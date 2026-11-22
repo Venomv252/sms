@@ -1,0 +1,80 @@
+.roster-page { display: flex; flex-direction: column; gap: 14px; }
+
+.roster-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.stat-green { color: var(--green-primary); }
+.stat-red { color: #dc2626; }
+
+.roster-icon {
+  width: 36px; height: 36px;
+  background: var(--green-light);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green-primary);
+}
+
+/* Faculty escorts */
+.faculty-escorts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.faculty-escort-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border: 1px solid var(--gray-100);
+}
+.faculty-escort-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  font-size: 12px; font-weight: 700;
+  color: var(--gray-800);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Search */
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+}
+.search-box input { padding: 0; border: none; border-radius: 0; width: 100%; }
+
+/* Filter tabs */
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.filter-tab {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--gray-600);
+}
+.filter-tab.active {
+  background: var(--green-primary);
+  color: #fff;
+  border-color: var(--green-primary);
+}
+
+/* Student list */
+.student-manifest-list { display: flex; flex-direction: column; gap: 10px; }

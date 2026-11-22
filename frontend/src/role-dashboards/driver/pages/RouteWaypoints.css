@@ -1,0 +1,83 @@
+.route-page { display: flex; flex-direction: column; gap: 14px; }
+
+.route-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.route-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.active-waypoint-card { border: 2px solid var(--green-primary); }
+.manifest-target {
+  text-align: right;
+  padding: 8px 12px;
+  background: var(--green-light);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.awaiting-students {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+.awaiting-student {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: var(--gray-50);
+  border-radius: 8px;
+  padding: 8px;
+}
+.student-chip-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--green-primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Stop list */
+.stop-list { display: flex; flex-direction: column; gap: 0; }
+.stop-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+.stop-item:last-child { border-bottom: none; }
+.stop-dot { flex-shrink: 0; margin-top: 1px; width: 20px; }
+.stop-info { flex: 1; }
+.stop-count { text-align: right; flex-shrink: 0; }
+.active-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--green-primary);
+  border: 3px solid var(--green-light);
+  box-shadow: 0 0 0 2px var(--green-primary);
+}
+.upcoming-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--gray-300);
+}
+
+/* Re-route stats */
+.reroute-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
