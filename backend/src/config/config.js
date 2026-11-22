@@ -29,7 +29,13 @@ const config = {
     accessExpiry: process.env.JWT_ACCESS_EXPIRY || "8h",
     refreshExpiry: process.env.JWT_REFRESH_EXPIRY || "7d",
   },
-  client: { url: process.env.CORS_ORIGIN || "http://localhost:5173" },
+  client: { 
+    url: process.env.CORS_ORIGIN || "http://localhost:5173",
+    // Support multiple origins separated by comma
+    allowedOrigins: process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+      : ["http://localhost:5173"]
+  },
   rateLimit: {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
     maxRequests: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,

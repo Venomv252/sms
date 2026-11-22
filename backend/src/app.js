@@ -21,7 +21,19 @@ import prisma from "./config/prisma.js";
 const app = express();
 app.disable("x-powered-by");
 app.use(helmet());
-app.use(cors({ origin: config.client.url, credentials: true }));
+app.use(cors({ 
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    if (config.client.allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true 
+}));
 app.use(rateLimit({
   windowMs: config.rateLimit.windowMs,
   limit: config.rateLimit.maxRequests,
