@@ -59,6 +59,7 @@ export default function SuperAdminDashboard() {
     sessionStorage.getItem("sms_authenticated_user") || "{}",
   );
   const [page, setPage] = useState("overview");
+  const [globalSearch, setGlobalSearch] = useState("");
   const [mobileNav, setMobileNav] = useState(false);
   const [schools, setSchools] = useState([]);
   const [directors, setDirectors] = useState([]);
@@ -107,6 +108,16 @@ export default function SuperAdminDashboard() {
       ),
     [schools],
   );
+  const globalFilteredSchools = useMemo(() => {
+    const query = globalSearch.trim().toLowerCase();
+    if (!query) return schools;
+    return schools.filter((s) => `${s.name || ""} ${s.code || ""} ${s.address || ""}`.toLowerCase().includes(query));
+  }, [schools, globalSearch]);
+  const globalFilteredDirectors = useMemo(() => {
+    const query = globalSearch.trim().toLowerCase();
+    if (!query) return directors;
+    return directors.filter((d) => `${d.firstName || ""} ${d.lastName || ""} ${d.username || ""} ${d.email || ""}`.toLowerCase().includes(query));
+  }, [directors, globalSearch]);
   const filteredDirectorSchools = useMemo(() => {
     const query = directorSchoolSearch.trim().toLowerCase();
     if (!query) return schools;
@@ -234,7 +245,7 @@ export default function SuperAdminDashboard() {
   };
   const schoolCards = (
     <div className="network-grid">
-      {schools.map((s) => (
+      {globalFilteredSchools.map((s) => (
         <article className="network-card" key={s.id}>
           <div className="network-card-top">
             <div className="network-school-mark">
@@ -308,7 +319,7 @@ export default function SuperAdminDashboard() {
   );
   const directorCards = (
     <div className="superadmin-director-list director-management-list">
-      {directors.map((d) => (
+      {globalFilteredDirectors.map((d) => (
         <article key={d.id}>
           {editingDirector?.id === d.id ? (
             <form className="director-edit-form" onSubmit={saveDirector}>
