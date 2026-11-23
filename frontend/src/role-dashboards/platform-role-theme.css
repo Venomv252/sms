@@ -177,11 +177,11 @@
 .superadmin-count { color: #6d7c75 !important; background: #f0f4f2 !important; }
 .platform-compact-row { border-color:var(--rp-border) !important; }
 .platform-compact-row strong,
-.platform-stat-row strong { color:#e9f0f6 !important; }
+.platform-stat-row strong { color:#18352b !important; }
 .platform-compact-row small,
-.platform-stat-row small { color:#8799ae !important; }
+.platform-stat-row small { color:#6d7c75 !important; }
 .platform-compact-row > b,
-.platform-stat-row b { color:#c8d5e2 !important; }
+.platform-stat-row b { color:#18352b !important; }
 .network-school-mark,
 .director-avatar {
   background: #e7f4ed !important;
@@ -216,105 +216,105 @@
   transform: translateY(-1px) !important;
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
 }
-.platform-stat-row { border-color:var(--rp-border) !important; color:#c7d4e2 !important; }
+.platform-stat-row { border-color:var(--rp-border) !important; color:#18352b !important; }
 .platform-stat-row.heading {
-  background:#1a293d !important;
-  color:#8ea0b5 !important;
+  background:#f6f8fa !important;
+  color:#6d7c75 !important;
 }
-.platform-stat-row.heading span { color:#8ea0b5 !important; }
-.platform-stat-row > span:first-child { color:#edf3f8 !important; }
+.platform-stat-row.heading span { color:#6d7c75 !important; }
+.platform-stat-row > span:first-child { color:#18352b !important; }
 .superadmin-school-row,
 .superadmin-director-list article,
 .superadmin-detail-grid > div {
-  background:#152236 !important;
+  background:#ffffff !important;
   border-color:var(--rp-border) !important;
-  color:#e5edf5 !important;
+  color:#18352b !important;
 }
 .superadmin-school-main strong,
-.superadmin-director-info strong { color:#edf3f8 !important; }
+.superadmin-director-info strong { color:#18352b !important; }
 .superadmin-school-main span,
 .superadmin-school-main small,
 .superadmin-director-info span,
-.superadmin-director-info small { color:#91a2b7 !important; }
-.superadmin-detail-grid span { color:#8799ae !important; }
-.superadmin-detail-grid strong { color:#e9f1f8 !important; }
+.superadmin-director-info small { color:#6d7c75 !important; }
+.superadmin-detail-grid span { color:#6d7c75 !important; }
+.superadmin-detail-grid strong { color:#18352b !important; }
 .platform-shell input,
 .platform-shell textarea,
 .platform-shell select,
 .superadmin-modal input,
 .superadmin-modal textarea,
 .superadmin-modal select {
-  background:#0d1725 !important;
-  color:#e7eef6 !important;
-  border:1px solid #34465c !important;
+  background:#ffffff !important;
+  color:#18352b !important;
+  border:1px solid #e1e9e4 !important;
   border-radius:7px !important;
 }
 .platform-shell input::placeholder,
-.platform-shell textarea::placeholder { color:#65788f !important; }
+.platform-shell textarea::placeholder { color:#87919a !important; }
 .platform-shell label,
-.superadmin-modal label { color:#b9c6d4 !important; }
-.platform-shell fieldset { border-color:#34465c !important; }
-.platform-shell legend { color:#c5d1dd !important; }
+.superadmin-modal label { color:#18352b !important; }
+.platform-shell fieldset { border-color:#e1e9e4 !important; }
+.platform-shell legend { color:#18352b !important; }
 .platform-shell .school-assignment-results,
 .platform-shell .director-school-options {
-  background:#101c2b !important;
-  border-color:#34465c !important;
+  background:#ffffff !important;
+  border-color:#e1e9e4 !important;
 }
 .platform-shell .school-assignment-results label,
 .platform-shell .director-school-options label {
-  border-color:#26384c !important;
-  color:#d4deea !important;
+  border-color:#e1e9e4 !important;
+  color:#18352b !important;
 }
 .platform-shell .school-assignment-results small,
-.platform-shell .director-school-options small { color:#8194aa !important; }
+.platform-shell .director-school-options small { color:#6d7c75 !important; }
 .platform-shell .superadmin-icon-button {
-  background:#1a2a3d !important;
-  color:#b8c7d6 !important;
-  border:1px solid #33465c !important;
+  background:#f6f8fa !important;
+  color:#18352b !important;
+  border:1px solid #e1e9e4 !important;
 }
-.platform-shell .superadmin-icon-button:hover { background:#263b52 !important; }
-.platform-shell .superadmin-icon-button.danger { color:#ff8d8d !important; }
+.platform-shell .superadmin-icon-button:hover { background:#edf0f2 !important; }
+.platform-shell .superadmin-icon-button.danger { color:#dc2626 !important; }
 .platform-shell .director-submit {
-  background:#078a5b !important;
+  background:#07845f !important;
   color:#fff !important;
 }
 .superadmin-error,
 .superadmin-success {
   border:1px solid var(--rp-border) !important;
 }
-.superadmin-error { background:#3b1c26 !important; color:#ffb5bd !important; }
-.superadmin-success { background:#12382d !important; color:#8df0bc !important; }
+.superadmin-error { background:#fff0f0 !important; color:#dc2626 !important; }
+.superadmin-success { background:#e7f4ed !important; color:#16a36a !important; }
 .superadmin-loading,
 .superadmin-empty {
-  background:#111d2c !important;
-  border:1px dashed #34465c !important;
-  color:#91a3b7 !important;
+  background:#f9fafb !important;
+  border:1px dashed #e1e9e4 !important;
+  color:#6d7c75 !important;
 }
 .platform-health-panel .health-notice {
-  background:#2c291c !important;
-  border-color:#66552a !important;
+  background:#fffbeb !important;
+  border-color:#fde68a !important;
 }
-.platform-health-panel .health-notice strong { color:#f4e7c3 !important; }
+.platform-health-panel .health-notice strong { color:#92400e !important; }
 .platform-health-panel .health-notice p,
-.platform-health-panel .health-notice small { color:#c0b28c !important; }
+.platform-health-panel .health-notice small { color:#78716c !important; }
 .platform-health-panel .health-status-row { border-color:var(--rp-border) !important; }
-.platform-shell .superadmin-modal-backdrop { background:rgba(1,7,15,.78) !important; }
+.platform-shell .superadmin-modal-backdrop { background:rgba(0,0,0,0.5) !important; }
 .platform-shell .superadmin-modal,
 .platform-shell .superadmin-confirm-modal {
-  background:#111d2c !important;
-  border:1px solid #34465c !important;
-  color:#eaf1f7 !important;
+  background:#ffffff !important;
+  border:1px solid #e1e9e4 !important;
+  color:#18352b !important;
 }
-.platform-shell .superadmin-modal h2 { color:#f1f5f9 !important; }
+.platform-shell .superadmin-modal h2 { color:#18352b !important; }
 .platform-shell .superadmin-confirm-modal p,
-.platform-shell .superadmin-delete-details { color:#a9b8c8 !important; }
+.platform-shell .superadmin-delete-details { color:#6d7c75 !important; }
 .platform-shell .superadmin-cancel-button {
-  background:#1d2c40 !important;
-  color:#d6e0ea !important;
-  border:1px solid #34465c !important;
+  background:#f6f8fa !important;
+  color:#18352b !important;
+  border:1px solid #e1e9e4 !important;
 }
 .platform-shell .superadmin-delete-confirm {
-  background:#a83242 !important;
+  background:#dc2626 !important;
   color:#fff !important;
 }
 /* Director's opened school workspace follows the same control-plane palette. */

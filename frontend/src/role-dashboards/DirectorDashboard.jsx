@@ -27,6 +27,7 @@ import SchoolWorkspace from "./SchoolWorkspace.jsx";
 import "./director.css";
 import "./admin.css";
 import "./platform-role-theme.css";
+import "./director-theme.css";
 
 const NAV = [
   { id: "overview", label: "Overview", icon: LayoutDashboard, group: "OVERVIEW" },

@@ -1,0 +1,412 @@
+/* Director Dashboard Theme - Light sidebar matching Super Admin design */
+
+/* Only target director dashboard specifically */
+.director-role-shell {
+  --d-green: #0a7c59;
+  --d-green-dark: #065c41;
+  --d-green-soft: #e6f4f0;
+  background: #f8fafb !important;
+  color: #111827 !important;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+/* Sidebar - Light green theme */
+.director-role-shell > .platform-sidebar {
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border-right: 0 !important;
+  box-shadow: 2px 0 14px rgba(15, 55, 42, 0.08) !important;
+  padding: 0 12px 14px !important;
+}
+
+/* Brand section */
+.director-role-shell .platform-brand {
+  min-height: 92px !important;
+  padding: 16px 8px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.director-role-shell .platform-brand-icon {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+  border-radius: 10px;
+}
+
+.director-role-shell .platform-brand strong {
+  color: #fff !important;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.director-role-shell .platform-brand small {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Navigation labels */
+.director-role-shell .platform-nav-label {
+  color: rgba(255, 255, 255, 0.62) !important;
+  padding: 25px 10px 12px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+}
+
+.director-role-shell .platform-nav-group-label {
+  color: rgba(255, 255, 255, 0.55) !important;
+  padding-top: 18px !important;
+}
+
+/* Navigation buttons */
+.director-role-shell .platform-sidebar nav {
+  gap: 5px !important;
+}
+
+.director-role-shell .platform-sidebar nav button {
+  min-height: 43px !important;
+  color: rgba(255, 255, 255, 0.86) !important;
+  background: transparent !important;
+  border-radius: 8px !important;
+  border: none !important;
+  padding: 11px 12px !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  margin: 0 !important;
+}
+
+.director-role-shell .platform-sidebar nav button:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+.director-role-shell .platform-sidebar nav button.active {
+  color: var(--d-green-dark) !important;
+  background: #fff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.director-role-shell .platform-sidebar nav button.active em {
+  color: var(--d-green-dark) !important;
+  background: var(--d-green-soft) !important;
+}
+
+.director-role-shell .platform-sidebar nav button em {
+  color: #fff !important;
+  background: rgba(220, 38, 38, 0.9) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  padding: 1px 5px !important;
+  border-radius: 10px !important;
+  min-width: 16px !important;
+  text-align: center !important;
+}
+
+/* Sidebar bottom section */
+.director-role-shell .platform-sidebar-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+.director-role-shell .platform-user-avatar {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+.director-role-shell .platform-user strong {
+  color: #fff !important;
+}
+
+.director-role-shell .platform-user small {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.director-role-shell .platform-sidebar .platform-signout {
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-radius: 8px;
+}
+
+.director-role-shell .platform-sidebar .platform-signout:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+.director-role-shell .platform-close-nav {
+  color: #fff !important;
+}
+
+/* Main content area */
+.director-role-shell > .platform-main {
+  background: #f8fafb !important;
+  padding-bottom: 42px !important;
+}
+
+/* Top bar */
+.director-role-shell .platform-topbar {
+  min-height: 76px !important;
+  background: #fff !important;
+  border-bottom: 1px solid #e9edf0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px !important;
+}
+
+.director-role-shell .platform-topbar h1 {
+  color: #111827 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+.director-role-shell .platform-topbar > div:nth-child(2) > span {
+  color: #8b969e !important;
+  font-size: 9px !important;
+  letter-spacing: 0.13em !important;
+}
+
+.director-role-shell .platform-live {
+  background: var(--d-green-soft) !important;
+  color: var(--d-green) !important;
+  border-radius: 30px !important;
+  padding: 8px 12px !important;
+  font-size: 11px !important;
+  white-space: nowrap !important;
+  border: none !important;
+}
+
+.director-role-shell .platform-live i {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 3px #d1fae5 !important;
+}
+
+.director-role-shell .superadmin-refresh {
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  font-size: 12px !important;
+  border: none !important;
+}
+
+/* Page intro section */
+.director-role-shell .platform-page-intro {
+  border-radius: 14px !important;
+  border: 1px solid #e5e7eb !important;
+  background: linear-gradient(110deg, #fff 0%, #fff 55%, var(--d-green-soft) 100%) !important;
+  padding: 24px 26px !important;
+}
+
+.director-role-shell .platform-page-intro h2 {
+  font-size: 25px !important;
+  color: #111827 !important;
+}
+
+.director-role-shell .platform-page-intro p {
+  font-size: 13px !important;
+  color: #6b7280 !important;
+}
+
+/* KPI cards */
+.director-role-shell .superadmin-kpis article {
+  border: 1px solid #e8ecef !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+}
+
+.director-role-shell .superadmin-kpis article > svg {
+  color: var(--d-green) !important;
+  background: var(--d-green-soft) !important;
+  border-radius: 50%;
+  padding: 6px;
+}
+
+.director-role-shell .superadmin-kpis article > span {
+  color: #6b7280 !important;
+}
+
+.director-role-shell .superadmin-kpis article > strong {
+  color: #111827 !important;
+}
+
+.director-role-shell .superadmin-kpis article small {
+  color: #9ca3af !important;
+}
+
+/* Panels */
+.director-role-shell .superadmin-panel {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+}
+
+.director-role-shell .superadmin-section-title h2 {
+  color: #111827 !important;
+}
+
+.director-role-shell .superadmin-section-title p {
+  color: #6b7280 !important;
+}
+
+.director-role-shell .superadmin-section-title button {
+  background: rgba(10, 124, 89, 0.1) !important;
+  color: var(--d-green) !important;
+  border: 1.5px solid rgba(10, 124, 89, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 10px 18px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.director-role-shell .superadmin-section-title button:hover {
+  background: rgba(10, 124, 89, 0.2) !important;
+  border-color: rgba(10, 124, 89, 0.5) !important;
+}
+
+.director-role-shell .superadmin-count {
+  background: var(--d-green-soft) !important;
+  color: var(--d-green) !important;
+}
+
+/* Network cards */
+.director-role-shell .network-card {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.director-role-shell .network-school-mark {
+  background: var(--d-green-soft) !important;
+  color: var(--d-green) !important;
+}
+
+.director-role-shell .network-school-title strong {
+  color: #111827 !important;
+}
+
+.director-role-shell .network-school-title span {
+  color: #6b7280 !important;
+}
+
+.director-role-shell .network-metrics > div {
+  background: #f9fafb !important;
+  border: 1px solid #e9edf0 !important;
+}
+
+.director-role-shell .network-metrics span {
+  color: #6b7280 !important;
+}
+
+.director-role-shell .network-metrics strong {
+  color: #111827 !important;
+}
+
+/* Buttons */
+.director-role-shell .director-open-school {
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  border: none !important;
+}
+
+.director-role-shell .director-submit {
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+/* Empty states and messages */
+.director-role-shell .superadmin-empty {
+  background: #f9fafb !important;
+  border: 1px dashed #e1e9e4 !important;
+  color: #6b7280 !important;
+}
+
+.director-role-shell .superadmin-error {
+  background: #fff0f0 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.director-role-shell .superadmin-success {
+  background: var(--d-green-soft) !important;
+  color: var(--d-green) !important;
+  border: 1px solid #c7e9dd !important;
+}
+
+.director-role-shell .superadmin-loading {
+  background: #f9fafb !important;
+  color: #6b7280 !important;
+}
+
+/* Stat tables */
+.director-role-shell .platform-stat-row {
+  border-color: #e9edf0 !important;
+}
+
+.director-role-shell .platform-stat-row.heading {
+  background: #f6f8fa !important;
+  color: #6b7280 !important;
+}
+
+.director-role-shell .platform-stat-row strong {
+  color: #111827 !important;
+}
+
+.director-role-shell .platform-stat-row small {
+  color: #6b7280 !important;
+}
+
+.director-role-shell .platform-stat-row b {
+  color: #111827 !important;
+}
+
+/* Modals */
+.director-role-shell .superadmin-modal-backdrop {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.director-role-shell .superadmin-modal {
+  background: #fff !important;
+  border: 1px solid #e9edf0 !important;
+}
+
+.director-role-shell .superadmin-modal h2 {
+  color: #111827 !important;
+}
+
+.director-role-shell .superadmin-modal label {
+  color: #111827 !important;
+}
+
+.director-role-shell .superadmin-modal input,
+.director-role-shell .superadmin-modal textarea {
+  background: #fff !important;
+  border: 1px solid #e1e9e4 !important;
+  color: #111827 !important;
+}
+
+.director-role-shell .superadmin-icon-button {
+  background: #f6f8fa !important;
+  color: #111827 !important;
+  border: 1px solid #e1e9e4 !important;
+}
+
+.director-role-shell .superadmin-icon-button:hover {
+  background: #edf0f2 !important;
+}
+
+.director-role-shell .superadmin-icon-button.danger {
+  color: #dc2626 !important;
+}
+
+.director-role-shell .platform-menu-toggle {
+  background: #f0f4f2 !important;
+  color: var(--d-green) !important;
+}
+
+/* Responsive */
+@media (max-width: 680px) {
+  .director-role-shell .platform-sidebar {
+    background: var(--d-green) !important;
+  }
+}
