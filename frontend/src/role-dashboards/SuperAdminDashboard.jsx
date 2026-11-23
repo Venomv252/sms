@@ -64,7 +64,6 @@ export default function SuperAdminDashboard() {
   );
   const [page, setPage] = useState("overview");
   const [globalSearch, setGlobalSearch] = useState("");
-  const [globalSearch, setGlobalSearch] = useState("");
   const [mobileNav, setMobileNav] = useState(false);
   const [schools, setSchools] = useState([]);
   const [directors, setDirectors] = useState([]);
@@ -113,16 +112,6 @@ export default function SuperAdminDashboard() {
       ),
     [schools],
   );
-  const globalFilteredSchools = useMemo(() => {
-    const query = globalSearch.trim().toLowerCase();
-    if (!query) return schools;
-    return schools.filter((s) => `${s.name || ""} ${s.code || ""} ${s.address || ""}`.toLowerCase().includes(query));
-  }, [schools, globalSearch]);
-  const globalFilteredDirectors = useMemo(() => {
-    const query = globalSearch.trim().toLowerCase();
-    if (!query) return directors;
-    return directors.filter((d) => `${d.firstName || ""} ${d.lastName || ""} ${d.username || ""} ${d.email || ""}`.toLowerCase().includes(query));
-  }, [directors, globalSearch]);
   const globalFilteredSchools = useMemo(() => {
     const query = globalSearch.trim().toLowerCase();
     if (!query) return schools;
