@@ -29,12 +29,21 @@ const config = {
     accessExpiry: process.env.JWT_ACCESS_EXPIRY || "8h",
     refreshExpiry: process.env.JWT_REFRESH_EXPIRY || "7d",
   },
-  client: { 
-    url: process.env.CORS_ORIGIN || "http://localhost:5173",
-    // Support multiple origins separated by comma
-    allowedOrigins: process.env.CORS_ORIGIN 
-      ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-      : ["http://localhost:5173"]
+  client: {
+    // Keep the production frontend explicitly allowed even if the Render
+    // environment variable is missing or contains a trailing slash.
+    url: process.env.CORS_ORIGIN || "https://sms-rho-umber.vercel.app",
+    // Support comma-separated origins and normalize accidental trailing slashes.
+    allowedOrigins: [
+      "https://sms-rho-umber.vercel.app",
+      "http://localhost:5173",
+      ...(process.env.CORS_ORIGIN
+        ? process.env.CORS_ORIGIN.split(",")
+        : []),
+    ]
+      .map((origin) => origin.trim().replace(/\\/+$/, ""))
+      .filter(Boolean)
+      .filter((origin, index, origins) => origins.indexOf(origin) === index),
   },
   rateLimit: {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
