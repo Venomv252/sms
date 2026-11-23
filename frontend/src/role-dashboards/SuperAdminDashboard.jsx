@@ -13,6 +13,9 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  Search,
+  Bell,
+  Settings,
   School,
   ShieldCheck,
   Trash2,
@@ -30,6 +33,7 @@ import {
 } from "../api.js";
 import "./admin.css";
 import "./platform-role-theme.css";
+import "./superadmin-zip-theme.css";
 
 const EMPTY_SCHOOL = { name: "", code: "", address: "" };
 const EMPTY_DIRECTOR = {
@@ -59,6 +63,7 @@ export default function SuperAdminDashboard() {
     sessionStorage.getItem("sms_authenticated_user") || "{}",
   );
   const [page, setPage] = useState("overview");
+  const [globalSearch, setGlobalSearch] = useState("");
   const [globalSearch, setGlobalSearch] = useState("");
   const [mobileNav, setMobileNav] = useState(false);
   const [schools, setSchools] = useState([]);
@@ -108,6 +113,16 @@ export default function SuperAdminDashboard() {
       ),
     [schools],
   );
+  const globalFilteredSchools = useMemo(() => {
+    const query = globalSearch.trim().toLowerCase();
+    if (!query) return schools;
+    return schools.filter((s) => `${s.name || ""} ${s.code || ""} ${s.address || ""}`.toLowerCase().includes(query));
+  }, [schools, globalSearch]);
+  const globalFilteredDirectors = useMemo(() => {
+    const query = globalSearch.trim().toLowerCase();
+    if (!query) return directors;
+    return directors.filter((d) => `${d.firstName || ""} ${d.lastName || ""} ${d.username || ""} ${d.email || ""}`.toLowerCase().includes(query));
+  }, [directors, globalSearch]);
   const globalFilteredSchools = useMemo(() => {
     const query = globalSearch.trim().toLowerCase();
     if (!query) return schools;
@@ -487,8 +502,8 @@ export default function SuperAdminDashboard() {
             <ShieldCheck />
           </div>
           <div>
-            <strong>Greenwood High</strong>
-            <small>School ERP Portal</small>
+            <strong>SchoolERP</strong>
+            <small>Super Admin Portal</small>
           </div>
           <button
             className="platform-close-nav"
@@ -497,7 +512,7 @@ export default function SuperAdminDashboard() {
             <X />
           </button>
         </div>
-        <div className="platform-nav-label">WORKSPACE</div>
+        <div className="platform-nav-label">MAIN NAVIGATION</div>
         <nav>
           {NAV.map((item, index) => (
             <React.Fragment key={item.id}>
@@ -555,16 +570,22 @@ export default function SuperAdminDashboard() {
             <Menu />
           </button>
           <div>
-            <span>PLATFORM CONTROL</span>
+            <span>SUPER ADMIN PORTAL</span>
             <h1>{sectionTitle}</h1>
           </div>
-          <div className="platform-top-actions">
-            <span className="platform-live">
-              <i /> Platform workspace
-            </span>
-            <button className="superadmin-refresh" onClick={loadData}>
-              <RefreshCw size={15} /> Refresh
-            </button>
+          <div className="superadmin-header-search">
+            <Search size={16} />
+            <input type="search" aria-label="Search schools and directors" placeholder="Search schools, directors…" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} />
+          </div>
+          <div className="platform-top-actions superadmin-header-actions">
+            <span className="platform-live"><i /> Live workspace</span>
+            <button className="superadmin-header-icon" type="button" title="Notifications" aria-label="Notifications"><Bell size={18} /></button>
+            <button className="superadmin-header-icon" type="button" title="Settings" aria-label="Settings"><Settings size={18} /></button>
+            <div className="superadmin-header-user">
+              <span>{(user.firstName || "S").slice(0, 1)}{(user.lastName || "").slice(0, 1)}</span>
+              <div><strong>{[user.firstName, user.lastName].filter(Boolean).join(" ") || "Super Admin"}</strong><small>Super Administrator</small></div>
+            </div>
+            <button className="superadmin-refresh" onClick={loadData} title="Refresh data" aria-label="Refresh data"><RefreshCw size={15} /></button>
           </div>
         </header>
         {(error || message) && (
@@ -1002,7 +1023,7 @@ export default function SuperAdminDashboard() {
                   <span>Collected</span>
                   <span>Pending</span>
                 </div>
-                {schools.map((s) => (
+                {globalFilteredSchools.map((s) => (
                   <div className="platform-stat-row" key={s.id}>
                     <span>
                       <strong>{s.name}</strong>
