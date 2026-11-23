@@ -41,7 +41,7 @@ const config = {
         ? process.env.CORS_ORIGIN.split(",")
         : []),
     ]
-      .map((origin) => origin.trim().replace(/\\/+$/, ""))
+      .map((origin) => origin.trim().replace(/\/+$/, ""))
       .filter(Boolean)
       .filter((origin, index, origins) => origins.indexOf(origin) === index),
   },
