@@ -7,14 +7,18 @@ import { requireSchoolScope } from "../middleware/schoolScope.js";
 
 const router = express.Router();
 
-// All routes require MANAGEMENT role and school assignment
-router.use(auth, allowRoles("MANAGEMENT"), requireSchoolScope);
+// All routes require authentication
+router.use(auth);
+
+// Most routes require MANAGEMENT role and school assignment
+// (Some specific routes will override this with their own allowRoles)
+const managementOnly = [allowRoles("MANAGEMENT"), requireSchoolScope];
 
 /**
  * GET /api/management/dashboard/statistics
  * Get comprehensive dashboard statistics for the assigned school
  */
-router.get("/dashboard/statistics", async (req, res, next) => {
+router.get("/dashboard/statistics", ...managementOnly, async (req, res, next) => {
   try {
     const schoolId = req.user.schoolId;
 
@@ -237,17 +241,40 @@ router.get("/dashboard/statistics", async (req, res, next) => {
 /**
  * POST /api/management/principal/create
  * Create a Principal account for the current school
+ * Accessible by: DIRECTOR, MANAGEMENT
  */
-router.post("/principal/create", async (req, res, next) => {
+router.post("/principal/create", allowRoles("DIRECTOR", "MANAGEMENT"), async (req, res, next) => {
   try {
-    const { firstName, lastName, email, phoneNumber } = req.body;
-    const schoolId = req.user.schoolId;
+    const { firstName, lastName, email, phoneNumber, username, temporaryPassword } = req.body;
+    
+    // For DIRECTOR, get schoolId from route/query params or body
+    // For MANAGEMENT, get from authenticated user
+    let schoolId;
+    if (req.user.role === "DIRECTOR") {
+      schoolId = req.body.schoolId || req.query.schoolId;
+      if (!schoolId) {
+        return res.status(400).json({
+          status: "error",
+          message: "School ID is required for Director role",
+        });
+      }
+    } else {
+      schoolId = req.user.schoolId;
+    }
 
     // Validate required fields
-    if (!firstName?.trim() || !lastName?.trim() || !email?.trim()) {
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !username?.trim() || !temporaryPassword?.trim()) {
       return res.status(400).json({
         status: "error",
-        message: "First name, last name, and email are required",
+        message: "First name, last name, email, username, and password are required",
+      });
+    }
+
+    // Validate password length
+    if (temporaryPassword.length < 8 || temporaryPassword.length > 72) {
+      return res.status(400).json({
+        status: "error",
+        message: "Password must be between 8 and 72 characters",
       });
     }
 
@@ -261,6 +288,7 @@ router.post("/principal/create", async (req, res, next) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedUsername = username.trim().toLowerCase();
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
@@ -271,6 +299,18 @@ router.post("/principal/create", async (req, res, next) => {
       return res.status(409).json({
         status: "error",
         message: "A user with this email already exists",
+      });
+    }
+
+    // Check if username already exists
+    const existingUsername = await prisma.user.findUnique({
+      where: { username: normalizedUsername },
+    });
+
+    if (existingUsername) {
+      return res.status(409).json({
+        status: "error",
+        message: "Username already exists",
       });
     }
 
@@ -289,25 +329,7 @@ router.post("/principal/create", async (req, res, next) => {
       });
     }
 
-    // Generate username from email (before @)
-    let baseUsername = normalizedEmail.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (baseUsername.length < 3) baseUsername = `principal${baseUsername}`;
-    
-    // Ensure username is unique
-    let username = baseUsername;
-    let counter = 1;
-    while (await prisma.user.findUnique({ where: { username } })) {
-      username = `${baseUsername}${counter}`;
-      counter++;
-    }
-
-    // Generate secure temporary password (12 characters)
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*";
-    let tempPassword = "";
-    for (let i = 0; i < 12; i++) {
-      const randomIndex = Math.floor(Math.random() * chars.length);
-      tempPassword += chars[randomIndex];
-    }
+    const tempPassword = temporaryPassword.trim();
 
     // Hash the password
     const passwordHash = await bcrypt.hash(tempPassword, config.bcrypt.saltRounds);
@@ -316,7 +338,7 @@ router.post("/principal/create", async (req, res, next) => {
     const principal = await prisma.user.create({
       data: {
         email: normalizedEmail,
-        username,
+        username: normalizedUsername,
         password: passwordHash,
         role: "PRINCIPAL",
         schoolId,
@@ -352,7 +374,7 @@ router.post("/principal/create", async (req, res, next) => {
           schoolName: principal.school?.name,
         },
         credentials: {
-          username,
+          username: normalizedUsername,
           temporaryPassword: tempPassword,
           // These credentials are shown only once
           warning: "Store these credentials securely. They will not be shown again.",
@@ -374,7 +396,7 @@ router.post("/principal/create", async (req, res, next) => {
  * GET /api/management/principals
  * Get list of principals for the current school
  */
-router.get("/principals", async (req, res, next) => {
+router.get("/principals", ...managementOnly, async (req, res, next) => {
   try {
     const schoolId = req.user.schoolId;
 

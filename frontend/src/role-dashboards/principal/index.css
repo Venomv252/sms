@@ -1,6 +1,13 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* Principal Dashboard - Scoped Styles */
+.principal-dashboard *, 
+.principal-dashboard *::before, 
+.principal-dashboard *::after { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
 
-:root {
+.principal-dashboard {
   --green: #16a34a;
   --green-light: #dcfce7;
   --green-dark: #15803d;
@@ -29,9 +36,7 @@
   --sidebar-width: 220px;
   --header-height: 52px;
   --font: 'Inter', sans-serif;
-}
-
-body {
+  
   font-family: var(--font);
   background: var(--gray-50);
   color: var(--gray-800);
@@ -40,12 +45,12 @@ body {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+.principal-dashboard ::-webkit-scrollbar { width: 4px; height: 4px; }
+.principal-dashboard ::-webkit-scrollbar-track { background: transparent; }
+.principal-dashboard ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
 
 /* Layout */
-.app-layout { display: flex; height: 100vh; overflow: hidden; }
+.principal-dashboard .app-layout { display: flex; height: 100vh; overflow: hidden; }
 
 /* Sidebar */
 .sidebar {

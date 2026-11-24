@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
@@ -31,6 +32,8 @@ import {
   apiDelete,
   clearApiSession,
 } from "../api.js";
+import CredentialDisplay from "../components/CredentialDisplay.jsx";
+import SuperAdminDeleteConfirmation from "../components/SuperAdminDeleteConfirmation.jsx";
 import "./admin.css";
 import "./platform-role-theme.css";
 import "./superadmin-zip-theme.css";
@@ -51,23 +54,24 @@ const money = (value) =>
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
 const NAV = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard, group: "PLATFORM" },
-  { id: "schools", label: "Schools", icon: Building2, group: "INSTITUTIONS" },
-  { id: "directors", label: "Directors", icon: Users, group: "INSTITUTIONS" },
-  { id: "statistics", label: "Platform statistics", icon: BarChart3, group: "OVERSIGHT" },
-  { id: "health", label: "System health", icon: Activity, group: "OVERSIGHT" },
+  { id: "dashboard", label: "Overview", icon: LayoutDashboard, group: "PLATFORM", path: "/superadmin/dashboard" },
+  { id: "schools", label: "Schools", icon: Building2, group: "INSTITUTIONS", path: "/superadmin/schools" },
+  { id: "directors", label: "Directors", icon: Users, group: "INSTITUTIONS", path: "/superadmin/directors" },
+  { id: "statistics", label: "Platform statistics", icon: BarChart3, group: "OVERSIGHT", path: "/superadmin/statistics" },
+  { id: "health", label: "System health", icon: Activity, group: "OVERSIGHT", path: "/superadmin/health" },
 ];
 
 export default function SuperAdminDashboard() {
   const user = JSON.parse(
     sessionStorage.getItem("sms_authenticated_user") || "{}",
   );
-  const [page, setPage] = useState("overview");
+  const navigate = useNavigate();
+  const location = useLocation();
   const [globalSearch, setGlobalSearch] = useState("");
   const [mobileNav, setMobileNav] = useState(false);
   const [schools, setSchools] = useState([]);
   const [directors, setDirectors] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [directorForm, setDirectorForm] = useState(EMPTY_DIRECTOR);
@@ -80,25 +84,66 @@ export default function SuperAdminDashboard() {
   const [editDirectorSchoolSearch, setEditDirectorSchoolSearch] = useState("");
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [deletingRecord, setDeletingRecord] = useState(false);
-  const loadData = useCallback(async () => {
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  
+  // Cache to avoid re-fetching - PERFORMANCE OPTIMIZATION
+  const [dataCache, setDataCache] = useState({ schools: null, directors: null, timestamp: null });
+  const CACHE_DURATION = 30000; // 30 seconds
+  
+  // Determine current page from route
+  const currentPath = location.pathname;
+  const currentPage = currentPath.split('/').pop() || 'dashboard';
+  
+  // Lazy load data based on current route - PERFORMANCE OPTIMIZATION
+  const loadData = useCallback(async (force = false) => {
+    const page = location.pathname.split('/').pop();
+    
+    // Check cache first
+    const now = Date.now();
+    if (!force && dataCache.timestamp && (now - dataCache.timestamp) < CACHE_DURATION) {
+      // Use cached data
+      if (dataCache.schools) setSchools(dataCache.schools);
+      if (dataCache.directors) setDirectors(dataCache.directors);
+      return;
+    }
+    
     setLoading(true);
     setError("");
     try {
-      const [s, d] = await Promise.all([
-        apiGet("/platform/schools"),
-        apiGet("/platform/directors"),
-      ]);
-      setSchools(s || []);
-      setDirectors(d || []);
+      // Only load what's needed for current page
+      if (page === 'dashboard') {
+        // Dashboard needs both for overview
+        const [s, d] = await Promise.all([
+          apiGet("/platform/schools"),
+          apiGet("/platform/directors"),
+        ]);
+        setSchools(s || []);
+        setDirectors(d || []);
+        setDataCache({ schools: s || [], directors: d || [], timestamp: Date.now() });
+      } else if (page === 'schools' || page === 'directors' || page === 'statistics') {
+        // These pages need both for assignments and stats
+        const [s, d] = await Promise.all([
+          apiGet("/platform/schools"),
+          apiGet("/platform/directors"),
+        ]);
+        setSchools(s || []);
+        setDirectors(d || []);
+        setDataCache({ schools: s || [], directors: d || [], timestamp: Date.now() });
+      } else if (page === 'health') {
+        // Health page doesn't need data
+        setLoading(false);
+        return;
+      }
     } catch (e) {
       setError(e.message || "Unable to load platform data.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [location.pathname, dataCache]);
+  
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [location.pathname]); // Only reload when route changes
   const totals = useMemo(
     () =>
       schools.reduce(
@@ -154,7 +199,7 @@ export default function SuperAdminDashboard() {
       setMessage(
         "School created successfully. You can now assign it to a Director.",
       );
-      await loadData();
+      await loadData(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message || "Unable to create school.");
     } finally {
@@ -166,11 +211,38 @@ export default function SuperAdminDashboard() {
     setSaving(true);
     setError("");
     try {
-      await apiPost("/platform/directors", directorForm);
+      const payload = {
+        firstName: directorForm.firstName,
+        lastName: directorForm.lastName,
+        email: directorForm.email,
+        username: directorForm.username,
+        temporaryPassword: directorForm.password,
+        schoolIds: directorForm.schoolIds,
+      };
+      
+      const response = await apiPost("/platform/directors", payload);
+      
+      // Show credentials modal if credentials were returned
+      if (response.credentials) {
+        // Get school names for selected school IDs
+        const selectedSchools = schools
+          .filter(s => directorForm.schoolIds.includes(s.id))
+          .map(s => s.name);
+        
+        setCreatedCredentials({
+          username: response.credentials.username,
+          password: response.credentials.password,
+          role: "Director",
+          name: `${directorForm.firstName} ${directorForm.lastName}`,
+          email: directorForm.email,
+          schools: selectedSchools,
+        });
+      }
+      
       setDirectorForm(EMPTY_DIRECTOR);
       setDirectorSchoolSearch("");
-      setMessage("Director account created.");
-      await loadData();
+      setMessage("Director account created successfully.");
+      await loadData(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message);
     } finally {
@@ -187,7 +259,7 @@ export default function SuperAdminDashboard() {
       });
       setEditingSchool(null);
       setMessage("School updated.");
-      await loadData();
+      await loadData(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message);
     }
@@ -212,7 +284,7 @@ export default function SuperAdminDashboard() {
       });
       setEditingDirector(null);
       setMessage("Director updated.");
-      await loadData();
+      await loadData(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message);
     }
@@ -240,7 +312,7 @@ export default function SuperAdminDashboard() {
           ? "School deleted successfully."
           : "Director deleted successfully.",
       );
-      await loadData();
+      await loadData(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message || `Unable to delete ${type}.`);
     } finally {
@@ -482,7 +554,9 @@ export default function SuperAdminDashboard() {
       ))}
     </div>
   );
-  const sectionTitle = NAV.find((x) => x.id === page)?.label || "Overview";
+  
+  const pageTitle = NAV.find((x) => x.path === currentPath)?.label || "Overview";
+
   return (
     <div className="platform-shell superadmin-role-shell">
       <aside className={`platform-sidebar ${mobileNav ? "is-open" : ""}`}>
@@ -509,9 +583,9 @@ export default function SuperAdminDashboard() {
                 <div className="platform-nav-group-label">{item.group}</div>
               )}
               <button
-                className={page === item.id ? "active" : ""}
+                className={currentPath === item.path ? "active" : ""}
                 onClick={() => {
-                  setPage(item.id);
+                  navigate(item.path);
                   setMobileNav(false);
                 }}
               >
@@ -560,7 +634,7 @@ export default function SuperAdminDashboard() {
           </button>
           <div>
             <span>SUPER ADMIN PORTAL</span>
-            <h1>{sectionTitle}</h1>
+            <h1>{pageTitle}</h1>
           </div>
           <div className="superadmin-header-search">
             <Search size={16} />
@@ -574,7 +648,7 @@ export default function SuperAdminDashboard() {
               <span>{(user.firstName || "S").slice(0, 1)}{(user.lastName || "").slice(0, 1)}</span>
               <div><strong>{[user.firstName, user.lastName].filter(Boolean).join(" ") || "Super Admin"}</strong><small>Super Administrator</small></div>
             </div>
-            <button className="superadmin-refresh" onClick={loadData} title="Refresh data" aria-label="Refresh data"><RefreshCw size={15} /></button>
+            <button className="superadmin-refresh" onClick={() => loadData(true)} title="Refresh data" aria-label="Refresh data"><RefreshCw size={15} /></button>
           </div>
         </header>
         {(error || message) && (
@@ -596,108 +670,113 @@ export default function SuperAdminDashboard() {
         {loading && (
           <div className="superadmin-loading">Loading platform data…</div>
         )}
-        {!loading && page === "overview" && (
-          <>
-            <section className="platform-page-intro">
-              <div>
-                <h2>Welcome back, {user.firstName || "Super Admin"}</h2>
-                <p>
-                  Your platform at a glance. Use the navigation to manage
-                  schools, Directors, and platform performance.
-                </p>
+        
+        <Routes>
+          {/* Overview/Dashboard Route */}
+          <Route path="dashboard" element={
+            <>
+              <section className="platform-page-intro">
+                <div>
+                  <h2>Welcome back, {user.firstName || "Super Admin"}</h2>
+                  <p>
+                    Your platform at a glance. Use the navigation to manage
+                    schools, Directors, and platform performance.
+                  </p>
+                </div>
+              </section>
+              <section className="superadmin-overview superadmin-kpis">
+                <article>
+                  <Building2 />
+                  <span>Schools</span>
+                  <strong>{schools.length}</strong>
+                  <small>Registered institutions</small>
+                </article>
+                <article>
+                  <UserRound />
+                  <span>Directors</span>
+                  <strong>{directors.length}</strong>
+                  <small>Platform accounts</small>
+                </article>
+                <article>
+                  <GraduationCap />
+                  <span>Total students</span>
+                  <strong>{totals.students.toLocaleString("en-IN")}</strong>
+                  <small>Across all schools</small>
+                </article>
+                <article>
+                  <CircleDollarSign />
+                  <span>Fees collected</span>
+                  <strong>{money(totals.collected)}</strong>
+                  <small>Recorded as paid</small>
+                </article>
+              </section>
+              <div className="platform-overview-grid">
+                <section className="superadmin-panel">
+                  <div className="superadmin-section-title">
+                    <div>
+                      <h2>
+                        <Building2 size={19} /> School network
+                      </h2>
+                      <p>High-level portfolio summary</p>
+                    </div>
+                    <button onClick={() => navigate("/superadmin/schools")}>View all</button>
+                  </div>
+                  {schools.slice(0, 4).map((s) => (
+                    <div className="platform-compact-row" key={s.id}>
+                      <div className="network-school-mark">
+                        <School size={18} />
+                      </div>
+                      <div>
+                        <strong>{s.name}</strong>
+                        <small>
+                          {s.code} ·{" "}
+                          {s.directors?.[0]
+                            ? `${s.directors[0].firstName} ${s.directors[0].lastName}`
+                            : "No Director"}
+                        </small>
+                      </div>
+                      <b>{s.studentCount || 0} students</b>
+                    </div>
+                  ))}
+                  {!schools.length && (
+                    <div className="superadmin-empty">No schools registered.</div>
+                  )}
+                </section>
+                <section className="superadmin-panel">
+                  <div className="superadmin-section-title">
+                    <div>
+                      <h2>
+                        <Users size={19} /> Director summary
+                      </h2>
+                      <p>People managing your school network</p>
+                    </div>
+                    <button onClick={() => navigate("/superadmin/directors")}>Manage</button>
+                  </div>
+                  {directors.slice(0, 4).map((d) => (
+                    <div className="platform-compact-row" key={d.id}>
+                      <div className="director-avatar">
+                        {d.firstName?.[0]}
+                        {d.lastName?.[0]}
+                      </div>
+                      <div>
+                        <strong>
+                          {d.firstName} {d.lastName}
+                        </strong>
+                        <small>@{d.username}</small>
+                      </div>
+                      <b>{d.ownedSchools?.length || 0} schools</b>
+                    </div>
+                  ))}
+                  {!directors.length && (
+                    <div className="superadmin-empty">No Directors created.</div>
+                  )}
+                </section>
               </div>
-            </section>
-            <section className="superadmin-overview superadmin-kpis">
-              <article>
-                <Building2 />
-                <span>Schools</span>
-                <strong>{schools.length}</strong>
-                <small>Registered institutions</small>
-              </article>
-              <article>
-                <UserRound />
-                <span>Directors</span>
-                <strong>{directors.length}</strong>
-                <small>Platform accounts</small>
-              </article>
-              <article>
-                <GraduationCap />
-                <span>Total students</span>
-                <strong>{totals.students.toLocaleString("en-IN")}</strong>
-                <small>Across all schools</small>
-              </article>
-              <article>
-                <CircleDollarSign />
-                <span>Fees collected</span>
-                <strong>{money(totals.collected)}</strong>
-                <small>Recorded as paid</small>
-              </article>
-            </section>
-            <div className="platform-overview-grid">
-              <section className="superadmin-panel">
-                <div className="superadmin-section-title">
-                  <div>
-                    <h2>
-                      <Building2 size={19} /> School network
-                    </h2>
-                    <p>High-level portfolio summary</p>
-                  </div>
-                  <button onClick={() => setPage("schools")}>View all</button>
-                </div>
-                {schools.slice(0, 4).map((s) => (
-                  <div className="platform-compact-row" key={s.id}>
-                    <div className="network-school-mark">
-                      <School size={18} />
-                    </div>
-                    <div>
-                      <strong>{s.name}</strong>
-                      <small>
-                        {s.code} ·{" "}
-                        {s.directors?.[0]
-                          ? `${s.directors[0].firstName} ${s.directors[0].lastName}`
-                          : "No Director"}
-                      </small>
-                    </div>
-                    <b>{s.studentCount || 0} students</b>
-                  </div>
-                ))}
-                {!schools.length && (
-                  <div className="superadmin-empty">No schools registered.</div>
-                )}
-              </section>
-              <section className="superadmin-panel">
-                <div className="superadmin-section-title">
-                  <div>
-                    <h2>
-                      <Users size={19} /> Director summary
-                    </h2>
-                    <p>People managing your school network</p>
-                  </div>
-                  <button onClick={() => setPage("directors")}>Manage</button>
-                </div>
-                {directors.slice(0, 4).map((d) => (
-                  <div className="platform-compact-row" key={d.id}>
-                    <div className="director-avatar">
-                      {d.firstName?.[0]}
-                      {d.lastName?.[0]}
-                    </div>
-                    <div>
-                      <strong>
-                        {d.firstName} {d.lastName}
-                      </strong>
-                      <small>@{d.username}</small>
-                    </div>
-                    <b>{d.ownedSchools?.length || 0} schools</b>
-                  </div>
-                ))}
-                {!directors.length && (
-                  <div className="superadmin-empty">No Directors created.</div>
-                )}
-              </section>
-            </div>
-          </>
-        )}
-        {!loading && page === "schools" && (
+            </>
+          } />
+          
+          {/* Schools Route */}
+          <Route path="schools" element={
           <>
             <section className="superadmin-panel">
               <div className="superadmin-section-title">
@@ -784,8 +863,10 @@ export default function SuperAdminDashboard() {
               )}
             </section>
           </>
-        )}
-        {!loading && page === "directors" && (
+          } />
+          
+          {/* Directors Route */}
+          <Route path="directors" element={
           <>
             <section className="superadmin-panel">
               <div className="superadmin-section-title">
@@ -854,6 +935,7 @@ export default function SuperAdminDashboard() {
                         username: e.target.value,
                       })
                     }
+                    placeholder="Username for login"
                   />
                 </label>
                 <label className="director-password-field">
@@ -861,7 +943,7 @@ export default function SuperAdminDashboard() {
                   <input
                     required
                     type="password"
-                    minLength={12}
+                    minLength={8}
                     maxLength={72}
                     autoComplete="new-password"
                     value={directorForm.password}
@@ -871,9 +953,10 @@ export default function SuperAdminDashboard() {
                         password: e.target.value,
                       })
                     }
+                    placeholder="Temporary password"
                   />
                   <small>
-                    12–72 characters. It will not be displayed again.
+                    8–72 characters. User should change after first login.
                   </small>
                 </label>
                 <fieldset className="director-school-assignment">
@@ -963,8 +1046,10 @@ export default function SuperAdminDashboard() {
               {directorCards}
             </section>
           </>
-        )}
-        {!loading && page === "statistics" && (
+          } />
+          
+          {/* Statistics Route */}
+          <Route path="statistics" element={
           <>
             <section className="superadmin-overview superadmin-kpis">
               <article>
@@ -1030,8 +1115,10 @@ export default function SuperAdminDashboard() {
               </p>
             </section>
           </>
-        )}
-        {!loading && page === "health" && (
+          } />
+          
+          {/* Health Route */}
+          <Route path="health" element={
           <section className="superadmin-panel platform-health-panel">
             <div className="superadmin-section-title">
               <div>
@@ -1072,104 +1159,20 @@ export default function SuperAdminDashboard() {
               </strong>
             </div>
           </section>
-        )}
+          } />
+          
+          {/* Default redirect to dashboard */}
+          <Route path="*" element={<Navigate to="/superadmin/dashboard" replace />} />
+        </Routes>
       </main>
       {deleteConfirmation && (
-        <div
-          className="superadmin-modal-backdrop"
-          role="presentation"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !deletingRecord)
-              setDeleteConfirmation(null);
-          }}
-        >
-          <section
-            className="superadmin-modal superadmin-confirm-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-record-title"
-            aria-describedby="delete-record-description"
-          >
-            <div className="superadmin-modal-heading">
-              <h2 id="delete-record-title">
-                Delete{" "}
-                {deleteConfirmation.type === "school" ? "school" : "Director"}?
-              </h2>
-              <button
-                type="button"
-                className="superadmin-icon-button"
-                aria-label="Close confirmation"
-                disabled={deletingRecord}
-                onClick={() => setDeleteConfirmation(null)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <p id="delete-record-description">
-              Are you sure you want to delete{" "}
-              <strong>
-                {deleteConfirmation.type === "school"
-                  ? deleteConfirmation.item.name
-                  : `${deleteConfirmation.item.firstName} ${deleteConfirmation.item.lastName}`}
-              </strong>
-              ?
-            </p>
-            <div className="superadmin-delete-details">
-              {deleteConfirmation.type === "school" ? (
-                <>
-                  <p>Before you continue:</p>
-                  <ul>
-                    <li>
-                      School-owned users, notices, and related records will be
-                      permanently deleted.
-                    </li>
-                    <li>
-                      Records belonging to other schools will be preserved.
-                    </li>
-                    <li>
-                      This action cannot be undone after successful deletion.
-                    </li>
-                  </ul>
-                </>
-              ) : (
-                <>
-                  <p>This action will:</p>
-                  <ul>
-                    <li>Delete the Director's login account.</li>
-                    <li>
-                      Remove all school assignments linked to this Director.
-                    </li>
-                    <li>
-                      Keep the schools and their student, teacher, parent and
-                      other staff accounts unchanged.
-                    </li>
-                  </ul>
-                </>
-              )}
-            </div>
-            <div className="superadmin-confirm-actions">
-              <button
-                type="button"
-                className="superadmin-cancel-button"
-                disabled={deletingRecord}
-                onClick={() => setDeleteConfirmation(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="superadmin-delete-confirm"
-                disabled={deletingRecord}
-                onClick={confirmDelete}
-              >
-                <Trash2 size={16} />
-                {deletingRecord
-                  ? "Deleting…"
-                  : `Delete ${deleteConfirmation.type === "school" ? "School" : "Director"}`}
-              </button>
-            </div>
-          </section>
-        </div>
+        <SuperAdminDeleteConfirmation
+          type={deleteConfirmation.type}
+          item={deleteConfirmation.item}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteConfirmation(null)}
+          isDeleting={deletingRecord}
+        />
       )}
       {editingSchool && (
         <div
@@ -1232,6 +1235,17 @@ export default function SuperAdminDashboard() {
             </button>
           </form>
         </div>
+      )}
+      {createdCredentials && (
+        <CredentialDisplay
+          username={createdCredentials.username}
+          password={createdCredentials.password}
+          role={createdCredentials.role}
+          name={createdCredentials.name}
+          email={createdCredentials.email}
+          schools={createdCredentials.schools}
+          onClose={() => setCreatedCredentials(null)}
+        />
       )}
     </div>
   );

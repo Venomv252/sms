@@ -162,6 +162,13 @@ export async function apiPatch(path, body) {
   });
 }
 
+export async function apiPut(path, body) {
+  return apiRequest(path, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function apiDelete(path) {
   return apiRequest(path, { method: "DELETE" });
 }

@@ -17,6 +17,7 @@ import noticeRoutes from "./routes/notices.routes.js";
 import scheduleRoutes from "./routes/schedules.routes.js";
 import managementRoutes from "./routes/management.routes.js";
 import platformRoutes from "./routes/platform.routes.js";
+import principalRoutes from "./routes/principal.routes.js";
 
 import errorHandler from "./middleware/errorHandler.js";
 import prisma from "./config/prisma.js";
@@ -125,6 +126,7 @@ app.use("/api/notices", noticeRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/management", managementRoutes);
 app.use("/api/platform", platformRoutes);
+app.use("/api/principal", principalRoutes);
 
 // 404 handler
 app.use((req, res) => {

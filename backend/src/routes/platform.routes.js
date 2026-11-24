@@ -400,27 +400,27 @@ router.post("/directors", allowRoles("SUPER_ADMIN"), async (req, res, next) => {
   try {
     const {
       email,
-      username,
-      password,
       firstName,
       lastName,
       schoolIds = [],
+      username,
+      temporaryPassword,
     } = req.body ?? {};
 
     if (
-      ![email, username, password, firstName, lastName].every(
+      ![email, firstName, lastName, username, temporaryPassword].every(
         (v) => typeof v === "string" && v.trim()
       )
     ) {
       return res.status(400).json({
         message:
-          "First name, last name, email, username and password are required",
+          "First name, last name, email, username, and temporary password are required",
       });
     }
 
-    if (password.length < 12 || password.length > 72) {
+    if (temporaryPassword.length < 8 || temporaryPassword.length > 72) {
       return res.status(400).json({
-        message: "Password must be 12–72 characters",
+        message: "Password must be between 8 and 72 characters",
       });
     }
 
@@ -440,13 +440,21 @@ router.post("/directors", allowRoles("SUPER_ADMIN"), async (req, res, next) => {
     }
 
     const uniqueSchoolIds = [...new Set(schoolIds)];
+    const normalizedEmail = email.trim().toLowerCase();
     const normalizedUsername = username.trim().toLowerCase();
 
-    if (!/^[a-z0-9][a-z0-9._-]{2,29}$/.test(normalizedUsername)) {
-      return res.status(400).json({
-        message: "Invalid username format",
+    // Check if username already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { username: normalizedUsername }
+    });
+    
+    if (existingUser) {
+      return res.status(409).json({
+        message: "Username already exists",
       });
     }
+
+    const tempPassword = temporaryPassword.trim();
 
     const director = await prisma.$transaction(async (tx) => {
       if (uniqueSchoolIds.length) {
@@ -467,10 +475,10 @@ router.post("/directors", allowRoles("SUPER_ADMIN"), async (req, res, next) => {
 
       const created = await tx.user.create({
         data: {
-          email: email.trim().toLowerCase(),
+          email: normalizedEmail,
           username: normalizedUsername,
           password: await bcrypt.hash(
-            password,
+            tempPassword,
             config.bcrypt.saltRounds
           ),
           role: "DIRECTOR",
@@ -500,7 +508,14 @@ router.post("/directors", allowRoles("SUPER_ADMIN"), async (req, res, next) => {
       return created;
     });
 
-    res.status(201).json({ data: director });
+    res.status(201).json({ 
+      data: director,
+      credentials: {
+        username: normalizedUsername,
+        password: tempPassword,
+        message: "⚠️ Store these credentials securely. The password will not be shown again."
+      }
+    });
   } catch (error) {
     if (error.code === "P2002") {
       return res.status(409).json({
@@ -1481,6 +1496,594 @@ router.get(
   }
 );
 
+
+// ============================================================
+// DIRECTOR: SCHOOL OVERVIEW (Dashboard Stats Only)
+// ============================================================
+
+router.get(
+  "/director/schools/:schoolId/overview",
+  allowRoles("DIRECTOR"),
+  async (req, res, next) => {
+    try {
+      const { schoolId } = req.params;
+
+      // Verify ownership
+      const assignment = await prisma.directorSchool.findUnique({
+        where: {
+          directorId_schoolId: {
+            directorId: req.user.id,
+            schoolId,
+          },
+        },
+        select: {
+          school: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              address: true,
+              createdAt: true,
+            },
+          },
+        },
+      });
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: "School not found in your assigned portfolio",
+        });
+      }
+
+      const school = assignment.school;
+      const schoolUserWhere = { user: { schoolId } };
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const [
+        studentCount,
+        teacherCount,
+        staffCount,
+        classCount,
+        subjectCount,
+        attendanceToday,
+        attendancePresentToday,
+        feeSummary,
+        pendingFees,
+        resultCount,
+      ] = await Promise.all([
+        prisma.student.count({ where: schoolUserWhere }),
+        prisma.teacher.count({ where: { user: { schoolId } } }),
+        prisma.user.count({
+          where: {
+            schoolId,
+            role: { in: ["PRINCIPAL", "MANAGEMENT", "ACCOUNTANT", "DRIVER"] },
+          },
+        }),
+        prisma.class.count({
+          where: { teacher: { user: { schoolId } } },
+        }),
+        prisma.subject.count({
+          where: { teacher: { user: { schoolId } } },
+        }),
+        prisma.attendance.count({
+          where: {
+            student: schoolUserWhere,
+            date: { gte: today, lt: tomorrow },
+          },
+        }),
+        prisma.attendance.count({
+          where: {
+            student: schoolUserWhere,
+            date: { gte: today, lt: tomorrow },
+            status: "PRESENT",
+          },
+        }),
+        prisma.feePayment.aggregate({
+          where: { student: schoolUserWhere, status: "PAID" },
+          _sum: { amount: true },
+        }),
+        prisma.feePayment.count({
+          where: {
+            student: schoolUserWhere,
+            status: { in: ["PENDING", "OVERDUE", "PARTIAL"] },
+          },
+        }),
+        prisma.result.count({
+          where: { student: schoolUserWhere },
+        }),
+      ]);
+
+      const feeCollected = Number(feeSummary._sum.amount || 0);
+      const attendanceRate = attendanceToday
+        ? Number(((attendancePresentToday / attendanceToday) * 100).toFixed(1))
+        : null;
+
+      res.json({
+        data: {
+          school,
+          stats: {
+            students: studentCount,
+            teachers: teacherCount,
+            otherStaff: staffCount,
+            classes: classCount,
+            subjects: subjectCount,
+            attendanceToday: attendanceToday ? attendanceRate : null,
+            attendanceRecordsToday: attendanceToday,
+            presentToday: attendancePresentToday,
+            feeCollected,
+            pendingFeeRecords: pendingFees,
+            resultsPublished: resultCount,
+          },
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================
+// DIRECTOR: STUDENTS LIST
+// ============================================================
+
+router.get(
+  "/director/schools/:schoolId/students",
+  allowRoles("DIRECTOR"),
+  async (req, res, next) => {
+    try {
+      const { schoolId } = req.params;
+      const { page = 1, limit = 20, search = "" } = req.query;
+
+      // Verify ownership
+      const assignment = await prisma.directorSchool.findUnique({
+        where: {
+          directorId_schoolId: {
+            directorId: req.user.id,
+            schoolId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: "School not found in your assigned portfolio",
+        });
+      }
+
+      const schoolUserWhere = { user: { schoolId } };
+      const whereClause = {
+        ...schoolUserWhere,
+        ...(search && {
+          OR: [
+            { rollNumber: { contains: search, mode: "insensitive" } },
+            { user: { firstName: { contains: search, mode: "insensitive" } } },
+            { user: { lastName: { contains: search, mode: "insensitive" } } },
+            { user: { email: { contains: search, mode: "insensitive" } } },
+          ],
+        }),
+      };
+
+      const [students, total] = await Promise.all([
+        prisma.student.findMany({
+          where: whereClause,
+          skip: (parseInt(page) - 1) * parseInt(limit),
+          take: parseInt(limit),
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            rollNumber: true,
+            grade: true,
+            section: true,
+            createdAt: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+          },
+        }),
+        prisma.student.count({ where: whereClause }),
+      ]);
+
+      res.json({
+        data: students,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================
+// DIRECTOR: TEACHERS LIST
+// ============================================================
+
+router.get(
+  "/director/schools/:schoolId/teachers",
+  allowRoles("DIRECTOR"),
+  async (req, res, next) => {
+    try {
+      const { schoolId } = req.params;
+      const { page = 1, limit = 20, search = "" } = req.query;
+
+      // Verify ownership
+      const assignment = await prisma.directorSchool.findUnique({
+        where: {
+          directorId_schoolId: {
+            directorId: req.user.id,
+            schoolId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: "School not found in your assigned portfolio",
+        });
+      }
+
+      const whereClause = {
+        user: {
+          schoolId,
+          ...(search && {
+            OR: [
+              { firstName: { contains: search, mode: "insensitive" } },
+              { lastName: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+            ],
+          }),
+        },
+        ...(search && {
+          OR: [
+            { employeeId: { contains: search, mode: "insensitive" } },
+            { department: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      };
+
+      const [teachers, total] = await Promise.all([
+        prisma.teacher.findMany({
+          where: whereClause,
+          skip: (parseInt(page) - 1) * parseInt(limit),
+          take: parseInt(limit),
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            employeeId: true,
+            department: true,
+            designation: true,
+            createdAt: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+          },
+        }),
+        prisma.teacher.count({ where: whereClause }),
+      ]);
+
+      res.json({
+        data: teachers,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================
+// DIRECTOR: PRINCIPALS LIST
+// ============================================================
+
+router.get(
+  "/director/schools/:schoolId/principals",
+  allowRoles("DIRECTOR"),
+  async (req, res, next) => {
+    try {
+      const { schoolId } = req.params;
+
+      // Verify ownership
+      const assignment = await prisma.directorSchool.findUnique({
+        where: {
+          directorId_schoolId: {
+            directorId: req.user.id,
+            schoolId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: "School not found in your assigned portfolio",
+        });
+      }
+
+      const principals = await prisma.user.findMany({
+        where: { schoolId, role: "PRINCIPAL" },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          createdAt: true,
+        },
+      });
+
+      res.json({
+        data: principals.map((p) => ({
+          id: p.id,
+          name: `${p.firstName} ${p.lastName}`,
+          email: p.email,
+          username: p.username,
+          createdAt: p.createdAt,
+        })),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================
+// DIRECTOR: ACADEMICS (Classes, Subjects, Schedules)
+// ============================================================
+
+router.get(
+  "/director/schools/:schoolId/academics",
+  allowRoles("DIRECTOR"),
+  async (req, res, next) => {
+    try {
+      const { schoolId } = req.params;
+
+      // Verify ownership
+      const assignment = await prisma.directorSchool.findUnique({
+        where: {
+          directorId_schoolId: {
+            directorId: req.user.id,
+            schoolId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: "School not found in your assigned portfolio",
+        });
+      }
+
+      const [classes, subjects, schedules] = await Promise.all([
+        prisma.class.findMany({
+          where: { teacher: { user: { schoolId } } },
+          orderBy: { name: "asc" },
+          select: {
+            id: true,
+            name: true,
+            grade: true,
+            section: true,
+            teacher: {
+              select: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+            subject: { select: { name: true, code: true } },
+            _count: { select: { attendance: true } },
+          },
+        }),
+        prisma.subject.findMany({
+          where: { teacher: { user: { schoolId } } },
+          orderBy: { name: "asc" },
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            description: true,
+            teacher: {
+              select: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+            _count: { select: { classes: true } },
+          },
+        }),
+        prisma.schedule.findMany({
+          where: { class: { teacher: { user: { schoolId } } } },
+          orderBy: [{ dayOfWeek: "asc" }, { period: "asc" }],
+          select: {
+            id: true,
+            dayOfWeek: true,
+            period: true,
+            startTime: true,
+            endTime: true,
+            room: true,
+            class: {
+              select: {
+                name: true,
+                grade: true,
+                section: true,
+                subject: { select: { name: true } },
+                teacher: {
+                  select: {
+                    user: { select: { firstName: true, lastName: true } },
+                  },
+                },
+              },
+            },
+          },
+        }),
+      ]);
+
+      res.json({
+        data: {
+          classes,
+          subjects,
+          schedules,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================
+// DIRECTOR: NOTICES
+// ============================================================
+
+router.get(
+  "/director/schools/:schoolId/notices",
+  allowRoles("DIRECTOR"),
+  async (req, res, next) => {
+    try {
+      const { schoolId } = req.params;
+      const { page = 1, limit = 20 } = req.query;
+
+      // Verify ownership
+      const assignment = await prisma.directorSchool.findUnique({
+        where: {
+          directorId_schoolId: {
+            directorId: req.user.id,
+            schoolId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: "School not found in your assigned portfolio",
+        });
+      }
+
+      const [notices, total] = await Promise.all([
+        prisma.notice.findMany({
+          where: { schoolId, isActive: true },
+          skip: (parseInt(page) - 1) * parseInt(limit),
+          take: parseInt(limit),
+          orderBy: { publishDate: "desc" },
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            category: true,
+            priority: true,
+            publishDate: true,
+            expiryDate: true,
+            createdBy: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        }),
+        prisma.notice.count({ where: { schoolId, isActive: true } }),
+      ]);
+
+      res.json({
+        data: notices,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================
+// DIRECTOR: HOMEWORK
+// ============================================================
+
+router.get(
+  "/director/schools/:schoolId/homework",
+  allowRoles("DIRECTOR"),
+  async (req, res, next) => {
+    try {
+      const { schoolId } = req.params;
+      const { page = 1, limit = 20 } = req.query;
+
+      // Verify ownership
+      const assignment = await prisma.directorSchool.findUnique({
+        where: {
+          directorId_schoolId: {
+            directorId: req.user.id,
+            schoolId,
+          },
+        },
+      });
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: "School not found in your assigned portfolio",
+        });
+      }
+
+      const [homework, total] = await Promise.all([
+        prisma.homework.findMany({
+          where: { class: { teacher: { user: { schoolId } } } },
+          skip: (parseInt(page) - 1) * parseInt(limit),
+          take: parseInt(limit),
+          orderBy: { dueDate: "asc" },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            dueDate: true,
+            totalMarks: true,
+            subject: { select: { name: true, code: true } },
+            class: { select: { name: true, grade: true, section: true } },
+            teacher: {
+              select: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+            _count: { select: { submissions: true } },
+          },
+        }),
+        prisma.homework.count({
+          where: { class: { teacher: { user: { schoolId } } } },
+        }),
+      ]);
+
+      res.json({
+        data: homework,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // ============================================================
 // DIRECTOR: CREATE PRINCIPAL WITH ONE-TIME TEMPORARY CREDENTIALS

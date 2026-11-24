@@ -1,4 +1,4 @@
-import "./index.css";
+import "./index-scoped.css";
 import { useState } from 'react'
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
@@ -18,7 +18,7 @@ function App() {
 
   return (
     <MemoryRouter>
-      <div className="app-layout">
+      <div className="principal-dashboard app-layout">
         {/* Mobile overlay */}
         <div
           className={`sidebar-overlay ${sidebarOpen ? 'show' : ''}`}

@@ -55,6 +55,45 @@ enum SubmissionStatus {
   EVALUATED
 }
 
+enum ComplaintStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum ComplaintPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  APPROVE
+  REJECT
+}
+
+enum NoticeAudience {
+  ALL_STAFF
+  TEACHERS
+  ACCOUNTANTS
+  TRANSPORT_STAFF
+  OTHER_EMPLOYEES
+  ALL_STUDENTS
+  PARENTS
+  SELECTED_CLASSES
+  SELECTED_DEPARTMENTS
+  CUSTOM
+}
+
 model School {
   id        String   @id @default(uuid())
   name      String
@@ -65,6 +104,12 @@ model School {
   users     User[]
   notices   Notice[]
   directorLinks DirectorSchool[]
+  complaints Complaint[]
+  academicEvents AcademicEvent[]
+  inventoryItems InventoryItem[]
+  auditLogs AuditLog[]
+  buses Bus[]
+  admissionApplications AdmissionApplication[]
 
   @@map("schools")
 }
@@ -86,6 +131,7 @@ model User {
   student       Student?
   parentLinks   ParentStudent[] @relation("ParentUser")
   teacher       Teacher?
+  accountant    Accountant?
   notes         Note[]
   doubts        Doubt[]        @relation("DoubtAuthor")
   comments      DoubtComment[]
@@ -321,6 +367,7 @@ model Notice {
   updatedAt   DateTime @updatedAt
 
   school School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  recipients NoticeRecipient[]
 
   @@index([schoolId, isActive, publishDate])
   @@map("notices")
@@ -420,4 +467,236 @@ model DoubtComment {
   author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("doubt_comments")
+}
+
+// Accountant model for financial management
+model Accountant {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  employeeId  String   @unique
+  phoneNumber String?
+  address     String?
+  permissions Json?    // Stores permission flags: {feeCollection, concessions, expenses, payroll, reports, approvals}
+  approvalLimit Decimal? @db.Decimal(10, 2) // Maximum amount they can approve without Principal
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accountants")
+}
+
+// Complaint/Grievance management
+model Complaint {
+  id          String            @id @default(uuid())
+  title       String
+  description String
+  category    String
+  priority    ComplaintPriority @default(NORMAL)
+  status      ComplaintStatus   @default(SUBMITTED)
+  submittedBy String            // User ID
+  schoolId    String
+  assignedTo  String?           // User ID of staff handling it
+  resolution  String?
+  remarks     String?
+  isConfidential Boolean        @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  resolvedAt  DateTime?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, status, priority])
+  @@map("complaints")
+}
+
+// Academic Calendar Events
+model AcademicEvent {
+  id           String    @id @default(uuid())
+  title        String
+  description  String?
+  eventType    String    // HOLIDAY, WORKING_DAY, EXAM, SCHOOL_EVENT, EMERGENCY_CLOSURE
+  startDate    DateTime
+  endDate      DateTime?
+  schoolId     String
+  notifyStaff  Boolean   @default(false)
+  notifyStudents Boolean @default(false)
+  notifyParents Boolean  @default(false)
+  createdBy    String    // User ID
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, startDate])
+  @@map("academic_events")
+}
+
+// Inventory/Infrastructure management
+model InventoryItem {
+  id          String   @id @default(uuid())
+  name        String
+  category    String   // CLASSROOM, LABORATORY, LIBRARY, FURNITURE, EQUIPMENT, VEHICLE
+  location    String?
+  quantity    Int      @default(1)
+  condition   String?  // EXCELLENT, GOOD, FAIR, POOR, DAMAGED
+  purchaseDate DateTime?
+  warrantyExpiry DateTime?
+  schoolId    String
+  maintenanceNotes String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  maintenanceRequests MaintenanceRequest[]
+
+  @@index([schoolId, category])
+  @@map("inventory_items")
+}
+
+// Maintenance tracking
+model MaintenanceRequest {
+  id          String   @id @default(uuid())
+  itemId      String
+  description String
+  priority    String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  reportedBy  String   // User ID
+  assignedTo  String?  // User ID
+  cost        Decimal? @db.Decimal(10, 2)
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  item InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([status, priority])
+  @@map("maintenance_requests")
+}
+
+// Audit Log for security and compliance
+model AuditLog {
+  id          String      @id @default(uuid())
+  userId      String      // Who performed the action
+  schoolId    String?     // Which school (null for platform-level actions)
+  action      AuditAction
+  entityType  String?     // User, Student, Fee, Notice, etc.
+  entityId    String?     // ID of the affected record
+  changes     Json?       // Before/after values
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+
+  school School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, createdAt])
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
+
+// Transport/Bus tracking
+model Bus {
+  id              String   @id @default(uuid())
+  busNumber       String   @unique
+  registrationNumber String @unique
+  capacity        Int
+  driverId        String?
+  schoolId        String
+  isActive        Boolean  @default(true)
+  insuranceExpiry DateTime?
+  fitnessExpiry   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  trips  Trip[]
+
+  @@index([schoolId, isActive])
+  @@map("buses")
+}
+
+// Bus trips
+model Trip {
+  id          String   @id @default(uuid())
+  busId       String
+  routeName   String
+  startTime   DateTime
+  endTime     DateTime?
+  status      String   @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, DELAYED, CANCELLED
+  delayMinutes Int?
+  remarks     String?
+  currentLatitude  Float?
+  currentLongitude Float?
+  lastLocationUpdate DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bus Bus @relation(fields: [busId], references: [id], onDelete: Cascade)
+  locationHistory BusLocationHistory[]
+
+  @@index([busId, startTime])
+  @@index([status])
+  @@map("trips")
+}
+
+// GPS tracking history for buses
+model BusLocationHistory {
+  id         String   @id @default(uuid())
+  tripId     String
+  latitude   Float
+  longitude  Float
+  recordedAt DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, recordedAt])
+  @@map("bus_location_history")
+}
+
+// Enhanced Notice model relationships (keeping existing Notice model, adding audience targeting)
+model NoticeRecipient {
+  id        String   @id @default(uuid())
+  noticeId  String
+  userId    String?  // Specific user (optional)
+  audience  NoticeAudience
+  classGrade String? // For SELECTED_CLASSES
+  classSection String? // For SELECTED_CLASSES
+  department String? // For SELECTED_DEPARTMENTS
+  viewedAt  DateTime?
+  acknowledgedAt DateTime?
+  createdAt DateTime @default(now())
+
+  notice Notice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+
+  @@index([noticeId, userId])
+  @@index([audience, classGrade, classSection])
+  @@map("notice_recipients")
+}
+
+// Student admission applications
+model AdmissionApplication {
+  id              String   @id @default(uuid())
+  studentName     String
+  dateOfBirth     DateTime
+  parentName      String
+  parentEmail     String
+  parentPhone     String
+  appliedGrade    String
+  previousSchool  String?
+  address         String
+  schoolId        String
+  status          String   @default("SUBMITTED") // SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED
+  reviewedBy      String?  // User ID
+  reviewNotes     String?
+  applicationDate DateTime @default(now())
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, status])
+  @@map("admission_applications")
 }

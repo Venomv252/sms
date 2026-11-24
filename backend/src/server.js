@@ -3,11 +3,15 @@ import app from "./app.js";
 import prisma from "./config/prisma.js";
 import config from "./config/config.js";
 import { shutdownLoginRateLimiter } from "./middleware/loginRateLimit.js";
+import { initializeWebSocket } from "./services/websocket.js";
 
 const server = app.listen(config.port, () => {
   console.log(`School ERP API running at http://localhost:${config.port}`);
   console.log(`Environment: ${config.nodeEnv}`);
 });
+
+// Initialize WebSocket server
+initializeWebSocket(server);
 
 let shuttingDown = false;
 async function shutdown(signal, exitCode = 0) {

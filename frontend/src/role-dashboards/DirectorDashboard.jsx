@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from "react-router-dom";
 import {
   Activity,
   ArrowUpRight,
@@ -20,8 +21,6 @@ import {
   apiPatch,
   apiDelete,
   clearApiSession,
-  setActiveSchoolId,
-  getActiveSchoolId,
 } from "../api.js";
 import SchoolWorkspace from "./SchoolWorkspace.jsx";
 import "./director.css";
@@ -30,44 +29,61 @@ import "./platform-role-theme.css";
 import "./director-theme.css";
 
 const NAV = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard, group: "OVERVIEW" },
-  { id: "schools", label: "My schools", icon: Building2, group: "SCHOOL PORTFOLIO" },
-  { id: "statistics", label: "Statistics", icon: BarChart3, group: "SCHOOL PORTFOLIO" },
+  { id: "dashboard", label: "Overview", icon: LayoutDashboard, group: "OVERVIEW", path: "/director/dashboard" },
+  { id: "schools", label: "My schools", icon: Building2, group: "SCHOOL PORTFOLIO", path: "/director/schools" },
+  { id: "statistics", label: "Statistics", icon: BarChart3, group: "SCHOOL PORTFOLIO", path: "/director/statistics" },
 ];
 
-export default function DirectorDashboard() {
+// Main Director Dashboard Component
+function DirectorDashboardMain() {
   const user = JSON.parse(
     sessionStorage.getItem("sms_authenticated_user") || "{}",
   );
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [page, setPage] = useState("overview");
+  const [page, setPage] = useState("dashboard");
   const [mobileNav, setMobileNav] = useState(false);
   const [overview, setOverview] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [editing, setEditing] = useState(null);
-  const [activeSchool, setActiveSchool] = useState(getActiveSchoolId());
+  
+  // Cache to avoid re-fetching - PERFORMANCE OPTIMIZATION
+  const [dataCache, setDataCache] = useState({ data: null, timestamp: null });
+  const CACHE_DURATION = 30000; // 30 seconds
+  
+  // Lazy load data based on current route - PERFORMANCE OPTIMIZATION
+  const load = useCallback(async (force = false) => {
+    const currentPath = location.pathname;
+    
+    // Check cache first
+    const now = Date.now();
+    if (!force && dataCache.timestamp && (now - dataCache.timestamp) < CACHE_DURATION && dataCache.data) {
+      setOverview(dataCache.data);
+      return;
+    }
 
-  const load = async () => {
     setLoading(true);
     setError("");
 
     try {
-      setOverview(await apiGet("/platform/director/overview"));
+      const data = await apiGet("/platform/director/overview");
+      setOverview(data);
+      setDataCache({ data, timestamp: Date.now() });
     } catch (e) {
       setError(e.message || "Unable to load your schools.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [location.pathname, dataCache]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [location.pathname]); // Only reload when route changes
 
   const schools = overview?.schools || [];
-  const selected = schools.find((s) => s.id === activeSchool);
 
   const totals = useMemo(
     () =>
@@ -94,7 +110,7 @@ export default function DirectorDashboard() {
 
       setEditing(null);
       setMessage("School information updated.");
-      await load();
+      await load(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message);
     }
@@ -112,55 +128,17 @@ export default function DirectorDashboard() {
     try {
       await apiDelete(`/platform/director/schools/${s.id}`);
       setMessage("School deleted.");
-      await load();
+      await load(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const openSchool = (id) => {
-    setActiveSchoolId(id);
-    setActiveSchool(id);
+  const openSchool = (schoolId) => {
+    navigate(`/director/schools/${schoolId}/overview`);
   };
 
-  if (selected)
-    return (
-      <div className="director-workspace">
-        <header className="director-workspace-bar">
-          <div>
-            <span>DIRECTOR WORKSPACE</span>
-            <strong>{selected.name}</strong>
-          </div>
-
-          <button
-            className="director-secondary"
-            onClick={() => {
-              setActiveSchoolId(null);
-              setActiveSchool(null);
-            }}
-          >
-            ← Director dashboard
-          </button>
-
-          <button
-            className="director-logout"
-            onClick={() => {
-              clearApiSession();
-              location.reload();
-            }}
-          >
-            <LogOut size={16} /> Sign out
-          </button>
-        </header>
-
-        <SchoolWorkspace school={selected} onBack={() => {
-            setActiveSchoolId(null);
-            setActiveSchool(null);
-          }} />
-      </div>
-    );
-
-  const pageTitle = NAV.find((n) => n.id === page)?.label || "Overview";
+  const pageTitle = NAV.find((n) => n.path === `/director/${page}`)?.label || "Overview";
 
   return (
     <div className="platform-shell director-shell director-role-shell">
@@ -195,6 +173,7 @@ export default function DirectorDashboard() {
                 className={page === n.id ? "active" : ""}
                 onClick={() => {
                   setPage(n.id);
+                  navigate(n.path);
                   setMobileNav(false);
                 }}
               >
@@ -257,7 +236,7 @@ export default function DirectorDashboard() {
               <i /> Account active
             </span>
 
-            <button className="superadmin-refresh" onClick={load}>
+            <button className="superadmin-refresh" onClick={() => load(true)}>
               <RefreshCw size={15} /> Refresh
             </button>
           </div>
@@ -284,7 +263,9 @@ export default function DirectorDashboard() {
           </div>
         )}
 
-        {!loading && page === "overview" && (
+        <Routes>
+          {/* Overview Route */}
+          <Route path="dashboard" element={
           <>
             <section className="platform-page-intro">
               <div>
@@ -335,7 +316,7 @@ export default function DirectorDashboard() {
                   <p>Open any school to access its operational workspace.</p>
                 </div>
 
-                <button onClick={() => setPage("schools")}>
+                <button onClick={() => navigate("/director/schools")}>
                   Manage schools
                 </button>
               </div>
@@ -392,9 +373,10 @@ export default function DirectorDashboard() {
               )}
             </section>
           </>
-        )}
+          } />
 
-        {!loading && page === "schools" && (
+          {/* Schools Route */}
+          <Route path="schools" element={
           <section className="superadmin-panel">
             <div className="superadmin-section-title">
               <div>
@@ -484,9 +466,10 @@ export default function DirectorDashboard() {
               </div>
             )}
           </section>
-        )}
+          } />
 
-        {!loading && page === "statistics" && (
+          {/* Statistics Route */}
+          <Route path="statistics" element={
           <>
             <section className="superadmin-overview superadmin-kpis">
               <article>
@@ -559,7 +542,14 @@ export default function DirectorDashboard() {
               </div>
             </section>
           </>
-        )}
+          } />
+
+          {/* School Workspace Route - Nested */}
+          <Route path="schools/:schoolId/*" element={<SchoolWorkspaceRouter schools={schools} />} />
+
+          {/* Default redirect to dashboard */}
+          <Route path="*" element={<Navigate to="/director/dashboard" replace />} />
+        </Routes>
       </main>
 
       {editing && (
@@ -627,5 +617,78 @@ export default function DirectorDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+// School Workspace Router - handles nested routes for a specific school
+function SchoolWorkspaceRouter({ schools }) {
+  const { schoolId } = useParams();
+  const navigate = useNavigate();
+  
+  const school = schools.find(s => s.id === schoolId);
+  
+  if (!school) {
+    return (
+      <div style={{ padding: '32px', textAlign: 'center' }}>
+        <h2>School not found</h2>
+        <p>This school is not in your portfolio.</p>
+        <button 
+          onClick={() => navigate('/director/dashboard')}
+          style={{
+            marginTop: '16px',
+            padding: '8px 16px',
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer'
+          }}
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="director-workspace">
+      <header className="director-workspace-bar">
+        <div>
+          <span>DIRECTOR WORKSPACE</span>
+          <strong>{school.name}</strong>
+        </div>
+
+        <button
+          className="director-secondary"
+          onClick={() => navigate('/director/dashboard')}
+        >
+          ← Director dashboard
+        </button>
+
+        <button
+          className="director-logout"
+          onClick={() => {
+            clearApiSession();
+            location.reload();
+          }}
+        >
+          <LogOut size={16} /> Sign out
+        </button>
+      </header>
+
+      <SchoolWorkspace 
+        school={school} 
+        onBack={() => navigate('/director/dashboard')} 
+      />
+    </div>
+  );
+}
+
+// Main export - wraps everything in Routes
+export default function DirectorDashboard() {
+  return (
+    <Routes>
+      <Route path="/*" element={<DirectorDashboardMain />} />
+    </Routes>
   );
 }
