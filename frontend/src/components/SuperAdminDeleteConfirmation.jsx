@@ -99,6 +99,7 @@ export default function SuperAdminDeleteConfirmation({
     if (type === "school") return "school";
     if (type === "director") return "Director";
     if (type === "principal") return "Principal";
+    if (type === "accountant") return "Accountant";
     return type; // fallback
   };
 
@@ -147,6 +148,20 @@ export default function SuperAdminDeleteConfirmation({
             <li>
               They will lose access to the school management system.
             </li>
+            <li>This action cannot be undone.</li>
+          </ul>
+        </>
+      );
+    } else if (type === "accountant") {
+      return (
+        <>
+          <p>This action will:</p>
+          <ul>
+            <li>Permanently remove their Accountant account.</li>
+            <li>
+              They will no longer have access to financial records.
+            </li>
+            <li>Financial transaction history will remain intact.</li>
             <li>This action cannot be undone.</li>
           </ul>
         </>

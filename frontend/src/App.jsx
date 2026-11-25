@@ -19,7 +19,7 @@ const ManagementDashboard = lazy(
   () => import("./role-dashboards/management/App.jsx"),
 );
 const AccountantDashboard = lazy(
-  () => import("./role-dashboards/accountant/App.jsx"),
+  () => import("./role-dashboards/AccountantDashboard.jsx"),
 );
 const DriverDashboard = lazy(() => import("./role-dashboards/driver/App.jsx"));
 const SuperAdminDashboard = lazy(

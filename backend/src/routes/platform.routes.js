@@ -8,6 +8,281 @@ import config from "../config/config.js";
 const router = Router();
 router.use(auth);
 
+// ============================================================
+// SUPER ADMIN: DASHBOARD STATS (OPTIMIZED)
+// ============================================================
+
+router.get(
+  "/superadmin/dashboard/stats",
+  allowRoles("SUPER_ADMIN"),
+  async (req, res, next) => {
+    try {
+      // Run all counts in parallel for performance
+      const [
+        totalSchools,
+        totalDirectors,
+        totalStudents,
+        totalTeachers,
+        topSchools,
+        recentSchools,
+      ] = await Promise.all([
+        // Total schools count
+        prisma.school.count(),
+
+        // Total directors count
+        prisma.user.count({
+          where: { role: "DIRECTOR" },
+        }),
+
+        // Total students across all schools
+        prisma.student.count(),
+
+        // Total teachers across all schools
+        prisma.user.count({
+          where: { role: "TEACHER" },
+        }),
+
+        // Top 3 schools by user count
+        prisma.school.findMany({
+          take: 3,
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            _count: {
+              select: {
+                users: true,
+              },
+            },
+          },
+          orderBy: {
+            users: {
+              _count: "desc",
+            },
+          },
+        }),
+
+        // 2 most recently created schools
+        prisma.school.findMany({
+          take: 2,
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        }),
+      ]);
+
+      // Get revenue stats only if there are payments (skip if zero)
+      let revenue = {
+        total: 0,
+        collected: 0,
+        pending: 0,
+        overdue: 0,
+      };
+      
+      const paymentCount = await prisma.feePayment.count();
+      
+      if (paymentCount > 0) {
+        // Only fetch revenue if there are payments
+        const [paidRev, pendingRev, overdueRev] = await Promise.all([
+          prisma.feePayment.aggregate({
+            _sum: { amount: true },
+            where: { status: "PAID" },
+          }),
+          prisma.feePayment.aggregate({
+            _sum: { amount: true },
+            where: { status: { in: ["PENDING", "PARTIAL"] } },
+          }),
+          prisma.feePayment.aggregate({
+            _sum: { amount: true },
+            where: { status: "OVERDUE" },
+          }),
+        ]);
+
+        revenue = {
+          total: Number(paidRev._sum.amount || 0) + Number(pendingRev._sum.amount || 0) + Number(overdueRev._sum.amount || 0),
+          collected: Number(paidRev._sum.amount || 0),
+          pending: Number(pendingRev._sum.amount || 0),
+          overdue: Number(overdueRev._sum.amount || 0),
+        };
+      }
+
+      res.json({
+        data: {
+          overview: {
+            totalSchools,
+            totalDirectors,
+            totalStudents,
+            totalTeachers,
+            totalUsers: totalStudents + totalTeachers + totalDirectors, // Calculate instead of querying
+            totalPayments: paymentCount,
+          },
+          revenue,
+          topSchools: topSchools.map((school) => ({
+            id: school.id,
+            name: school.name,
+            code: school.code,
+            userCount: school._count.users,
+          })),
+          recentSchools: recentSchools.map((school) => ({
+            id: school.id,
+            name: school.name,
+            code: school.code,
+            createdAt: school.createdAt,
+          })),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================
+// DIRECTOR: DASHBOARD STATS (OPTIMIZED)
+// ============================================================
+
+router.get(
+  "/director/dashboard/stats",
+  allowRoles("DIRECTOR"),
+  async (req, res, next) => {
+    try {
+      const directorId = req.user.id;
+
+      // Get assigned schools count
+      const assignedSchools = await prisma.directorSchool.count({
+        where: { directorId },
+      });
+
+      if (assignedSchools === 0) {
+        return res.json({
+          data: {
+            overview: {
+              totalSchools: 0,
+              totalStudents: 0,
+              totalTeachers: 0,
+              totalStaff: 0,
+              totalUsers: 0,
+            },
+            schools: [],
+          },
+        });
+      }
+
+      // Get school IDs for this director
+      const schoolLinks = await prisma.directorSchool.findMany({
+        where: { directorId },
+        select: { schoolId: true },
+      });
+
+      const schoolIds = schoolLinks.map((link) => link.schoolId);
+
+      // Run counts in parallel
+      const [totalStudents, totalTeachers, totalPrincipals, totalUsers, schools] =
+        await Promise.all([
+          // Total students in assigned schools
+          prisma.student.count({
+            where: {
+              user: {
+                schoolId: { in: schoolIds },
+              },
+            },
+          }),
+
+          // Total teachers in assigned schools
+          prisma.user.count({
+            where: {
+              schoolId: { in: schoolIds },
+              role: "TEACHER",
+            },
+          }),
+
+          // Total principals in assigned schools
+          prisma.user.count({
+            where: {
+              schoolId: { in: schoolIds },
+              role: "PRINCIPAL",
+            },
+          }),
+
+          // Total users in assigned schools
+          prisma.user.count({
+            where: {
+              schoolId: { in: schoolIds },
+            },
+          }),
+
+          // Basic school info with counts
+          prisma.school.findMany({
+            where: {
+              id: { in: schoolIds },
+            },
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              address: true,
+              createdAt: true,
+              _count: {
+                select: {
+                  users: true,
+                },
+              },
+            },
+            orderBy: {
+              name: "asc",
+            },
+          }),
+        ]);
+
+      // Get student counts per school
+      const studentCounts = await Promise.all(
+        schools.map((school) =>
+          prisma.student.count({
+            where: {
+              user: {
+                schoolId: school.id,
+              },
+            },
+          })
+        )
+      );
+
+      const schoolsWithCounts = schools.map((school, index) => ({
+        id: school.id,
+        name: school.name,
+        code: school.code,
+        address: school.address,
+        createdAt: school.createdAt,
+        userCount: school._count.users,
+        studentCount: studentCounts[index],
+      }));
+
+      const totalStaff = totalTeachers + totalPrincipals;
+
+      res.json({
+        data: {
+          overview: {
+            totalSchools: assignedSchools,
+            totalStudents,
+            totalTeachers,
+            totalStaff,
+            totalUsers,
+          },
+          schools: schoolsWithCounts,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 /**
  * Permanently removes a school's tenant-owned data.
  *
@@ -509,11 +784,13 @@ router.post("/directors", allowRoles("SUPER_ADMIN"), async (req, res, next) => {
     });
 
     res.status(201).json({ 
-      data: director,
-      credentials: {
-        username: normalizedUsername,
-        password: tempPassword,
-        message: "⚠️ Store these credentials securely. The password will not be shown again."
+      data: {
+        director,
+        credentials: {
+          username: normalizedUsername,
+          password: tempPassword,
+          message: "⚠️ Store these credentials securely. The password will not be shown again."
+        }
       }
     });
   } catch (error) {

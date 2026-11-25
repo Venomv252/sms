@@ -716,6 +716,8 @@ router.get("/accountants", async (req, res, next) => {
       data: accountants.map((a) => ({
         id: a.id,
         userId: a.user.id,
+        firstName: a.user.firstName,
+        lastName: a.user.lastName,
         name: `${a.user.firstName} ${a.user.lastName}`,
         email: a.user.email,
         username: a.user.username,
@@ -726,6 +728,93 @@ router.get("/accountants", async (req, res, next) => {
         isActive: a.isActive,
         createdAt: a.user.createdAt,
       })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/principal/accountants/:id
+ * Update accountant information
+ */
+router.patch("/accountants/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const schoolId = req.user.schoolId;
+    const { firstName, lastName, email, employeeId, phoneNumber, approvalLimit } = req.body;
+
+    // Verify accountant belongs to this school
+    const accountant = await prisma.accountant.findFirst({
+      where: { 
+        id,
+        user: { schoolId }
+      },
+      include: { user: true }
+    });
+
+    if (!accountant) {
+      return res.status(404).json({ message: "Accountant not found" });
+    }
+
+    // Update user and accountant information
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: accountant.userId },
+        data: {
+          firstName: firstName?.trim(),
+          lastName: lastName?.trim(),
+          email: email?.trim().toLowerCase(),
+        },
+      }),
+      prisma.accountant.update({
+        where: { id },
+        data: {
+          employeeId: employeeId?.trim(),
+          phoneNumber: phoneNumber?.trim() || null,
+          approvalLimit: approvalLimit ? parseFloat(approvalLimit) : null,
+        },
+      }),
+    ]);
+
+    return res.json({
+      status: "success",
+      message: "Accountant updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/principal/accountants/:id
+ * Delete accountant account
+ */
+router.delete("/accountants/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const schoolId = req.user.schoolId;
+
+    // Verify accountant belongs to this school
+    const accountant = await prisma.accountant.findFirst({
+      where: { 
+        id,
+        user: { schoolId }
+      },
+    });
+
+    if (!accountant) {
+      return res.status(404).json({ message: "Accountant not found" });
+    }
+
+    // Delete accountant (user will be deleted via cascade)
+    await prisma.accountant.delete({
+      where: { id },
+    });
+
+    return res.json({
+      status: "success",
+      message: "Accountant deleted successfully",
     });
   } catch (error) {
     next(error);

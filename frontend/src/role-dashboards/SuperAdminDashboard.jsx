@@ -9,7 +9,6 @@ import {
   CircleDollarSign,
   GraduationCap,
   LayoutDashboard,
-  LogOut,
   Menu,
   Pencil,
   Plus,
@@ -32,6 +31,7 @@ import {
   apiDelete,
   clearApiSession,
 } from "../api.js";
+import RoleSidebar from "../components/RoleSidebar.jsx";
 import CredentialDisplay from "../components/CredentialDisplay.jsx";
 import SuperAdminDeleteConfirmation from "../components/SuperAdminDeleteConfirmation.jsx";
 import "./admin.css";
@@ -85,9 +85,10 @@ export default function SuperAdminDashboard() {
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [deletingRecord, setDeletingRecord] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
   
   // Cache to avoid re-fetching - PERFORMANCE OPTIMIZATION
-  const [dataCache, setDataCache] = useState({ schools: null, directors: null, timestamp: null });
+  const [dataCache, setDataCache] = useState({ schools: null, directors: null, dashboardStats: null, timestamp: null });
   const CACHE_DURATION = 30000; // 30 seconds
   
   // Determine current page from route
@@ -96,32 +97,47 @@ export default function SuperAdminDashboard() {
   
   // Lazy load data based on current route - PERFORMANCE OPTIMIZATION
   const loadData = useCallback(async (force = false) => {
-    const page = location.pathname.split('/').pop();
-    
-    // Check cache first
-    const now = Date.now();
-    if (!force && dataCache.timestamp && (now - dataCache.timestamp) < CACHE_DURATION) {
-      // Use cached data
-      if (dataCache.schools) setSchools(dataCache.schools);
-      if (dataCache.directors) setDirectors(dataCache.directors);
-      return;
-    }
+    const page = location.pathname.split('/').pop() || 'dashboard';
     
     setLoading(true);
     setError("");
+    
     try {
+      // Check cache first (unless force refresh)
+      const now = Date.now();
+      const isCacheValid = !force && dataCache.timestamp && (now - dataCache.timestamp) < CACHE_DURATION;
+      
+      if (isCacheValid) {
+        // Use cached data
+        if (dataCache.schools) setSchools(dataCache.schools);
+        if (dataCache.directors) setDirectors(dataCache.directors);
+        if (dataCache.dashboardStats) setDashboardStats(dataCache.dashboardStats);
+        setLoading(false);
+        return;
+      }
+      
       // Only load what's needed for current page
-      if (page === 'dashboard') {
-        // Dashboard needs both for overview
-        const [s, d] = await Promise.all([
-          apiGet("/platform/schools"),
-          apiGet("/platform/directors"),
-        ]);
+      if (page === 'dashboard' || page === 'superadmin') {
+        // Dashboard: Load lightweight stats only (OPTIMIZED!)
+        const stats = await apiGet("/platform/superadmin/dashboard/stats");
+        setDashboardStats(stats);
+        setDataCache({ dashboardStats: stats, timestamp: Date.now() });
+      } else if (page === 'schools') {
+        // Schools page: Load full school list with details
+        const s = await apiGet("/platform/schools");
         setSchools(s || []);
+        setDataCache({ schools: s || [], timestamp: Date.now() });
+      } else if (page === 'directors') {
+        // Directors page: Need both directors and schools for assignment
+        const [d, s] = await Promise.all([
+          apiGet("/platform/directors"),
+          apiGet("/platform/schools"),
+        ]);
         setDirectors(d || []);
-        setDataCache({ schools: s || [], directors: d || [], timestamp: Date.now() });
-      } else if (page === 'schools' || page === 'directors' || page === 'statistics') {
-        // These pages need both for assignments and stats
+        setSchools(s || []);
+        setDataCache({ directors: d || [], schools: s || [], timestamp: Date.now() });
+      } else if (page === 'statistics') {
+        // Statistics: Need both for graphs
         const [s, d] = await Promise.all([
           apiGet("/platform/schools"),
           apiGet("/platform/directors"),
@@ -139,11 +155,11 @@ export default function SuperAdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [location.pathname, dataCache]);
+  }, [location.pathname]);
   
   useEffect(() => {
     loadData();
-  }, [location.pathname]); // Only reload when route changes
+  }, [loadData]); // Reload when loadData changes
   const totals = useMemo(
     () =>
       schools.reduce(
@@ -169,7 +185,11 @@ export default function SuperAdminDashboard() {
   }, [directors, globalSearch]);
   const filteredDirectorSchools = useMemo(() => {
     const query = directorSchoolSearch.trim().toLowerCase();
-    if (!query) return schools;
+    if (!query) {
+      // Show only first 3 schools when not searching
+      return schools.slice(0, 3);
+    }
+    // Show all matching schools when searching
     return schools.filter((s) =>
       `${s.name || ""} ${s.code || ""} ${s.address || ""}`
         .toLowerCase()
@@ -178,7 +198,11 @@ export default function SuperAdminDashboard() {
   }, [schools, directorSchoolSearch]);
   const filteredEditDirectorSchools = useMemo(() => {
     const query = editDirectorSchoolSearch.trim().toLowerCase();
-    if (!query) return schools;
+    if (!query) {
+      // Show only first 3 schools when not searching
+      return schools.slice(0, 3);
+    }
+    // Show all matching schools when searching
     return schools.filter((s) =>
       `${s.name || ""} ${s.code || ""} ${s.address || ""}`
         .toLowerCase()
@@ -223,7 +247,7 @@ export default function SuperAdminDashboard() {
       const response = await apiPost("/platform/directors", payload);
       
       // Show credentials modal if credentials were returned
-      if (response.credentials) {
+      if (response?.credentials) {
         // Get school names for selected school IDs
         const selectedSchools = schools
           .filter(s => directorForm.schoolIds.includes(s.id))
@@ -494,6 +518,11 @@ export default function SuperAdminDashboard() {
                       No schools match your search.
                     </small>
                   )}
+                  {!editDirectorSchoolSearch && schools.length > 3 && (
+                    <small className="school-assignment-hint">
+                      Showing {Math.min(3, schools.length)} of {schools.length} schools. Use search to find more.
+                    </small>
+                  )}
                 </div>
               </div>
               <button className="superadmin-icon-button">
@@ -556,67 +585,31 @@ export default function SuperAdminDashboard() {
   );
   
   const pageTitle = NAV.find((x) => x.path === currentPath)?.label || "Overview";
+  
+  // Prepare navigation items for RoleSidebar
+  const navItems = NAV.map(item => ({
+    ...item,
+    badge: item.id === "schools" ? schools.length : undefined,
+  }));
 
   return (
     <div className="platform-shell superadmin-role-shell">
-      <aside className={`platform-sidebar ${mobileNav ? "is-open" : ""}`}>
-        <div className="platform-brand">
-          <div className="platform-brand-icon">
-            <ShieldCheck />
-          </div>
-          <div>
-            <strong>SchoolERP</strong>
-            <small>Super Admin Portal</small>
-          </div>
-          <button
-            className="platform-close-nav"
-            onClick={() => setMobileNav(false)}
-          >
-            <X />
-          </button>
-        </div>
-        <div className="platform-nav-label">MAIN NAVIGATION</div>
-        <nav>
-          {NAV.map((item, index) => (
-            <React.Fragment key={item.id}>
-              {(index === 0 || NAV[index - 1].group !== item.group) && (
-                <div className="platform-nav-group-label">{item.group}</div>
-              )}
-              <button
-                className={currentPath === item.path ? "active" : ""}
-                onClick={() => {
-                  navigate(item.path);
-                  setMobileNav(false);
-                }}
-              >
-                <item.icon size={18} />
-                <span>{item.label}</span>
-                {item.id === "schools" && <em>{schools.length}</em>}
-              </button>
-            </React.Fragment>
-          ))}
-        </nav>
-        <div className="platform-sidebar-bottom">
-          <div className="platform-user">
-            <div className="platform-user-avatar">
-              {(user.firstName || "S").slice(0, 1)}
-            </div>
-            <div>
-              <strong>{user.firstName || "Super Admin"}</strong>
-              <small>Super Administrator</small>
-            </div>
-          </div>
-          <button
-            className="platform-signout"
-            onClick={() => {
-              clearApiSession();
-              location.reload();
-            }}
-          >
-            <LogOut size={17} /> Sign out
-          </button>
-        </div>
-      </aside>
+      <RoleSidebar
+        brandTitle="SchoolERP"
+        brandSubtitle="Super Admin Portal"
+        brandIcon={ShieldCheck}
+        navLabel="MAIN NAVIGATION"
+        navItems={navItems}
+        currentPage={currentPath.split('/').pop() || 'dashboard'}
+        onNavigate={(pageId) => {
+          const item = NAV.find(n => n.id === pageId);
+          if (item) navigate(item.path);
+        }}
+        mobileNav={mobileNav}
+        setMobileNav={setMobileNav}
+        user={user}
+        userRole="Super Administrator"
+      />
       {mobileNav && (
         <button
           className="platform-nav-scrim"
@@ -684,94 +677,96 @@ export default function SuperAdminDashboard() {
                   </p>
                 </div>
               </section>
-              <section className="superadmin-overview superadmin-kpis">
-                <article>
-                  <Building2 />
-                  <span>Schools</span>
-                  <strong>{schools.length}</strong>
-                  <small>Registered institutions</small>
-                </article>
-                <article>
-                  <UserRound />
-                  <span>Directors</span>
-                  <strong>{directors.length}</strong>
-                  <small>Platform accounts</small>
-                </article>
-                <article>
-                  <GraduationCap />
-                  <span>Total students</span>
-                  <strong>{totals.students.toLocaleString("en-IN")}</strong>
-                  <small>Across all schools</small>
-                </article>
-                <article>
-                  <CircleDollarSign />
-                  <span>Fees collected</span>
-                  <strong>{money(totals.collected)}</strong>
-                  <small>Recorded as paid</small>
-                </article>
-              </section>
-              <div className="platform-overview-grid">
-                <section className="superadmin-panel">
-                  <div className="superadmin-section-title">
-                    <div>
-                      <h2>
-                        <Building2 size={19} /> School network
-                      </h2>
-                      <p>High-level portfolio summary</p>
-                    </div>
-                    <button onClick={() => navigate("/superadmin/schools")}>View all</button>
-                  </div>
-                  {schools.slice(0, 4).map((s) => (
-                    <div className="platform-compact-row" key={s.id}>
-                      <div className="network-school-mark">
-                        <School size={18} />
+              
+              {loading && !dashboardStats ? (
+                <div className="superadmin-empty">Loading dashboard...</div>
+              ) : dashboardStats ? (
+                    <>
+                      <section className="superadmin-overview superadmin-kpis">
+                        <article>
+                          <Building2 />
+                          <span>Schools</span>
+                          <strong>{dashboardStats.overview.totalSchools}</strong>
+                          <small>Registered institutions</small>
+                        </article>
+                        <article>
+                          <UserRound />
+                          <span>Directors</span>
+                          <strong>{dashboardStats.overview.totalDirectors}</strong>
+                          <small>Platform accounts</small>
+                        </article>
+                        <article>
+                          <GraduationCap />
+                          <span>Total students</span>
+                          <strong>{dashboardStats.overview.totalStudents.toLocaleString("en-IN")}</strong>
+                          <small>Across all schools</small>
+                        </article>
+                        <article>
+                          <CircleDollarSign />
+                          <span>Fees collected</span>
+                          <strong>{money(dashboardStats.revenue.collected)}</strong>
+                          <small>Recorded as paid</small>
+                        </article>
+                      </section>
+                      <div className="platform-overview-grid">
+                        <section className="superadmin-panel">
+                          <div className="superadmin-section-title">
+                            <div>
+                              <h2>
+                                <Building2 size={19} /> Top Schools
+                              </h2>
+                              <p>Schools with highest enrollment</p>
+                            </div>
+                            <button onClick={() => navigate("/superadmin/schools")}>View all</button>
+                          </div>
+                          {dashboardStats.topSchools && dashboardStats.topSchools.length > 0 ? (
+                            dashboardStats.topSchools.map((s) => (
+                              <div className="platform-compact-row" key={s.id}>
+                                <div className="network-school-mark">
+                                  <School size={18} />
+                                </div>
+                                <div>
+                                  <strong>{s.name}</strong>
+                                  <small>{s.code}</small>
+                                </div>
+                                <b>{s.userCount} users</b>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="superadmin-empty">No schools registered.</div>
+                          )}
+                        </section>
+                        <section className="superadmin-panel">
+                          <div className="superadmin-section-title">
+                            <div>
+                              <h2>
+                                <Users size={19} /> Recent Schools
+                              </h2>
+                              <p>Recently created schools</p>
+                            </div>
+                            <button onClick={() => navigate("/superadmin/directors")}>Manage Directors</button>
+                          </div>
+                          {dashboardStats.recentSchools && dashboardStats.recentSchools.length > 0 ? (
+                            dashboardStats.recentSchools.map((s) => (
+                              <div className="platform-compact-row" key={s.id}>
+                                <div className="network-school-mark">
+                                  <School size={18} />
+                                </div>
+                                <div>
+                                  <strong>{s.name}</strong>
+                                  <small>{s.code} · {new Date(s.createdAt).toLocaleDateString()}</small>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="superadmin-empty">No schools created yet.</div>
+                          )}
+                        </section>
                       </div>
-                      <div>
-                        <strong>{s.name}</strong>
-                        <small>
-                          {s.code} ·{" "}
-                          {s.directors?.[0]
-                            ? `${s.directors[0].firstName} ${s.directors[0].lastName}`
-                            : "No Director"}
-                        </small>
-                      </div>
-                      <b>{s.studentCount || 0} students</b>
-                    </div>
-                  ))}
-                  {!schools.length && (
-                    <div className="superadmin-empty">No schools registered.</div>
+                    </>
+                  ) : (
+                    <div className="superadmin-empty">No dashboard data available. Try refreshing.</div>
                   )}
-                </section>
-                <section className="superadmin-panel">
-                  <div className="superadmin-section-title">
-                    <div>
-                      <h2>
-                        <Users size={19} /> Director summary
-                      </h2>
-                      <p>People managing your school network</p>
-                    </div>
-                    <button onClick={() => navigate("/superadmin/directors")}>Manage</button>
-                  </div>
-                  {directors.slice(0, 4).map((d) => (
-                    <div className="platform-compact-row" key={d.id}>
-                      <div className="director-avatar">
-                        {d.firstName?.[0]}
-                        {d.lastName?.[0]}
-                      </div>
-                      <div>
-                        <strong>
-                          {d.firstName} {d.lastName}
-                        </strong>
-                        <small>@{d.username}</small>
-                      </div>
-                      <b>{d.ownedSchools?.length || 0} schools</b>
-                    </div>
-                  ))}
-                  {!directors.length && (
-                    <div className="superadmin-empty">No Directors created.</div>
-                  )}
-                </section>
-              </div>
             </>
           } />
           
@@ -1003,6 +998,11 @@ export default function SuperAdminDashboard() {
                         {filteredDirectorSchools.length === 0 && (
                           <small className="school-assignment-empty">
                             No schools match your search.
+                          </small>
+                        )}
+                        {!directorSchoolSearch && schools.length > 3 && (
+                          <small className="school-assignment-hint">
+                            Showing {Math.min(3, schools.length)} of {schools.length} schools. Use search to find more.
                           </small>
                         )}
                       </div>

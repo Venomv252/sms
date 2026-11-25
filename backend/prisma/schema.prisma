@@ -350,6 +350,8 @@ model FeePayment {
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  @@index([status])
+  @@index([studentId, status])
   @@map("fee_payments")
 }
 

@@ -4,6 +4,7 @@ import prisma from "./config/prisma.js";
 import config from "./config/config.js";
 import { shutdownLoginRateLimiter } from "./middleware/loginRateLimit.js";
 import { initializeWebSocket } from "./services/websocket.js";
+import { startDatabaseWarmup } from "./keepDatabaseWarm.js";
 
 const server = app.listen(config.port, () => {
   console.log(`School ERP API running at http://localhost:${config.port}`);
@@ -12,6 +13,9 @@ const server = app.listen(config.port, () => {
 
 // Initialize WebSocket server
 initializeWebSocket(server);
+
+// Keep database warm (prevents Neon free tier cold starts)
+startDatabaseWarmup();
 
 let shuttingDown = false;
 async function shutdown(signal, exitCode = 0) {

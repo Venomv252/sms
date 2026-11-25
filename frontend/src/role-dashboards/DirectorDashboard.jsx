@@ -7,7 +7,6 @@ import {
   Building2,
   GraduationCap,
   LayoutDashboard,
-  LogOut,
   Menu,
   Pencil,
   RefreshCw,
@@ -22,6 +21,7 @@ import {
   apiDelete,
   clearApiSession,
 } from "../api.js";
+import RoleSidebar from "../components/RoleSidebar.jsx";
 import SchoolWorkspace from "./SchoolWorkspace.jsx";
 import "./director.css";
 import "./admin.css";
@@ -69,7 +69,8 @@ function DirectorDashboardMain() {
     setError("");
 
     try {
-      const data = await apiGet("/platform/director/overview");
+      // Use optimized dashboard stats endpoint
+      const data = await apiGet("/platform/director/dashboard/stats");
       setOverview(data);
       setDataCache({ data, timestamp: Date.now() });
     } catch (e) {
@@ -86,16 +87,12 @@ function DirectorDashboardMain() {
   const schools = overview?.schools || [];
 
   const totals = useMemo(
-    () =>
-      schools.reduce(
-        (a, s) => ({
-          students: a.students + Number(s.students || 0),
-          staff: a.staff + Number(s.staffCount || 0),
-          notices: a.notices + Number(s.activeNotices || 0),
-        }),
-        { students: 0, staff: 0, notices: 0 },
-      ),
-    [schools],
+    () => ({
+      students: overview?.overview?.totalStudents || 0,
+      staff: overview?.overview?.totalStaff || 0,
+      teachers: overview?.overview?.totalTeachers || 0,
+    }),
+    [overview],
   );
 
   const saveSchool = async (e) => {
@@ -139,75 +136,32 @@ function DirectorDashboardMain() {
   };
 
   const pageTitle = NAV.find((n) => n.path === `/director/${page}`)?.label || "Overview";
+  
+  // Prepare navigation items for RoleSidebar
+  const navItems = NAV.map(item => ({
+    ...item,
+    badge: item.id === "schools" ? schools.length : undefined,
+  }));
 
   return (
     <div className="platform-shell director-shell director-role-shell">
-      <aside className={`platform-sidebar ${mobileNav ? "is-open" : ""}`}>
-        <div className="platform-brand">
-          <div className="platform-brand-icon">
-            <Building2 />
-          </div>
-
-          <div>
-            <strong>Greenwood High</strong>
-            <small>School ERP Portal</small>
-          </div>
-
-          <button
-            className="platform-close-nav"
-            onClick={() => setMobileNav(false)}
-          >
-            <X />
-          </button>
-        </div>
-
-        <div className="platform-nav-label">MY ORGANISATION</div>
-
-        <nav>
-          {NAV.map((n, index) => (
-            <React.Fragment key={n.id}>
-              {(index === 0 || NAV[index - 1].group !== n.group) && (
-                <div className="platform-nav-group-label">{n.group}</div>
-              )}
-              <button
-                className={page === n.id ? "active" : ""}
-                onClick={() => {
-                  setPage(n.id);
-                  navigate(n.path);
-                  setMobileNav(false);
-                }}
-              >
-                <n.icon size={18} />
-                <span>{n.label}</span>
-                {n.id === "schools" && <em>{schools.length}</em>}
-              </button>
-            </React.Fragment>
-          ))}
-        </nav>
-
-        <div className="platform-sidebar-bottom">
-          <div className="platform-user">
-            <div className="platform-user-avatar">
-              {(user.firstName || "D").slice(0, 1)}
-            </div>
-
-            <div>
-              <strong>{user.firstName || "Director"}</strong>
-              <small>Director</small>
-            </div>
-          </div>
-
-          <button
-            className="platform-signout"
-            onClick={() => {
-              clearApiSession();
-              location.reload();
-            }}
-          >
-            <LogOut size={17} /> Sign out
-          </button>
-        </div>
-      </aside>
+      <RoleSidebar
+        brandTitle="Greenwood High"
+        brandSubtitle="School ERP Portal"
+        brandIcon={Building2}
+        navLabel="MY ORGANISATION"
+        navItems={navItems}
+        currentPage={page}
+        onNavigate={(pageId) => {
+          setPage(pageId);
+          const item = NAV.find(n => n.id === pageId);
+          if (item) navigate(item.path);
+        }}
+        mobileNav={mobileNav}
+        setMobileNav={setMobileNav}
+        user={user}
+        userRole="Director"
+      />
 
       {mobileNav && (
         <button
@@ -300,10 +254,10 @@ function DirectorDashboardMain() {
               </article>
 
               <article>
-                <Activity />
-                <span>Active notices</span>
-                <strong>{totals.notices.toLocaleString("en-IN")}</strong>
-                <small>Across your schools</small>
+                <Building2 />
+                <span>Schools</span>
+                <strong>{overview?.overview?.totalSchools || 0}</strong>
+                <small>Under your management</small>
               </article>
             </section>
 
@@ -339,20 +293,18 @@ function DirectorDashboardMain() {
                       <div className="network-metrics">
                         <div>
                           <span>Students</span>
-                          <strong>{s.students || 0}</strong>
+                          <strong>{s.studentCount || 0}</strong>
                         </div>
 
                         <div>
-                          <span>Teachers</span>
-                          <strong>{s.teachers || 0}</strong>
+                          <span>Users</span>
+                          <strong>{s.userCount || 0}</strong>
                         </div>
 
                         <div>
-                          <span>Attendance</span>
+                          <span>Created</span>
                           <strong>
-                            {s.attendanceRate == null
-                              ? "—"
-                              : `${s.attendanceRate}%`}
+                            {new Date(s.createdAt).toLocaleDateString()}
                           </strong>
                         </div>
                       </div>
@@ -669,7 +621,7 @@ function SchoolWorkspaceRouter({ schools }) {
           className="director-logout"
           onClick={() => {
             clearApiSession();
-            location.reload();
+            navigate("/login");
           }}
         >
           <LogOut size={16} /> Sign out

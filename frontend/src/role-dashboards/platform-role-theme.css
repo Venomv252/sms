@@ -408,3 +408,93 @@
 @media (max-width: 680px) {
   .platform-sidebar { background:var(--rp-sidebar) !important; }
 }
+
+/* Platform User Mini - Top Header User Info */
+.platform-user-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: var(--rp-panel-2);
+  border: 1px solid var(--rp-border);
+  border-radius: 8px;
+}
+
+.platform-user-mini > span {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  max-width: 32px;
+  max-height: 32px;
+  border-radius: 50%;
+  background: var(--rp-green);
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  flex-grow: 0;
+  aspect-ratio: 1 / 1;
+}
+
+.platform-user-mini > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.platform-user-mini strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rp-text);
+  line-height: 1.2;
+}
+
+.platform-user-mini small {
+  font-size: 11px;
+  color: var(--rp-muted);
+  line-height: 1.2;
+}
+
+@media (max-width: 768px) {
+  .platform-user-mini > div {
+    display: none;
+  }
+  
+  .platform-user-mini {
+    padding: 6px;
+  }
+}
+
+
+/* Print Styles for Invoice */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  #invoice-content,
+  #invoice-content * {
+    visibility: visible;
+  }
+  
+  #invoice-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  .superadmin-modal-backdrop,
+  .superadmin-modal-heading {
+    display: none !important;
+  }
+  
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+}

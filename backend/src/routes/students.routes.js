@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "../config/prisma.js";
-import { auth, allowRoles } from "../middleware/auth.js";
+import { auth, allowRoles, allowRoleGroup } from "../middleware/auth.js";
 import { accessibleStudentWhere } from "../middleware/schoolScope.js";
 
 const router = Router();
@@ -29,7 +29,7 @@ router.get("/children", allowRoles("PARENT"), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.get("/", allowRoles("SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "MANAGEMENT", "TEACHER", "ACCOUNTANT"), async (req, res, next) => {
+router.get("/", allowRoleGroup("STAFF"), async (req, res, next) => {
   try {
     const studentWhere = await accessibleStudentWhere(req);
     const students = await prisma.student.findMany({

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { UserCheck, Plus, X, Save } from "lucide-react";
-import { apiGet, apiPost } from "../../../api.js";
+import { UserCheck, Plus, X, Save, Pencil, Trash2 } from "lucide-react";
+import { apiGet, apiPost, apiPatch, apiDelete } from "../../../api.js";
 import CredentialDisplay from "../../../components/CredentialDisplay.jsx";
+import SuperAdminDeleteConfirmation from "../../../components/SuperAdminDeleteConfirmation.jsx";
+import "./accountants.css";
 
 export default function Accountants({ setError, setMessage, schoolName }) {
   const [accountants, setAccountants] = useState([]);
@@ -9,6 +11,9 @@ export default function Accountants({ setError, setMessage, schoolName }) {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [editingAccountant, setEditingAccountant] = useState(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", employeeId: "", phoneNumber: "",
     username: "",
@@ -83,6 +88,59 @@ export default function Accountants({ setError, setMessage, schoolName }) {
     }
   };
 
+  const handleEdit = (accountant) => {
+    setEditingAccountant({
+      id: accountant.id,
+      firstName: accountant.firstName || "",
+      lastName: accountant.lastName || "",
+      email: accountant.email || "",
+      employeeId: accountant.employeeId || "",
+      phoneNumber: accountant.phoneNumber || "",
+      approvalLimit: accountant.approvalLimit || "",
+    });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    
+    try {
+      await apiPatch(`/principal/accountants/${editingAccountant.id}`, {
+        firstName: editingAccountant.firstName,
+        lastName: editingAccountant.lastName,
+        email: editingAccountant.email,
+        employeeId: editingAccountant.employeeId,
+        phoneNumber: editingAccountant.phoneNumber,
+        approvalLimit: editingAccountant.approvalLimit,
+      });
+      
+      setMessage("Accountant updated successfully");
+      setEditingAccountant(null);
+      await loadAccountants();
+    } catch (err) {
+      setError(err.message || "Unable to update accountant");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setError("");
+    
+    try {
+      await apiDelete(`/principal/accountants/${deleteConfirmation.id}`);
+      setMessage(`Accountant "${deleteConfirmation.name}" deleted successfully`);
+      setDeleteConfirmation(null);
+      await loadAccountants();
+    } catch (err) {
+      setError(err.message || "Unable to delete accountant");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <>
       <section className="superadmin-panel">
@@ -104,15 +162,37 @@ export default function Accountants({ setError, setMessage, schoolName }) {
               <span>Email</span>
               <span>Phone</span>
               <span>Status</span>
+              <span>Actions</span>
             </div>
 
             {accountants.map((acc) => (
               <div className="platform-stat-row" key={acc.id}>
                 <span><strong>{acc.name}</strong></span>
-                <b>{acc.employeeId}</b>
+                <span>{acc.employeeId}</span>
                 <span><small>{acc.email}</small></span>
                 <span><small>{acc.phoneNumber || "—"}</small></span>
-                <b className={acc.isActive ? "text-success" : "text-muted"}>{acc.isActive ? "Active" : "Inactive"}</b>
+                <span className={acc.isActive ? "text-success" : "text-muted"}>{acc.isActive ? "Active" : "Inactive"}</span>
+                <span style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start' }}>
+                  <button 
+                    className="superadmin-icon-button" 
+                    onClick={() => handleEdit(acc)}
+                    title="Edit accountant"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <button 
+                    className="superadmin-icon-button danger" 
+                    onClick={() => setDeleteConfirmation({ 
+                      id: acc.id, 
+                      name: acc.name,
+                      type: 'accountant',
+                      details: `Employee ID: ${acc.employeeId}`
+                    })}
+                    title="Delete accountant"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </span>
               </div>
             ))}
           </div>
@@ -183,6 +263,40 @@ export default function Accountants({ setError, setMessage, schoolName }) {
           email={createdCredentials.email}
           schools={createdCredentials.schools}
           onClose={() => setCreatedCredentials(null)}
+        />
+      )}
+
+      {editingAccountant && (
+        <div className="superadmin-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setEditingAccountant(null); }}>
+          <form className="superadmin-modal" onSubmit={handleUpdate}>
+            <div className="superadmin-modal-heading">
+              <h2>Edit Accountant</h2>
+              <button type="button" className="superadmin-icon-button" onClick={() => setEditingAccountant(null)}><X size={18} /></button>
+            </div>
+
+            <div className="principal-form-grid">
+              <label>First Name *<input required value={editingAccountant.firstName} onChange={(e) => setEditingAccountant({ ...editingAccountant, firstName: e.target.value })} /></label>
+              <label>Last Name *<input required value={editingAccountant.lastName} onChange={(e) => setEditingAccountant({ ...editingAccountant, lastName: e.target.value })} /></label>
+              <label>Email *<input required type="email" value={editingAccountant.email} onChange={(e) => setEditingAccountant({ ...editingAccountant, email: e.target.value })} /></label>
+              <label>Employee ID *<input required value={editingAccountant.employeeId} onChange={(e) => setEditingAccountant({ ...editingAccountant, employeeId: e.target.value })} /></label>
+              <label>Phone Number<input value={editingAccountant.phoneNumber} onChange={(e) => setEditingAccountant({ ...editingAccountant, phoneNumber: e.target.value })} /></label>
+              <label>Approval Limit (₹)<input type="number" value={editingAccountant.approvalLimit} onChange={(e) => setEditingAccountant({ ...editingAccountant, approvalLimit: e.target.value })} /></label>
+            </div>
+
+            <button className="director-submit" disabled={saving}><Save size={16} /> {saving ? "Updating..." : "Update Accountant"}</button>
+          </form>
+        </div>
+      )}
+
+      {deleteConfirmation && (
+        <SuperAdminDeleteConfirmation
+          type="accountant"
+          item={{
+            name: deleteConfirmation.name
+          }}
+          onCancel={() => setDeleteConfirmation(null)}
+          onConfirm={handleDelete}
+          isDeleting={deleting}
         />
       )}
     </>

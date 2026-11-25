@@ -14,7 +14,6 @@ import {
   FileText,
   GraduationCap,
   LayoutDashboard,
-  LogOut,
   Menu,
   MessageSquare,
   Navigation,
@@ -31,6 +30,7 @@ import {
   apiGet,
   clearApiSession,
 } from "../api.js";
+import RoleSidebar from "../components/RoleSidebar.jsx";
 import "../role-dashboards/admin.css";
 import "../role-dashboards/platform-role-theme.css";
 import "../role-dashboards/director-theme.css";
@@ -79,6 +79,9 @@ export default function PrincipalDashboard() {
   const [message, setMessage] = useState("");
 
   const pageTitle = NAV.find((n) => n.id === page)?.label || "Dashboard";
+  
+  // Prepare navigation items for RoleSidebar
+  const navItems = NAV;
 
   const renderPage = () => {
     switch (page) {
@@ -117,75 +120,23 @@ export default function PrincipalDashboard() {
 
   return (
     <div className="platform-shell director-shell principal-role-shell">
-      <aside className={`platform-sidebar ${mobileNav ? "is-open" : ""}`}>
-        <div className="platform-brand">
-          <div className="platform-brand-icon">
-            <School />
-          </div>
-
-          <div>
-            <strong>{user.school?.name || "School ERP"}</strong>
-            <small>Principal Portal</small>
-          </div>
-
-          <button
-            className="platform-close-nav"
-            onClick={() => setMobileNav(false)}
-          >
-            <X />
-          </button>
-        </div>
-
-        <div className="platform-nav-label">SCHOOL MANAGEMENT</div>
-
-        <nav>
-          {NAV.map((n, index) => (
-            <React.Fragment key={n.id}>
-              {(index === 0 || NAV[index - 1].group !== n.group) && (
-                <div className="platform-nav-group-label">{n.group}</div>
-              )}
-              <button
-                className={page === n.id ? "active" : ""}
-                onClick={() => {
-                  setPage(n.id);
-                  setMobileNav(false);
-                  setError("");
-                  setMessage("");
-                }}
-              >
-                <n.icon size={18} />
-                <span>{n.label}</span>
-                {n.badge && (
-                  <span className="principal-nav-badge">{n.badge}</span>
-                )}
-              </button>
-            </React.Fragment>
-          ))}
-        </nav>
-
-        <div className="platform-sidebar-bottom">
-          <div className="platform-user">
-            <div className="platform-user-avatar">
-              {(user.firstName || "P").slice(0, 1)}
-            </div>
-
-            <div>
-              <strong>{user.firstName || "Principal"}</strong>
-              <small>Principal</small>
-            </div>
-          </div>
-
-          <button
-            className="platform-signout"
-            onClick={() => {
-              clearApiSession();
-              location.reload();
-            }}
-          >
-            <LogOut size={17} /> Sign out
-          </button>
-        </div>
-      </aside>
+      <RoleSidebar
+        brandTitle={user.school?.name || "School ERP"}
+        brandSubtitle="Principal Portal"
+        brandIcon={School}
+        navLabel="SCHOOL MANAGEMENT"
+        navItems={navItems}
+        currentPage={page}
+        onNavigate={(pageId) => {
+          setPage(pageId);
+          setError("");
+          setMessage("");
+        }}
+        mobileNav={mobileNav}
+        setMobileNav={setMobileNav}
+        user={user}
+        userRole="Principal"
+      />
 
       {mobileNav && (
         <button

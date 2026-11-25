@@ -66,3 +66,30 @@ export function allowRoles(...roles) {
     return next();
   };
 }
+
+// Role groups for common access patterns
+export const ROLE_GROUPS = {
+  // Administrative roles (can manage school operations)
+  ADMIN: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "MANAGEMENT"],
+  
+  // Staff roles (can view/manage students and academics)
+  STAFF: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "MANAGEMENT", "TEACHER"],
+  
+  // Financial roles (can access fee and payment data)
+  FINANCIAL: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "ACCOUNTANT"],
+  
+  // All school users (authenticated access)
+  ALL_USERS: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "MANAGEMENT", "TEACHER", "ACCOUNTANT", "STUDENT", "PARENT", "DRIVER"],
+  
+  // Student-related access (can view student data)
+  STUDENT_ACCESS: ["SUPER_ADMIN", "DIRECTOR", "PRINCIPAL", "MANAGEMENT", "TEACHER", "ACCOUNTANT", "STUDENT", "PARENT"],
+};
+
+// Helper function to allow role groups
+export function allowRoleGroup(groupName) {
+  const roles = ROLE_GROUPS[groupName];
+  if (!roles) {
+    throw new Error(`Unknown role group: ${groupName}`);
+  }
+  return allowRoles(...roles);
+}
