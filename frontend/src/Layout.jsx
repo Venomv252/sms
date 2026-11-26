@@ -12,28 +12,28 @@ import { subjects, allNotices } from "./data.js";
 
 /* ─── Route map ─────────────────────────────────────────────────────────── */
 export const ROUTES = {
-  "Dashboard": "/",
-  "Schedule & Classes": "/schedule",
-  "School Timing": "/school-timing",
-  "Timetable": "/timetable",
-  "Subjects": "/subjects",
-  "Syllabus": "/syllabus",
-  "Notes": "/notes",
-  "Homework & Assignments": "/homework",
-  "Doubt Forum": "/doubt-forum",
-  "Attendance": "/attendance",
-  "Performance": "/performance",
-  "Exam Schedule": "/exam-schedule",
-  "Results & Report Cards": "/results",
-  "Certificates": "/certificates",
-  "Certificates & Achievements": "/certificates",
-  "Notice Board & Circulars": "/notices",
-  "Announcements": "/announcements",
-  "Class Announcements": "/class-announcements",
-  "Sports & Activities": "/sports",
-  "Sports & Extra Activities": "/sports",
-  "Fee Management": "/fee-management",
-  "Transport & Commute": "/transport",
+  "Dashboard": "/student/dashboard",
+  "Schedule & Classes": "/student/dashboard/schedule",
+  "School Timing": "/student/dashboard/school-timing",
+  "Timetable": "/student/dashboard/timetable",
+  "Subjects": "/student/dashboard/subjects",
+  "Syllabus": "/student/dashboard/syllabus",
+  "Notes": "/student/dashboard/notes",
+  "Homework & Assignments": "/student/dashboard/homework",
+  "Doubt Forum": "/student/dashboard/doubt-forum",
+  "Attendance": "/student/dashboard/attendance",
+  "Performance": "/student/dashboard/performance",
+  "Exam Schedule": "/student/dashboard/exam-schedule",
+  "Results & Report Cards": "/student/dashboard/results",
+  "Certificates": "/student/dashboard/certificates",
+  "Certificates & Achievements": "/student/dashboard/certificates",
+  "Notice Board & Circulars": "/student/dashboard/notices",
+  "Announcements": "/student/dashboard/announcements",
+  "Class Announcements": "/student/dashboard/class-announcements",
+  "Sports & Activities": "/student/dashboard/sports",
+  "Sports & Extra Activities": "/student/dashboard/sports",
+  "Fee Management": "/student/dashboard/fee-management",
+  "Transport & Commute": "/student/dashboard/transport",
 };
 
 const navSections = [
@@ -225,7 +225,7 @@ export default function Layout({ children }) {
 
       {/* Mobile Bottom Nav */}
       <nav className="mobile-bottom-nav">
-        {[[LayoutDashboard,"Dashboard","/"],[CalendarDays,"Schedule","/schedule"],[ClipboardList,"Homework","/homework"],[TrendingUp,"Performance","/performance"],[MoreHorizontal,"More",null]].map(([Icon,label,route]) => (
+        {[[LayoutDashboard,"Dashboard","/student/dashboard"],[CalendarDays,"Schedule","/student/dashboard/schedule"],[ClipboardList,"Homework","/student/dashboard/homework"],[TrendingUp,"Performance","/student/dashboard/performance"],[MoreHorizontal,"More",null]].map(([Icon,label,route]) => (
           <div key={label}
             className={location.pathname === route ? "active" : ""}
             style={{cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3}}
@@ -242,10 +242,10 @@ export default function Layout({ children }) {
           <input autoFocus className="modal-input" placeholder="Search subjects, homework, notices..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}/>
           {searchQuery && (
             <div className="search-results">
-              {[...subjects.map(s => ({type:"Subject",label:s.name,route:"/subjects"})),
-                ...allNotices.map(n => ({type:"Notice",label:n.title,route:"/notices"})),
-                {type:"Page",label:"Attendance",route:"/attendance"},{type:"Page",label:"Timetable",route:"/timetable"},
-                {type:"Page",label:"Homework & Assignments",route:"/homework"},{type:"Page",label:"Exam Schedule",route:"/exam-schedule"},
+              {[...subjects.map(s => ({type:"Subject",label:s.name,route:"/student/dashboard/subjects"})),
+                ...allNotices.map(n => ({type:"Notice",label:n.title,route:"/student/dashboard/notices"})),
+                {type:"Page",label:"Attendance",route:"/student/dashboard/attendance"},{type:"Page",label:"Timetable",route:"/student/dashboard/timetable"},
+                {type:"Page",label:"Homework & Assignments",route:"/student/dashboard/homework"},{type:"Page",label:"Exam Schedule",route:"/student/dashboard/exam-schedule"},
               ].filter(r => r.label.toLowerCase().includes(searchQuery.toLowerCase())).slice(0,8).map((r,i) => (
                 <div className="search-result-item" key={i} onClick={() => { navigate(r.route); closeModal(); setSearchQuery(""); }}>
                   <span className="result-type">{r.type}</span><span>{r.label}</span>
@@ -260,7 +260,7 @@ export default function Layout({ children }) {
         <Modal title="Quick Action" onClose={closeModal}>
           <p className="modal-desc">Jump to a section or launch a task quickly.</p>
           <div className="quick-action-grid">
-            {[["Apply Leave","/attendance"],["Ask a Doubt","/doubt-forum"],["View Report Card","/results"],["Check Homework","/homework"],["View Timetable","/timetable"],["Exam Schedule","/exam-schedule"],["My Notes","/notes"],["Sports & Clubs","/sports"],["Fee Management","/fee-management"],["Bus Tracking","/transport"]].map(([a,route]) => (
+            {[["Apply Leave","/student/dashboard/attendance"],["Ask a Doubt","/student/dashboard/doubt-forum"],["View Report Card","/student/dashboard/results"],["Check Homework","/student/dashboard/homework"],["View Timetable","/student/dashboard/timetable"],["Exam Schedule","/student/dashboard/exam-schedule"],["My Notes","/student/dashboard/notes"],["Sports & Clubs","/student/dashboard/sports"],["Fee Management","/student/dashboard/fee-management"],["Bus Tracking","/student/dashboard/transport"]].map(([a,route]) => (
               <button key={a} className="qa-option" onClick={() => { navigate(route); closeModal(); showToast(`Opening ${a}...`); }}>{a}</button>
             ))}
           </div>

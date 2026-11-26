@@ -1,226 +1,369 @@
 import React, { useState } from "react";
-import BackendDataPanel from "../components/BackendDataPanel.jsx";
-import { Upload, Search, Filter, ChevronDown, Send, CheckCircle2, Clock, Archive, FileText, Code, Eye } from "lucide-react";
-import { homeworkList } from "../data.js";
+import { Upload, Search, FileText, CheckCircle2, Clock, AlertCircle, Calendar } from "lucide-react";
+import { useHomework, submitHomework, getHomeworkStats, calculateAverageScore, getHomeworkStatus, formatDueDate } from "../hooks/useHomework.js";
 import { Modal } from "../Layout.jsx";
 
-const statusColors = { due:"#d63333", submitted:"#087f5b", evaluated:"#1971c2", pending:"#e67700" };
-const statusBg = { due:"#fff0f0", submitted:"#dff9ef", evaluated:"#dde8ff", pending:"#fff4e0" };
-
 export default function Homework({ showToast }) {
-  const [activeTab, setActiveTab] = useState("All Assignments (33)");
-  const [selectedHW, setSelectedHW] = useState(null);
+  const { homework, loading, error, refetch } = useHomework();
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedHomework, setSelectedHomework] = useState(null);
   const [submitModal, setSubmitModal] = useState(null);
-  const [searchQ, setSearchQ] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("All Subjects");
-  const [clarificationModal, setClarificationModal] = useState(null);
-  const [clarText, setClarText] = useState("");
-
-  const tabs = ["All Assignments (33)","Pending","Submitted (3)","Evaluated (28)","Archived"];
-
-  const filtered = homeworkList.filter(h => {
-    const matchSearch = h.title.toLowerCase().includes(searchQ.toLowerCase()) || h.subject.toLowerCase().includes(searchQ.toLowerCase());
-    const matchSubject = subjectFilter === "All Subjects" || h.subject === subjectFilter;
-    return matchSearch && matchSubject;
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionForm, setSubmissionForm] = useState({
+    textAnswer: "",
+    fileUrl: ""
   });
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div style={{ padding: "60px 0", textAlign: "center", color: "#999" }}>
+          <div className="spinner" style={{ margin: "0 auto 16px" }}></div>
+          <p>Loading homework assignments...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-container">
+        <div style={{ padding: "60px 0", textAlign: "center" }}>
+          <AlertCircle size={48} style={{ color: "#e74c3c", marginBottom: "16px" }} />
+          <p>{error}</p>
+          <button className="green-button btn" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = getHomeworkStats(homework);
+  const avgScore = calculateAverageScore(homework);
+
+  // Filter homework
+  const filteredHomework = homework.filter((hw) => {
+    // Search filter
+    const matchesSearch = hw.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         hw.subject?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         hw.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+
+    // Status filter
+    if (filterStatus === "all") return true;
+    
+    const status = getHomeworkStatus(hw);
+    if (filterStatus === "pending") return status.status === "PENDING" || status.status === "DUE_SOON";
+    if (filterStatus === "submitted") return status.status === "SUBMITTED";
+    if (filterStatus === "evaluated") return status.status === "EVALUATED";
+    if (filterStatus === "overdue") return status.status === "OVERDUE";
+    
+    return true;
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const result = await submitHomework(submitModal.id, submissionForm);
+    
+    if (result.success) {
+      showToast("Homework submitted successfully!");
+      setSubmitModal(null);
+      setSubmissionForm({ textAnswer: "", fileUrl: "" });
+      refetch();
+    } else {
+      showToast(result.error || "Failed to submit homework", "error");
+    }
+    
+    setSubmitting(false);
+  };
 
   return (
     <div className="page-container">
-      <BackendDataPanel endpoint="/homework" title="Homework loaded from database" fields={[{ key: "title", label: "Assignment" }, { key: "subject.name", label: "Subject" }, { key: "dueDate", label: "Due date" }, { key: "totalMarks", label: "Total marks" }, { key: "submissions", label: "My submission" }]} />
-      {/* Breadcrumb */}
-      <div className="breadcrumb">Academic Year 2024–25 • Term II &nbsp;•&nbsp; Grade 10–B</div>
+      {/* Header */}
+      <div className="breadcrumb">Student Dashboard • Homework & Assignments</div>
 
-      {/* Page Header */}
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Homework & Assignments</h1>
-          <p className="page-subtitle">Review deadlines, upload coursework, track evaluation metrics, and request faculty guidance.</p>
+          <p className="page-subtitle">
+            Track your assignments, submit work, and view evaluation results
+          </p>
         </div>
         <div className="page-header-stats">
           <div className="hw-stat-card">
-            <div className="hw-stat-label">Submission<br/>Efficiency</div>
-            <div className="hw-stat-value green">98.2%</div>
+            <div className="hw-stat-label">Average<br/>Score</div>
+            <div className="hw-stat-value green">{avgScore}%</div>
           </div>
           <div className="hw-stat-card">
-            <div className="hw-stat-label">Weekly On-<br/>Time</div>
-            <div className="hw-stat-value">12/12</div>
+            <div className="hw-stat-label">Submitted</div>
+            <div className="hw-stat-value">{stats.submitted + stats.evaluated}/{stats.total}</div>
           </div>
         </div>
       </div>
 
-      {/* Metric Cards */}
+      {/* Stats Cards */}
       <div className="hw-metrics">
-        <div className="hw-metric attention">
-          <div className="hw-m-label">ATTENTION REQUIRED</div>
-          <div className="hw-m-value">02</div>
-          <div className="hw-m-sub red">● 1 due today (17:00)</div>
-          <div style={{fontSize:11,color:"#d63333",marginTop:6,cursor:"pointer"}} onClick={()=>navigate&&navigate("/homework")}>→</div>
+        <div className={`hw-metric ${stats.overdue > 0 ? "attention" : ""}`}>
+          <div className="hw-m-label">OVERDUE</div>
+          <div className="hw-m-value">{stats.overdue}</div>
+          <div className="hw-m-sub" style={{ color: stats.overdue > 0 ? "#c92a2a" : "#777" }}>
+            {stats.overdue > 0 ? "● Requires immediate attention" : "No overdue assignments"}
+          </div>
         </div>
+
+        <div className="hw-metric">
+          <div className="hw-m-label">PENDING</div>
+          <div className="hw-m-value">{stats.pending}</div>
+          <div className="hw-m-sub">Not yet submitted</div>
+        </div>
+
         <div className="hw-metric">
           <div className="hw-m-label">UNDER REVIEW</div>
-          <div className="hw-m-value">03</div>
-          <div className="hw-m-sub">Faculty turnaround ~24h</div>
-          <div style={{fontSize:11,color:"var(--green)",marginTop:6}}>Track</div>
+          <div className="hw-m-value">{stats.submitted}</div>
+          <div className="hw-m-sub">Awaiting evaluation</div>
         </div>
+
         <div className="hw-metric">
-          <div className="hw-m-label">EVALUATED WORKS</div>
-          <div className="hw-m-value">28<small style={{fontSize:14,fontWeight:400}}> Avg 94.8%</small></div>
-          <div className="hw-m-sub">24 Distinction (A1) &nbsp;<span className="link" onClick={() => setActiveTab("Evaluated (28)")}>Archive</span></div>
-        </div>
-        <div className="hw-metric lock">
-          <div className="hw-m-label">SUBMISSION LOCK</div>
-          <div className="hw-m-value">01</div>
-          <div className="hw-m-sub red">Mid-Term Lab Pract.</div>
-          <div style={{fontSize:11,color:"#d63333",marginTop:4}}>Fri 23:59</div>
+          <div className="hw-m-label">EVALUATED</div>
+          <div className="hw-m-value">{stats.evaluated}</div>
+          <div className="hw-m-sub">Graded assignments</div>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Filters */}
       <div className="hw-tabs">
-        {tabs.map(t => <button key={t} className={`hw-tab${activeTab===t?" active":""}`} onClick={() => setActiveTab(t)}>{t}{t==="Pending"&&<span className="tab-badge">●</span>}</button>)}
+        <button
+          className={`hw-tab ${filterStatus === "all" ? "active" : ""}`}
+          onClick={() => setFilterStatus("all")}
+        >
+          All ({stats.total})
+        </button>
+        <button
+          className={`hw-tab ${filterStatus === "pending" ? "active" : ""}`}
+          onClick={() => setFilterStatus("pending")}
+        >
+          Pending ({stats.pending})
+          {stats.overdue > 0 && <span className="tab-badge">●</span>}
+        </button>
+        <button
+          className={`hw-tab ${filterStatus === "submitted" ? "active" : ""}`}
+          onClick={() => setFilterStatus("submitted")}
+        >
+          Submitted ({stats.submitted})
+        </button>
+        <button
+          className={`hw-tab ${filterStatus === "evaluated" ? "active" : ""}`}
+          onClick={() => setFilterStatus("evaluated")}
+        >
+          Evaluated ({stats.evaluated})
+        </button>
       </div>
 
-      <div className="hw-layout">
-        {/* Left: List */}
-        <div className="hw-list-col">
-          {/* Search & Filter */}
-          <div className="hw-search-row">
-            <div className="hw-search-box"><Search size={15}/><input placeholder="Search by title, topic, or instructor..." value={searchQ} onChange={e=>setSearchQ(e.target.value)}/></div>
-            <select className="hw-select" value={subjectFilter} onChange={e=>setSubjectFilter(e.target.value)}>
-              <option>All Subjects</option>
-              {["Physics","Computer Science","Mathematics","English Literature","Chemistry"].map(s=><option key={s}>{s}</option>)}
-            </select>
-            <button className="hw-filter-btn"><Filter size={14}/>Sort: Due Date</button>
-          </div>
+      {/* Search */}
+      <div className="hw-search-row">
+        <div className="hw-search-box">
+          <Search size={15} />
+          <input
+            placeholder="Search by title, subject, or topic..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
 
-          {/* Assignment Cards */}
-          {filtered.map(hw => (
-            <div className={`hw-card${selectedHW?.id===hw.id?" hw-card-selected":""}`} key={hw.id} onClick={() => setSelectedHW(hw)}>
-              <div className="hw-card-top">
-                <span className="hw-due-tag" style={{background: hw.urgent?"#fff0f0":"#f0fff7", color: hw.urgent?"#d63333":"#087f5b"}}>
-                  {hw.status==="evaluated" ? `✓ Score: 20/20 • Grade A1 (Distinction)` : hw.status==="submitted" ? "✓ Submitted Yesterday • Awaiting Evaluation" : `⏰ Due ${hw.due}`}
-                </span>
-                <span className="hw-subject-tag" style={{background: hw.color+"22", color: hw.color, borderColor: hw.color+"44"}}>{hw.subject}</span>
-              </div>
-              <h3 className="hw-card-title">{hw.title}</h3>
-              <p className="hw-card-meta">Instructor: {hw.instructor}</p>
-              <ul className="hw-card-bullets">
-                <li>{hw.desc}</li>
-              </ul>
-              {hw.file && (
-                <div className="hw-card-files">
-                  <span className="hw-file"><FileText size={13}/>{hw.file}</span>
-                  {hw.questions && <span className="hw-questions-tag">{hw.questions}</span>}
-                </div>
-              )}
-              {hw.status==="evaluated" && (
-                <div className="hw-eval-remark">
-                  <div className="hw-eval-teacher">Mr. D'souza's Evaluation Remark</div>
-                  <p>"Exceptional thematic depth and structural coherence. Aarav demonstrated commanding synthesis of dramatic irony and lexical motifs in the soliloquy."</p>
-                  <div className="hw-eval-actions">
-                    <button className="hw-action-btn" onClick={e=>{e.stopPropagation();showToast("Added to Academic Portfolio!");}}>✓ Added to Academic Portfolio</button>
-                    <button className="hw-action-btn" onClick={e=>{e.stopPropagation();showToast("Opening graded rubric...");}}>View Graded Rubric</button>
-                    <button className="hw-action-btn" onClick={e=>{e.stopPropagation();showToast("Downloading annotated PDF...");}}>⬇ Annotated PDF</button>
-                  </div>
-                </div>
-              )}
-              {hw.status!=="evaluated" && hw.status!=="submitted" && (
-                <div className="hw-card-actions">
-                  <button className="hw-clarify-btn" onClick={e=>{e.stopPropagation();setClarificationModal(hw);}}>💬 Ask Clarification</button>
-                  <button className="hw-submit-btn" onClick={e=>{e.stopPropagation();setSubmitModal(hw);}}>⬆ Submit Work</button>
-                </div>
-              )}
-              {hw.status==="submitted" && (
-                <div className="hw-card-actions">
-                  <button className="hw-clarify-btn" onClick={e=>{e.stopPropagation();showToast("Opening submission...");}}>📄 View Submission</button>
-                  <button className="hw-clarify-btn" onClick={e=>{e.stopPropagation();showToast("Opening version history...");}}>🕓 Version History</button>
-                </div>
-              )}
+      {/* Homework List */}
+      <div className="hw-layout">
+        <div className="hw-list-col">
+          {filteredHomework.length === 0 ? (
+            <div style={{ padding: "60px 20px", textAlign: "center", color: "#999" }}>
+              <FileText size={48} style={{ opacity: 0.3, marginBottom: "16px" }} />
+              <p>{searchQuery ? "No homework found matching your search" : "No homework assignments"}</p>
             </div>
-          ))}
+          ) : (
+            filteredHomework.map((hw) => {
+              const statusInfo = getHomeworkStatus(hw);
+              const submission = hw.submissions?.[0];
+              const dueDate = new Date(hw.dueDate);
+
+              return (
+                <div
+                  key={hw.id}
+                  className={`hw-card ${selectedHomework?.id === hw.id ? "hw-card-selected" : ""}`}
+                  onClick={() => setSelectedHomework(hw)}
+                >
+                  <div className="hw-card-top">
+                    <span
+                      className="hw-due-tag"
+                      style={{ background: statusInfo.bg, color: statusInfo.color }}
+                    >
+                      {statusInfo.status === "EVALUATED" && submission ? (
+                        <>✓ Score: {submission.marksObtained}/{hw.totalMarks} ({((submission.marksObtained / hw.totalMarks) * 100).toFixed(0)}%)</>
+                      ) : statusInfo.status === "SUBMITTED" ? (
+                        <>✓ Submitted • Awaiting Evaluation</>
+                      ) : (
+                        <>⏰ {formatDueDate(hw.dueDate)}</>
+                      )}
+                    </span>
+                    <span
+                      className="hw-subject-tag"
+                      style={{
+                        background: "#f0f0f0",
+                        color: "#333",
+                        borderColor: "#ddd"
+                      }}
+                    >
+                      {hw.subject?.name || "Subject"}
+                    </span>
+                  </div>
+
+                  <h3 className="hw-card-title">{hw.title}</h3>
+                  
+                  <p className="hw-card-meta">
+                    Class: {hw.class?.name || "N/A"} • 
+                    Due: {dueDate.toLocaleDateString()} • 
+                    Total Marks: {hw.totalMarks}
+                  </p>
+
+                  <ul className="hw-card-bullets">
+                    <li>{hw.description}</li>
+                  </ul>
+
+                  {/* Evaluated with feedback */}
+                  {statusInfo.status === "EVALUATED" && submission?.feedback && (
+                    <div className="hw-eval-remark">
+                      <div className="hw-eval-teacher">Teacher's Feedback</div>
+                      <p>{submission.feedback}</p>
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  {statusInfo.status !== "EVALUATED" && statusInfo.status !== "SUBMITTED" && (
+                    <div className="hw-card-actions">
+                      <button
+                        className="hw-submit-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSubmitModal(hw);
+                        }}
+                      >
+                        ⬆ Submit Work
+                      </button>
+                    </div>
+                  )}
+
+                  {statusInfo.status === "SUBMITTED" && (
+                    <div className="hw-card-actions">
+                      <button className="hw-clarify-btn" disabled>
+                        📄 Submission Under Review
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
 
-        {/* Right: Quick Submission Drop */}
+        {/* Right sidebar with quick info */}
         <div className="hw-right-col">
           <div className="hw-quick-drop">
-            <div className="hw-quick-title">Quick Submission Drop <span className="green-dot">●</span></div>
-            <p>Drag and drop files to instantly link with your pending course assignments.</p>
-            <div className="hw-drop-zone" onClick={() => showToast("File upload dialog opened!")}>
-              <Upload size={28}/>
-              <p>Choose a file or drag here</p>
-              <small>PDF, DOCX, ZIP, IPYNB (Max 25MB)</small>
-              <button className="hw-browse-btn">Browse Local Drives</button>
-            </div>
-            <div className="hw-integrations">
-              <div className="hw-int-title">CLOUD INTEGRATIONS &nbsp; <span style={{color:"var(--green)",fontSize:11}}>Auto-sync ON</span></div>
-              <div className="hw-int-btns">
-                <button onClick={() => showToast("Connecting to Google Drive...")} className="hw-int-btn">📁 Google Drive</button>
-                <button onClick={() => showToast("Connecting to OneDrive...")} className="hw-int-btn">☁ OneDrive</button>
+            <div className="hw-quick-title">Quick Stats</div>
+            <div style={{ padding: "16px 0" }}>
+              <div style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between" }}>
+                <span>Total Assignments:</span>
+                <strong>{stats.total}</strong>
+              </div>
+              <div style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between" }}>
+                <span>Completion Rate:</span>
+                <strong style={{ color: "#087f5b" }}>
+                  {stats.total > 0 ? Math.round(((stats.submitted + stats.evaluated) / stats.total) * 100) : 0}%
+                </strong>
+              </div>
+              <div style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between" }}>
+                <span>Average Score:</span>
+                <strong style={{ color: "#1971c2" }}>{avgScore}%</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Overdue:</span>
+                <strong style={{ color: stats.overdue > 0 ? "#c92a2a" : "#087f5b" }}>
+                  {stats.overdue}
+                </strong>
               </div>
             </div>
           </div>
 
-          <div className="hw-honour-box">
-            <div className="hw-honour-title">🛡 Greenwood Honour Code</div>
-            <ul className="hw-honour-list">
-              <li><strong>Turnitin Integration</strong> — All essays, portfolios, and codebases undergo automated similarity scanning upon submission.</li>
-              <li>Maximum allowable similarity index: ≤ 10% excluding citations.</li>
-              <li>Generative AI tools must be cited in footnotes per APA 7th Edition style standard.</li>
-              <li>Only standard file extensions are allowed; encrypted PDFs will be automatically rejected.</li>
-            </ul>
-            <button className="link" style={{marginTop:8,background:"none",border:"none",cursor:"pointer",fontSize:12}} onClick={() => showToast("Opening Integrity Charter...")}>Read Greenwood Integrity Charter 2024–25 ↗</button>
-          </div>
-
-          <div className="hw-office-hours">
-            <div className="hw-oh-title">Faculty Office Hours <span className="hw-oh-today">Today</span></div>
-            {[{name:"Mrs. Roy",sub:"Math • Room 304",time:"15:30 – 18:30",btn:"Book Slot"},{name:"Dr. A. Evans",sub:"Physics • Lab 2B",time:"16:00 – 17:00",btn:"Drop In"},{name:"Mr. K. Sharma",sub:"Comp Sci • Lab 4",time:"Tomorrow 10:00",btn:"Request"},].map(f=>(
-              <div className="hw-oh-row" key={f.name}>
-                <div className="hw-oh-avatar">{f.name.split(" ").map(w=>w[0]).join("").slice(0,2)}</div>
-                <div className="hw-oh-info"><strong>{f.name}</strong><small>{f.sub}</small></div>
-                <div className="hw-oh-right"><span>{f.time}</span><button className="hw-oh-btn" onClick={() => showToast(`Booking slot with ${f.name}...`)}>{f.btn}</button></div>
+          {selectedHomework && (
+            <div className="panel" style={{ marginTop: "16px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "12px" }}>
+                Selected Assignment
+              </h3>
+              <div style={{ fontSize: "13px", color: "#555", lineHeight: 1.6 }}>
+                <p><strong>{selectedHomework.title}</strong></p>
+                <p style={{ marginTop: "8px" }}>Subject: {selectedHomework.subject?.name}</p>
+                <p>Class: {selectedHomework.class?.name}</p>
+                <p>Total Marks: {selectedHomework.totalMarks}</p>
+                <p>Due: {new Date(selectedHomework.dueDate).toLocaleDateString()}</p>
               </div>
-            ))}
-            <button className="link-btn" onClick={() => showToast("Opening full consultation schedule...")}>View Complete Faculty Consultation Schedule</button>
-          </div>
-
-          <div className="hw-extension-box">
-            <span>📍</span>
-            <div>
-              <strong>Need Extension?</strong>
-              <p>Medical or official leaves must be filed +12 hours prior to deadline via Support.</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Submit Modal */}
       {submitModal && (
-        <Modal title={`Submit: ${submitModal.subject}`} onClose={() => setSubmitModal(null)}>
-          <p className="modal-desc">Upload your completed work for <strong>{submitModal.title}</strong></p>
-          <label>Upload File</label>
-          <div className="hw-drop-zone small" onClick={() => showToast("File browser opened!")}>
-            <Upload size={22}/><p>Click to upload or drag & drop</p>
-            <small>PDF, DOCX, ZIP, IPYNB • Max 25MB</small>
-          </div>
-          <label>Comments to Instructor (optional)</label>
-          <textarea className="modal-textarea" placeholder="Any notes for your instructor..."/>
-          <div className="modal-actions">
-            <button className="modal-btn-secondary" onClick={() => setSubmitModal(null)}>Cancel</button>
-            <button className="modal-btn-primary" onClick={() => { setSubmitModal(null); showToast("✓ Assignment submitted successfully!"); }}>⬆ Submit Assignment</button>
-          </div>
-        </Modal>
-      )}
+        <Modal title="Submit Homework" onClose={() => setSubmitModal(null)}>
+          <form onSubmit={handleSubmit}>
+            <p className="modal-desc">
+              <strong>{submitModal.title}</strong>
+              <br />
+              Subject: {submitModal.subject?.name} • Total Marks: {submitModal.totalMarks}
+            </p>
 
-      {/* Clarification Modal */}
-      {clarificationModal && (
-        <Modal title="Ask Clarification" onClose={() => setClarificationModal(null)}>
-          <p className="modal-desc">Send a clarification request to <strong>{clarificationModal.instructor}</strong> regarding <em>{clarificationModal.title}</em></p>
-          <label>Your Question</label>
-          <textarea className="modal-textarea" placeholder="Describe what needs clarification..." value={clarText} onChange={e=>setClarText(e.target.value)}/>
-          <div className="modal-actions">
-            <button className="modal-btn-secondary" onClick={() => setClarificationModal(null)}>Cancel</button>
-            <button className="modal-btn-primary" onClick={() => { setClarificationModal(null); setClarText(""); showToast("✓ Clarification request sent!"); }}><Send size={14}/>Send Request</button>
-          </div>
+            <label>Your Answer / Solution *</label>
+            <textarea
+              className="modal-input"
+              rows="8"
+              value={submissionForm.textAnswer}
+              onChange={(e) => setSubmissionForm({ ...submissionForm, textAnswer: e.target.value })}
+              placeholder="Type your answer here..."
+              required
+            />
+
+            <label>File URL (Optional)</label>
+            <input
+              className="modal-input"
+              type="url"
+              value={submissionForm.fileUrl}
+              onChange={(e) => setSubmissionForm({ ...submissionForm, fileUrl: e.target.value })}
+              placeholder="https://example.com/your-file.pdf"
+            />
+            <small style={{ color: "#777", fontSize: "12px", display: "block", marginTop: "4px" }}>
+              Upload your file to a cloud service and paste the link here
+            </small>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="modal-btn-secondary"
+                onClick={() => setSubmitModal(null)}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="modal-btn-primary"
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Submit Homework"}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>

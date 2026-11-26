@@ -996,3 +996,350 @@
     min-width: 42px !important;
   }
 }
+
+
+/* Invoice and Bill Management Styles */
+.accountant-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--rp-surface);
+  border: 1px solid var(--rp-border);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--rp-muted);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--rp-text);
+  line-height: 1;
+}
+
+.stat-sublabel {
+  font-size: 12px;
+  color: var(--rp-muted);
+}
+
+/* Table Styles */
+.accountant-table-wrapper {
+  overflow-x: auto;
+  background: var(--rp-surface);
+  border: 1px solid var(--rp-border);
+  border-radius: 8px;
+}
+
+.accountant-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.accountant-data-table thead {
+  background: var(--rp-surface-hover);
+  border-bottom: 2px solid var(--rp-border);
+}
+
+.accountant-data-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rp-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.accountant-data-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--rp-text);
+  border-bottom: 1px solid var(--rp-border);
+}
+
+.accountant-data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.accountant-data-table tbody tr:hover {
+  background: var(--rp-surface-hover);
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-badge.status-paid,
+.status-badge.status-active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.status-overdue {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.status-bill {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.status-badge.status-salary {
+  background: #e2d9f3;
+  color: #432874;
+}
+
+.status-badge.status-fee {
+  background: #d1e7dd;
+  color: #0a3622;
+}
+
+.status-badge.status-utilities,
+.status-badge.status-supplies,
+.status-badge.status-maintenance,
+.status-badge.status-rent,
+.status-badge.status-other {
+  background: #e7e8ea;
+  color: #41464b;
+}
+
+/* Icon Buttons */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--rp-border);
+  border-radius: 6px;
+  background: var(--rp-surface);
+  color: var(--rp-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  background: var(--rp-primary);
+  color: white;
+  border-color: var(--rp-primary);
+  transform: translateY(-1px);
+}
+
+.icon-button:active {
+  transform: translateY(0);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--rp-bg);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 90%;
+  max-width: 600px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--rp-border);
+}
+
+.modal-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--rp-muted);
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: var(--rp-surface-hover);
+  color: var(--rp-text);
+}
+
+.modal-content form {
+  padding: 24px;
+}
+
+/* Tab Styles */
+.accountant-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--rp-border);
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tab-button.active {
+  background: var(--rp-primary);
+  color: white;
+}
+
+.tab-button:not(.active) {
+  background: transparent;
+  color: var(--rp-text);
+}
+
+.tab-button:not(.active):hover {
+  background: var(--rp-surface-hover);
+}
+
+/* Filter Bar */
+.accountant-filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.accountant-filter-bar input,
+.accountant-filter-bar select {
+  padding: 10px 14px;
+  border: 1px solid var(--rp-border);
+  border-radius: 6px;
+  background: var(--rp-surface);
+  color: var(--rp-text);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.accountant-filter-bar input:focus,
+.accountant-filter-bar select:focus {
+  outline: none;
+  border-color: var(--rp-primary);
+  box-shadow: 0 0 0 3px rgba(var(--rp-primary-rgb), 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .accountant-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .accountant-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .accountant-data-table {
+    font-size: 13px;
+  }
+
+  .accountant-data-table th,
+  .accountant-data-table td {
+    padding: 10px 12px;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .accountant-filter-bar {
+    flex-direction: column;
+  }
+}
+
+/* Print Styles for Invoices */
+@media print {
+  .platform-shell,
+  .platform-topbar,
+  .superadmin-panel > .superadmin-section-title button,
+  .icon-button,
+  .modal-overlay {
+    display: none !important;
+  }
+
+  .accountant-data-table {
+    page-break-inside: avoid;
+  }
+}

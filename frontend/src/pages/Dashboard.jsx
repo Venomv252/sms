@@ -3,122 +3,293 @@ import { useNavigate } from "react-router-dom";
 import {
   CalendarCheck, CircleHelp, FileBarChart, CheckCircle2, TrendingUp,
   Bell, ShieldCheck, Trophy, Megaphone, ChevronRight, FlaskConical,
-  MoreHorizontal, ClipboardList, UserRound, Send
+  ClipboardList, UserRound, AlertCircle
 } from "lucide-react";
-import { subjects, allNotices, schedule } from "../data.js";
-import { Modal } from "../Layout.jsx";
+import { 
+  useDashboard, 
+  calculateAttendanceStats, 
+  getThisWeekAttendance,
+  getHomeworkStats,
+  calculateAverageScore,
+  getClassStanding,
+  getGradeFromPercentage,
+  getUpcomingSchedules,
+  getNextClass,
+  getMinutesUntilClass,
+  formatTime,
+  getRecentNotices,
+  getSubjectPerformance
+} from "../hooks/useDashboard.js";
 
-export default function Dashboard({ showToast, setModal: parentSetModal }) {
+export default function Dashboard({ showToast }) {
   const navigate = useNavigate();
-  const [localModal, setLocalModal] = useState(null);
+  const { data, loading, error } = useDashboard();
   const [perfTab, setPerfTab] = useState("Donut");
-  const [leaveDate, setLeaveDate] = useState("");
-  const [leaveReason, setLeaveReason] = useState("");
 
-  const close = () => setLocalModal(null);
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div style={{ padding: "60px 0", textAlign: "center", color: "#999" }}>
+          <div className="spinner" style={{ margin: "0 auto 16px" }}></div>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard">
+        <div style={{ padding: "60px 0", textAlign: "center" }}>
+          <AlertCircle size={48} style={{ color: "#e74c3c", marginBottom: "16px" }} />
+          <p>{error}</p>
+          <button className="green-button btn" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { student, attendance, homework, results, schedules, notices } = data;
+
+  if (!student) {
+    return (
+      <div className="dashboard">
+        <div style={{ padding: "60px 0", textAlign: "center", color: "#999" }}>
+          <p>Student profile not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate all statistics
+  const attendanceStats = calculateAttendanceStats(attendance);
+  const weekAttendance = getThisWeekAttendance(attendance);
+  const homeworkStats = getHomeworkStats(homework);
+  const avgScore = calculateAverageScore(results);
+  const classRank = getClassStanding(results);
+  const grade = getGradeFromPercentage(avgScore);
+  const upcomingSchedules = getUpcomingSchedules(schedules);
+  const nextClass = getNextClass(schedules);
+  const minutesUntilNext = getMinutesUntilClass(nextClass);
+  const recentNotices = getRecentNotices(notices, 3);
+  const subjectPerformance = getSubjectPerformance(results);
+
+  // Get student name
+  const studentName = student.user?.firstName
+    ? `${student.user.firstName} ${student.user.lastName || ''}`.trim()
+    : "Student";
+  
+  // Get initials for avatar
+  const initials = studentName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+  // Current academic year
+  const currentYear = new Date().getFullYear();
+  const academicYear = `AY ${currentYear}–${currentYear + 1}`;
+
+  // Action items
+  const actionItems = [];
+  if (homeworkStats.dueToday > 0) {
+    actionItems.push({
+      text: `${homeworkStats.dueToday} Homework Due`,
+      time: "Today",
+      onClick: () => navigate("/homework")
+    });
+  }
+  if (homeworkStats.overdue > 0) {
+    actionItems.push({
+      text: `${homeworkStats.overdue} Homework Overdue`,
+      time: "Past Due",
+      onClick: () => navigate("/homework"),
+      urgent: true
+    });
+  }
 
   return (
     <div className="dashboard">
-{/* Welcome Card */}
+      {/* Welcome Card */}
       <section className="welcome-card">
         <div className="student-info">
-          <div className="student-avatar">AS<span className="status-dot"></span></div>
+          <div className="student-avatar">
+            {initials}
+            <span className="status-dot"></span>
+          </div>
           <div>
             <div className="welcome-title">
-              <h1>Aarav Sharma</h1>
+              <h1>{studentName}</h1>
               <span style={{ fontSize: 14, color: "var(--green)", fontWeight: 600, marginLeft: 8 }}>✓</span>
             </div>
             <div style={{ fontSize: 12, color: "#777", marginTop: 4 }}>
-              AY 2024–25 &nbsp;
-              <span style={{ background: "#dff9ef", color: "var(--green)", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 600, marginLeft: 4 }}>Term II</span>
+              {academicYear} &nbsp;
+              <span style={{ background: "#dff9ef", color: "var(--green)", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 600, marginLeft: 4 }}>
+                Active
+              </span>
             </div>
-            <p style={{ fontSize: 12, color: "#777", marginTop: 4 }}>Grade 10 – Section B • Roll No. 26</p>
+            <p style={{ fontSize: 12, color: "#777", marginTop: 4 }}>
+              Grade {student.grade} – Section {student.section}
+              {student.rollNumber && ` • Roll No. ${student.rollNumber}`}
+            </p>
           </div>
         </div>
         <div className="welcome-actions">
-          <button onClick={() => navigate("/attendance")}><UserRound size={15} />Attendance</button>
-          <button onClick={() => navigate("/doubt-forum")}><CircleHelp size={15} />Ask a Doubt</button>
-          <button className="green-button" onClick={() => navigate("/results")}><FileBarChart size={16} />View Report Card</button>
+          <button onClick={() => navigate("/attendance")}>
+            <UserRound size={15} />Attendance
+          </button>
+          <button onClick={() => navigate("/doubt-forum")}>
+            <CircleHelp size={15} />Ask a Doubt
+          </button>
+          <button className="green-button" onClick={() => navigate("/results")}>
+            <FileBarChart size={16} />View Report Card
+          </button>
         </div>
       </section>
 
       {/* Summary Grid - Desktop */}
       <div className="desktop-summary-grid">
         <div className="summary-card" style={{ cursor: "pointer" }} onClick={() => navigate("/attendance")}>
-          <div className="summary-heading"><span>ATTENDANCE</span><CheckCircle2 size={20} /></div>
-          <strong>94.2%</strong>
-          <div className="summary-positive">↗ Good</div>
-          <p>Class Standing: <strong>Rank 3</strong> of 42 students</p>
-          <div className="summary-footer">Pres: <b>146d</b> &nbsp; Abs: <em>7d</em></div>
+          <div className="summary-heading">
+            <span>ATTENDANCE</span>
+            <CheckCircle2 size={20} />
+          </div>
+          <strong>{attendanceStats.percentage}%</strong>
+          <div className={`summary-${parseFloat(attendanceStats.percentage) >= 90 ? 'positive' : parseFloat(attendanceStats.percentage) >= 75 ? 'neutral' : 'negative'}`}>
+            {parseFloat(attendanceStats.percentage) >= 90 ? '↗ Excellent' : parseFloat(attendanceStats.percentage) >= 75 ? '→ Good' : '↘ Needs Improvement'}
+          </div>
+          <p>Total Days: <strong>{attendanceStats.totalDays}</strong></p>
+          <div className="summary-footer">
+            Pres: <b>{attendanceStats.presentDays}d</b> &nbsp; Abs: <em>{attendanceStats.absentDays}d</em>
+          </div>
         </div>
+
         <div className="summary-card" style={{ cursor: "pointer" }} onClick={() => navigate("/results")}>
-          <div className="summary-heading"><span>CLASS STANDING</span><TrendingUp size={20} /></div>
-          <strong>Rank 3</strong>
-          <p>of 42 students</p>
-          <div className="grade-pill">Grade A1</div>
+          <div className="summary-heading">
+            <span>CLASS STANDING</span>
+            <TrendingUp size={20} />
+          </div>
+          <strong>Rank {classRank}</strong>
+          <p>Estimated ranking</p>
+          <div className="grade-pill">{grade}</div>
         </div>
+
         <div className="summary-card" style={{ cursor: "pointer" }} onClick={() => navigate("/performance")}>
-          <div className="summary-heading"><span>AVG SCORE</span><span className="percent-icon">%</span></div>
-          <strong className="green-number">91.5%</strong>
-          <div className="grade-pill">Grade A1</div>
-          <div className="summary-footer">Class Avg: 78.4% <span>+13.1%</span></div>
+          <div className="summary-heading">
+            <span>AVG SCORE</span>
+            <span className="percent-icon">%</span>
+          </div>
+          <strong className="green-number">{avgScore}%</strong>
+          <div className="grade-pill">{grade}</div>
+          <div className="summary-footer">
+            Based on {results.length} assessment{results.length !== 1 ? 's' : ''}
+          </div>
         </div>
+
         <div className="summary-card action-card">
-          <div className="summary-heading"><span>ACTION ITEMS</span><Bell size={19} /></div>
-          <div className="action-line" style={{ cursor: "pointer" }} onClick={() => navigate("/homework")}><span>2 Homework Due</span><b>Today</b></div>
-          <div className="action-line" style={{ cursor: "pointer" }} onClick={() => showToast("Olympiad form — 2 days left!")}><span>1 Olympiad Form</span><span>2 Days Left</span></div>
-          <div className="term-alert">◉ Term Finals begin in 12 Days</div>
+          <div className="summary-heading">
+            <span>ACTION ITEMS</span>
+            <Bell size={19} />
+          </div>
+          {actionItems.length > 0 ? (
+            actionItems.map((item, i) => (
+              <div
+                key={i}
+                className="action-line"
+                style={{ cursor: "pointer", color: item.urgent ? "#c92a2a" : undefined }}
+                onClick={item.onClick}
+              >
+                <span>{item.text}</span>
+                <b>{item.time}</b>
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: "16px 0", textAlign: "center", color: "#999", fontSize: "13px" }}>
+              <CheckCircle2 size={32} style={{ opacity: 0.3, marginBottom: "8px" }} />
+              <p>All caught up!</p>
+            </div>
+          )}
+          {recentNotices.length > 0 && (
+            <div className="term-alert" onClick={() => navigate("/notices")} style={{ cursor: "pointer" }}>
+              ◉ {recentNotices[0].title}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Mobile summary */}
       <div className="mobile-summary-grid">
         <div className="mini-summary" onClick={() => navigate("/attendance")} style={{ cursor: "pointer" }}>
-          <span>Attendance</span><strong>94.2%</strong><small>↗ Good</small>
+          <span>Attendance</span>
+          <strong>{attendanceStats.percentage}%</strong>
+          <small>{parseFloat(attendanceStats.percentage) >= 90 ? '↗ Excellent' : '→ Good'}</small>
         </div>
         <div className="mini-summary" onClick={() => navigate("/results")} style={{ cursor: "pointer" }}>
-          <span>Class Standing</span><strong>Rank 3</strong><small>of 42 students</small>
+          <span>Class Standing</span>
+          <strong>Rank {classRank}</strong>
+          <small>Grade {grade}</small>
         </div>
         <div className="mini-summary" onClick={() => navigate("/performance")} style={{ cursor: "pointer" }}>
-          <span>Average Score</span><strong>91.5%</strong><small>Grade A1</small>
+          <span>Average Score</span>
+          <strong>{avgScore}%</strong>
+          <small>Grade {grade}</small>
         </div>
       </div>
 
       {/* Mobile Quick Actions */}
       <div className="mobile-quick-actions">
-        <div className="quick-heading"><span>Quick Actions</span><small>Tap to launch</small></div>
+        <div className="quick-heading">
+          <span>Quick Actions</span>
+          <small>Tap to launch</small>
+        </div>
         <div className="quick-buttons">
-          <button onClick={() => navigate("/attendance")}><UserRound size={17} />Attendance</button>
-          <button className="active" onClick={() => navigate("/homework")}>
-            <ClipboardList size={17} />Homework <span className="badge">2 Due</span>
+          <button onClick={() => navigate("/attendance")}>
+            <UserRound size={17} />Attendance
+          </button>
+          <button
+            className={homeworkStats.dueToday > 0 ? "active" : ""}
+            onClick={() => navigate("/homework")}
+          >
+            <ClipboardList size={17} />Homework
+            {homeworkStats.dueToday > 0 && <span className="badge">{homeworkStats.dueToday} Due</span>}
           </button>
         </div>
       </div>
 
       {/* Mobile Upcoming Class */}
-      <div className="mobile-only">
-        <section className="mobile-card">
-          <div className="mobile-card-title">
-            <div>
-              <h2>◷ Upcoming Class</h2>
+      {nextClass && (
+        <div className="mobile-only">
+          <section className="mobile-card">
+            <div className="mobile-card-title">
+              <div>
+                <h2>◷ Upcoming Class</h2>
+              </div>
+              <b style={{ background: "#caffdf", color: "var(--green)" }}>
+                {minutesUntilNext > 0 ? `In ${minutesUntilNext} min` : 'Now'}
+              </b>
             </div>
-            <b style={{ background: "#caffdf", color: "var(--green)" }}>Live in 25 min</b>
-          </div>
-          <div className="upcoming-content" style={{ cursor: "pointer" }} onClick={() => navigate("/schedule")}>
-            <div className="period-circle">
-              <small>PER</small>
-              04
+            <div className="upcoming-content" style={{ cursor: "pointer" }} onClick={() => navigate("/schedule")}>
+              <div className="period-circle">
+                <small>PER</small>
+                {nextClass.period}
+              </div>
+              <div>
+                <h3>{nextClass.class?.subject?.name || "Class"}</h3>
+                <p>
+                  {nextClass.class?.teacher?.user ? 
+                    `${nextClass.class.teacher.user.firstName} ${nextClass.class.teacher.user.lastName}` : 
+                    'Teacher'
+                  }
+                  {nextClass.room && ` • ${nextClass.room}`}
+                </p>
+                <span>◷ {formatTime(nextClass.startTime)} – {formatTime(nextClass.endTime)}</span>
+              </div>
+              <ChevronRight size={18} style={{ marginLeft: "auto", color: "#aaa", flexShrink: 0 }} />
             </div>
-            <div>
-              <h3>Advanced Physics</h3>
-              <p>Dr. Evans • Room 204 (Lab Wing)</p>
-              <span>◷ 11:15 AM – 12:00 PM</span>
-            </div>
-            <ChevronRight size={18} style={{ marginLeft: "auto", color: "#aaa", flexShrink: 0 }} />
-          </div>
-        </section>
+          </section>
+        </div>
+      )}
 
-        {/* Mobile Attendance */}
+      {/* Mobile Attendance */}
+      <div className="mobile-only">
         <section className="mobile-card">
           <div className="mobile-card-title">
             <div>
@@ -126,7 +297,14 @@ export default function Dashboard({ showToast, setModal: parentSetModal }) {
               <p>Current Term Cumulative</p>
             </div>
             <button
-              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--green)", fontSize: "12px", fontWeight: 600 }}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--green)",
+                fontSize: "12px",
+                fontWeight: 600
+              }}
               onClick={() => navigate("/attendance")}
             >
               Detailed Log ↗
@@ -134,176 +312,236 @@ export default function Dashboard({ showToast, setModal: parentSetModal }) {
           </div>
           <div className="mobile-attendance-content">
             <div className="mobile-donut">
-              <div><strong>94.2</strong><span>% PRESENT</span></div>
+              <div>
+                <strong>{attendanceStats.percentage}</strong>
+                <span>% PRESENT</span>
+              </div>
             </div>
             <div className="attendance-stats">
-              <div><span style={{ color: "var(--green)" }}>● Present</span><strong>146d</strong></div>
-              <div><span style={{ color: "#d63333" }}>● Absent</span><strong>7d</strong></div>
-              <div><span style={{ color: "#e67700" }}>● Medical</span><strong>2d</strong></div>
-            </div>
-          </div>
-          {/* This week's record */}
-          <div className="week-record">
-            <div className="week-record-title">THIS WEEK'S RECORD &nbsp; <span style={{ color: "var(--green)", fontWeight: 700 }}>100% Present</span></div>
-            <div className="week-strip">
-              {[
-                ["Mon", "✓", "On-time"],
-                ["Tue", "✓", "On-time"],
-                ["Wed", "✓", "On-time"],
-                ["Thu", "✓", "On-time"],
-                ["Today", "✓", "Active"]
-              ].map(([day, icon, status], i) => (
-                <div key={i} className={`week-day${i === 4 ? " active-day" : ""}`}>
-                  <span>{day}</span>
-                  <b>{icon}</b>
-                  <small>{status}</small>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Desktop layout's performance panel - mobile version */}
-        <section className="mobile-card">
-          <div className="mobile-card-title">
-            <div>
-              <h2>Subject Performance</h2>
-              <p>Mid-Term I Official Assessments</p>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button
-                className={`filter-chip${perfTab === "Donut" ? " active" : ""}`}
-                onClick={() => setPerfTab("Donut")}
-                style={{ padding: "3px 8px", fontSize: 10 }}
-              >Donut</button>
-              <button
-                className={`filter-chip${perfTab === "Details" ? " active" : ""}`}
-                onClick={() => setPerfTab("Details")}
-                style={{ padding: "3px 8px", fontSize: 10 }}
-              >Details</button>
-            </div>
-          </div>
-          {perfTab === "Donut" ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-              <div className="donut" style={{ width: 160, height: 160 }}>
-                <div>
-                  <strong>91.5%</strong>
-                  <span>Agg. Score</span>
-                </div>
+              <div>
+                <span style={{ color: "var(--green)" }}>● Present</span>
+                <strong>{attendanceStats.presentDays}d</strong>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, width: "100%" }}>
-                {[
-                  ["Comp.Science", "98%", "#087f5b"],
-                  ["Mathematics", "96%", "#20a77a"],
-                  ["Science(Phy/C.)", "92%", "#495057"],
-                  ["2nd Language", "90%", "#7ee8c1"],
-                  ["English Lit.", "88%", "#adb5bd"],
-                  ["Social Studies", "85%", "#9be7cb"]
-                ].map(([sub, score, color]) => (
-                  <div key={sub} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0, display: "block" }}></span>
-                    <span style={{ color: "#555" }}>{sub}</span>
-                    <strong style={{ marginLeft: "auto" }}>{score}</strong>
+              <div>
+                <span style={{ color: "#d63333" }}>● Absent</span>
+                <strong>{attendanceStats.absentDays}d</strong>
+              </div>
+              {attendanceStats.medicalDays > 0 && (
+                <div>
+                  <span style={{ color: "#e67700" }}>● Medical</span>
+                  <strong>{attendanceStats.medicalDays}d</strong>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* This week's record */}
+          {weekAttendance.length > 0 && (
+            <div className="week-record">
+              <div className="week-record-title">
+                THIS WEEK'S RECORD &nbsp;
+                <span style={{ color: "var(--green)", fontWeight: 700 }}>
+                  {weekAttendance.filter(d => !d.isFuture && d.status === "PRESENT").length}/{weekAttendance.filter(d => !d.isFuture).length} Present
+                </span>
+              </div>
+              <div className="week-strip">
+                {weekAttendance.map((day, i) => (
+                  <div key={i} className={`week-day${day.isToday ? " active-day" : ""}`}>
+                    <span>{day.isToday ? "Today" : day.day}</span>
+                    <b>{day.isFuture ? "–" : day.status === "PRESENT" ? "✓" : "✗"}</b>
+                    <small>
+                      {day.isFuture ? "Upcoming" : day.isToday ? "Active" : day.status === "PRESENT" ? "On-time" : "Absent"}
+                    </small>
                   </div>
                 ))}
               </div>
             </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
-              {subjects.map(s => (
-                <div key={s.name}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
-                    <span>{s.name}</span><strong style={{ color: "var(--green)" }}>{s.score}%</strong>
-                  </div>
-                  <div className="progress"><div style={{ width: `${s.score}%`, background: s.color }}></div></div>
-                </div>
-              ))}
-            </div>
           )}
         </section>
 
-        {/* Campus Bulletin */}
-        <section className="mobile-card bulletin">
-          <div className="mobile-card-title">
-            <h2><Megaphone size={16} /> Campus Bulletin</h2>
-            <b>2 Unread</b>
-          </div>
-          <div className="bulletin-item" style={{ cursor: "pointer" }} onClick={() => navigate("/sports")}>
-            <div className="bullet-icon"><Trophy size={17} /></div>
-            <div>
-              <strong>School Football Championship...</strong>
-              <small>Yesterday</small>
-              <p>Emerald Falcons clash with Ruby Phoenix this Thursday 3:30 PM on Main Ground. Captains...</p>
+        {/* Subject Performance - Mobile */}
+        {subjectPerformance.length > 0 && (
+          <section className="mobile-card">
+            <div className="mobile-card-title">
+              <div>
+                <h2>Subject Performance</h2>
+                <p>Recent Assessments</p>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  className={`filter-chip${perfTab === "Donut" ? " active" : ""}`}
+                  onClick={() => setPerfTab("Donut")}
+                  style={{ padding: "3px 8px", fontSize: 10 }}
+                >
+                  Overview
+                </button>
+                <button
+                  className={`filter-chip${perfTab === "Details" ? " active" : ""}`}
+                  onClick={() => setPerfTab("Details")}
+                  style={{ padding: "3px 8px", fontSize: 10 }}
+                >
+                  Details
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="bulletin-item" style={{ cursor: "pointer" }} onClick={() => navigate("/notices")}>
-            <div className="bullet-icon"><FlaskConical size={17} /></div>
-            <div>
-              <strong>Science Olympiad Submission P...</strong>
-              <small>2 days ago</small>
-              <p>Submit synopsis for project exhibits via the school ERP by Friday midnight.</p>
+            {perfTab === "Donut" ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+                <div className="donut" style={{ width: 160, height: 160 }}>
+                  <div>
+                    <strong>{avgScore}%</strong>
+                    <span>Agg. Score</span>
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, width: "100%" }}>
+                  {subjectPerformance.slice(0, 6).map((subject, i) => (
+                    <div key={subject.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                      <span style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: `hsl(${150 - i * 20}, 70%, ${40 + i * 5}%)`,
+                        flexShrink: 0,
+                        display: "block"
+                      }}></span>
+                      <span style={{ color: "#555", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {subject.name}
+                      </span>
+                      <strong style={{ marginLeft: "auto" }}>{subject.percentage}%</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+                {subjectPerformance.map((subject, i) => (
+                  <div key={subject.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+                      <span>{subject.name}</span>
+                      <strong style={{ color: "var(--green)" }}>{subject.percentage}%</strong>
+                    </div>
+                    <div className="progress">
+                      <div style={{
+                        width: `${subject.percentage}%`,
+                        background: `hsl(${150 - i * 20}, 70%, ${40 + i * 5}%)`
+                      }}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Campus Bulletin - Mobile */}
+        {recentNotices.length > 0 && (
+          <section className="mobile-card bulletin">
+            <div className="mobile-card-title">
+              <h2><Megaphone size={16} /> Campus Bulletin</h2>
+              <b>{recentNotices.length} Recent</b>
             </div>
-          </div>
-        </section>
+            {recentNotices.map((notice) => (
+              <div key={notice.id} className="bulletin-item" style={{ cursor: "pointer" }} onClick={() => navigate("/notices")}>
+                <div className="bullet-icon">
+                  {notice.category === "Sports" ? <Trophy size={17} /> : <FlaskConical size={17} />}
+                </div>
+                <div>
+                  <strong>{notice.title.length > 40 ? notice.title.slice(0, 40) + '...' : notice.title}</strong>
+                  <small>{new Date(notice.publishDate).toLocaleDateString()}</small>
+                  <p>{notice.content.slice(0, 100)}...</p>
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
       </div>
 
       {/* Desktop Main Grid */}
       <div className="dashboard-grid">
         <div className="left-column">
           {/* Performance */}
-          <section className="panel performance-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Subject Performance</h2>
-                <p>Mid-Term I Official Assessments</p>
-              </div>
-              <div className="view-toggle">
-                {["Donut", "Details"].map(tab => (
-                  <button key={tab} className={perfTab === tab ? "active" : ""} onClick={() => setPerfTab(tab)}>{tab}</button>
-                ))}
-              </div>
-            </div>
-            {perfTab === "Donut" && (
-              <div style={{ display: "flex", justifyContent: "center", gap: 28, marginTop: 24, flexWrap: "wrap", alignItems: "center" }}>
-                <div className="donut">
-                  <div><strong>91.5%</strong><span>Agg. Score</span></div>
+          {subjectPerformance.length > 0 && (
+            <section className="panel performance-panel">
+              <div className="panel-heading">
+                <div>
+                  <h2>Subject Performance</h2>
+                  <p>Recent Assessments</p>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px" }}>
-                  {[
-                    ["Comp.Science", "98%", "#087f5b"],
-                    ["Mathematics", "96%", "#20a77a"],
-                    ["Science(Phy/C.)", "92%", "#495057"],
-                    ["2nd Language", "90%", "#7ee8c1"],
-                    ["English Lit.", "88%", "#adb5bd"],
-                    ["Social Studies", "85%", "#9be7cb"]
-                  ].map(([sub, score, color]) => (
-                    <div key={sub} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                      <span style={{ width: 9, height: 9, borderRadius: "50%", background: color, flexShrink: 0, display: "block" }}></span>
-                      <span style={{ color: "#555" }}>{sub}</span>
-                      <strong style={{ marginLeft: 6 }}>{score}</strong>
-                    </div>
+                <div className="view-toggle">
+                  {["Donut", "Details"].map(tab => (
+                    <button
+                      key={tab}
+                      className={perfTab === tab ? "active" : ""}
+                      onClick={() => setPerfTab(tab)}
+                    >
+                      {tab}
+                    </button>
                   ))}
                 </div>
               </div>
-            )}
-            {perfTab === "Details" && (
-              <div className="subject-list" style={{ marginTop: 20 }}>
-                {subjects.map(s => (
-                  <div className="subject-row" key={s.name}>
-                    <div className="subject-top">
-                      <div className="subject-name">
-                        <span style={{ background: s.color }}>{s.short}</span>
-                        <div><strong>{s.name}</strong><small>{s.teacher}</small></div>
-                      </div>
-                      <div className="subject-score"><strong>{s.score}</strong>/100<span>{s.score >= 90 ? "A1" : s.score >= 80 ? "A2" : "B1"}</span></div>
+              {perfTab === "Donut" && (
+                <div style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 28,
+                  marginTop: 24,
+                  flexWrap: "wrap",
+                  alignItems: "center"
+                }}>
+                  <div className="donut">
+                    <div>
+                      <strong>{avgScore}%</strong>
+                      <span>Agg. Score</span>
                     </div>
-                    <div className="class-average"><span>Class Avg: {s.classAvg}%</span><span>Syllabus: {s.syllabus}%</span></div>
-                    <div className="progress"><div style={{ width: `${s.score}%`, background: s.color }}></div></div>
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px" }}>
+                    {subjectPerformance.slice(0, 6).map((subject, i) => (
+                      <div key={subject.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                        <span style={{
+                          width: 9,
+                          height: 9,
+                          borderRadius: "50%",
+                          background: `hsl(${150 - i * 20}, 70%, ${40 + i * 5}%)`,
+                          flexShrink: 0,
+                          display: "block"
+                        }}></span>
+                        <span style={{ color: "#555" }}>{subject.name}</span>
+                        <strong style={{ marginLeft: 6 }}>{subject.percentage}%</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {perfTab === "Details" && (
+                <div className="subject-list" style={{ marginTop: 20 }}>
+                  {subjectPerformance.map((subject, i) => (
+                    <div className="subject-row" key={subject.id}>
+                      <div className="subject-top">
+                        <div className="subject-name">
+                          <span style={{ background: `hsl(${150 - i * 20}, 70%, ${40 + i * 5}%)` }}>
+                            {subject.code || subject.name.slice(0, 2).toUpperCase()}
+                          </span>
+                          <div>
+                            <strong>{subject.name}</strong>
+                            <small>{subject.scores.length} assessment{subject.scores.length !== 1 ? 's' : ''}</small>
+                          </div>
+                        </div>
+                        <div className="subject-score">
+                          <strong>{subject.percentage}</strong>/100
+                          <span>{subject.grade}</span>
+                        </div>
+                      </div>
+                      <div className="progress">
+                        <div style={{
+                          width: `${subject.percentage}%`,
+                          background: `hsl(${150 - i * 20}, 70%, ${40 + i * 5}%)`
+                        }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Attendance Analytics */}
           <section className="panel attendance-panel">
@@ -313,24 +551,39 @@ export default function Dashboard({ showToast, setModal: parentSetModal }) {
                 <p>Current Term Cumulative</p>
               </div>
               <button
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--green)", fontSize: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--green)",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4
+                }}
                 onClick={() => navigate("/attendance")}
               >
                 Detailed Log ↗
               </button>
             </div>
             <div style={{ display: "flex", gap: 28, alignItems: "center", marginTop: 20, flexWrap: "wrap" }}>
-              <div className="donut" style={{ width: 140, height: 140, background: "conic-gradient(var(--green) 0 94.2%, #eee 94.2%)", flexShrink: 0 }}>
+              <div className="donut" style={{
+                width: 140,
+                height: 140,
+                background: `conic-gradient(var(--green) 0 ${attendanceStats.percentage}%, #eee ${attendanceStats.percentage}%)`,
+                flexShrink: 0
+              }}>
                 <div style={{ width: 96, height: 96 }}>
-                  <strong style={{ fontSize: 22 }}>94.2</strong>
+                  <strong style={{ fontSize: 22 }}>{attendanceStats.percentage}</strong>
                   <span style={{ fontSize: 10 }}>% PRESENT</span>
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[
-                  ["● Present", "146d", "var(--green)"],
-                  ["● Absent", "7d", "#d63333"],
-                  ["● Medical", "2d", "#e67700"]
+                  ["● Present", `${attendanceStats.presentDays}d`, "var(--green)"],
+                  ["● Absent", `${attendanceStats.absentDays}d`, "#d63333"],
+                  ...(attendanceStats.medicalDays > 0 ? [["● Medical", `${attendanceStats.medicalDays}d`, "#e67700"]] : [])
                 ].map(([label, val, color]) => (
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
                     <span style={{ color }}>{label}</span>
@@ -339,91 +592,102 @@ export default function Dashboard({ showToast, setModal: parentSetModal }) {
                 ))}
               </div>
             </div>
-            <div style={{ marginTop: 20 }}>
-              <div className="cycle-title">THIS WEEK'S RECORD &nbsp; <span style={{ color: "var(--green)", fontWeight: 700 }}>100% Present</span></div>
-              <div className="heat-strip">
-                {[["Mon", "✓", "On-time"], ["Tue", "✓", "On-time"], ["Wed", "✓", "On-time"], ["Thu", "✓", "On-time"], ["Today", "✓", "Active"]].map(([day, icon, status], i) => (
-                  <div className={`heat-day${i === 4 ? " today" : ""}`} key={i}>
-                    <span>{day}</span>
-                    <small>{icon}</small>
-                    <em>{status}</em>
-                  </div>
-                ))}
+            {weekAttendance.length > 0 && (
+              <div style={{ marginTop: 20 }}>
+                <div className="cycle-title">
+                  THIS WEEK'S RECORD &nbsp;
+                  <span style={{ color: "var(--green)", fontWeight: 700 }}>
+                    {weekAttendance.filter(d => !d.isFuture && d.status === "PRESENT").length}/{weekAttendance.filter(d => !d.isFuture).length} Present
+                  </span>
+                </div>
+                <div className="heat-strip">
+                  {weekAttendance.map((day, i) => (
+                    <div className={`heat-day${day.isToday ? " today" : ""}`} key={i}>
+                      <span>{day.isToday ? "Today" : day.day}</span>
+                      <small>{day.isFuture ? "–" : day.status === "PRESENT" ? "✓" : "✗"}</small>
+                      <em>
+                        {day.isFuture ? "Upcoming" : day.isToday ? "Active" : day.status === "PRESENT" ? "On-time" : "Absent"}
+                      </em>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </section>
         </div>
 
         <div className="right-column">
           {/* Today's Classes */}
-          <section className="panel classes-panel">
-            <div className="panel-heading compact">
-              <div>
-                <h2>Upcoming Class</h2>
-                <p>Tuesday • 4 Sessions remaining</p>
+          {upcomingSchedules.length > 0 && (
+            <section className="panel classes-panel">
+              <div className="panel-heading compact">
+                <div>
+                  <h2>Today's Schedule</h2>
+                  <p>{upcomingSchedules.length} session{upcomingSchedules.length !== 1 ? 's' : ''}</p>
+                </div>
+                {nextClass && minutesUntilNext !== null && (
+                  <div className="live-badge">
+                    {minutesUntilNext > 0 ? `In ${minutesUntilNext} min` : 'Now'}
+                  </div>
+                )}
               </div>
-              <div className="live-badge">Live in 25 min</div>
-            </div>
-            <div className="class-list">
-              {schedule.filter(s => s.day === "Tue").map((item, i) => (
-                <div className="class-item" key={i} onClick={() => navigate("/schedule")}>
-                  <div className="class-time">
-                    <small>PERIOD {item.period}</small>
-                    <strong>{item.time}</strong>
+              <div className="class-list">
+                {upcomingSchedules.map((schedule, i) => (
+                  <div className="class-item" key={schedule.id} onClick={() => navigate("/schedule")}>
+                    <div className="class-time">
+                      <small>PERIOD {schedule.period}</small>
+                      <strong>{formatTime(schedule.startTime)}</strong>
+                    </div>
+                    <div className="class-info">
+                      <h3>{schedule.class?.subject?.name || "Class"}</h3>
+                      <p>
+                        {schedule.class?.teacher?.user ? 
+                          `${schedule.class.teacher.user.firstName} ${schedule.class.teacher.user.lastName}` : 
+                          'Teacher'
+                        }
+                        {schedule.room && ` • ${schedule.room}`}
+                      </p>
+                    </div>
+                    {nextClass && nextClass.id === schedule.id && <div className="class-live">NEXT</div>}
                   </div>
-                  <div className="class-info">
-                    <h3>{item.title}</h3>
-                    <p>{item.teacher} • {item.room}</p>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Notice Board */}
+          {recentNotices.length > 0 && (
+            <section className="panel notice-panel">
+              <div className="panel-heading compact">
+                <h2><Megaphone size={17} /> Campus Bulletin</h2>
+                <button
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--green)",
+                    fontSize: "13px",
+                    fontWeight: 600
+                  }}
+                  onClick={() => navigate("/notices")}
+                >
+                  View All
+                </button>
+              </div>
+              {recentNotices.map((notice) => (
+                <div className="notice" key={notice.id} style={{ cursor: "pointer" }} onClick={() => navigate("/notices")}>
+                  <div className="notice-top">
+                    <span>{notice.category}</span>
+                    <small>{new Date(notice.publishDate).toLocaleDateString()}</small>
                   </div>
-                  {item.live && <div className="class-live">NEXT</div>}
+                  <strong>{notice.title}</strong>
+                  <p>{notice.content.slice(0, 100)}...</p>
                 </div>
               ))}
-            </div>
-          </section>
-          {/* Notice Board */}
-          <section className="panel notice-panel">
-            <div className="panel-heading compact">
-              <h2><Megaphone size={17} /> Campus Bulletin</h2>
-              <button
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--green)", fontSize: "13px", fontWeight: 600 }}
-                onClick={() => navigate("/notices")}
-              >
-                2 Unread
-              </button>
-            </div>
-            {allNotices.slice(0, 3).map((n, i) => (
-              <div className="notice" key={i} style={{ cursor: "pointer" }} onClick={() => navigate("/notices")}>
-                <div className="notice-top">
-                  <span>{n.tag}</span>
-                  <small>{n.date}</small>
-                </div>
-                <strong>{n.title}</strong>
-                <p>{n.text.slice(0, 100)}...</p>
-              </div>
-            ))}
-          </section>
+            </section>
+          )}
         </div>
       </div>
-
-      {/* Local Modals */}
-      {localModal === "leave" && (
-        <Modal title="Apply for Leave" onClose={close}>
-          <p className="modal-desc">Submit a leave application to your homeroom teacher.</p>
-          <label>Leave Date</label>
-          <input type="date" className="modal-input" value={leaveDate} onChange={e => setLeaveDate(e.target.value)} />
-          <label>Reason</label>
-          <textarea className="modal-textarea" placeholder="Describe the reason..." value={leaveReason} onChange={e => setLeaveReason(e.target.value)} />
-          <div className="modal-actions">
-            <button className="modal-btn-secondary" onClick={close}>Cancel</button>
-            <button className="modal-btn-primary" onClick={() => {
-              if (!leaveDate || !leaveReason) { showToast("Please fill all fields."); return; }
-              close(); showToast("✓ Leave application submitted!");
-            }}>
-              <Send size={14} />Submit
-            </button>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }

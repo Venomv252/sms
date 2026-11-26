@@ -15,6 +15,9 @@ import {
   RefreshCw,
   GraduationCap,
   Briefcase,
+  FileText,
+  Wallet,
+  CreditCard,
 } from "lucide-react";
 import RoleSidebar from "../components/RoleSidebar.jsx";
 import "./admin.css";
@@ -32,6 +35,9 @@ import ParentRegistration from "./accountant/pages/ParentRegistration.jsx";
 import TeacherRegistration from "./accountant/pages/TeacherRegistration.jsx";
 import StaffRegistration from "./accountant/pages/StaffRegistration.jsx";
 import StudentFeeManagement from "./accountant/pages/StudentFeeManagement.jsx";
+import InvoiceManagement from "./accountant/pages/InvoiceManagement.jsx";
+import SalaryManagement from "./accountant/pages/SalaryManagement.jsx";
+import BillPayments from "./accountant/pages/BillPayments.jsx";
 
 const NAV = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard, group: "OVERVIEW" },
@@ -43,6 +49,9 @@ const NAV = [
   { id: "fee-collection", label: "Fee Collection", icon: DollarSign, group: "FEE MANAGEMENT" },
   { id: "defaulters", label: "Fee Defaulters", icon: TrendingDown, group: "FEE MANAGEMENT" },
   { id: "concessions", label: "Concessions & Discounts", icon: Percent, group: "FEE MANAGEMENT" },
+  { id: "salary-management", label: "Salary Management", icon: Wallet, group: "PAYROLL & EXPENSES" },
+  { id: "bill-payments", label: "Bill Payments", icon: CreditCard, group: "PAYROLL & EXPENSES" },
+  { id: "invoices", label: "Invoice Management", icon: FileText, group: "PAYROLL & EXPENSES" },
   { id: "transactions", label: "Transaction History", icon: Receipt, group: "FINANCIAL" },
   { id: "reports", label: "Financial Reports", icon: BarChart3, group: "REPORTS" },
 ];
@@ -100,6 +109,12 @@ export default function AccountantDashboard() {
         return <FeeDefaulters {...pageProps} />;
       case "concessions":
         return <Concessions {...pageProps} />;
+      case "salary-management":
+        return <SalaryManagement {...pageProps} />;
+      case "bill-payments":
+        return <BillPayments {...pageProps} />;
+      case "invoices":
+        return <InvoiceManagement {...pageProps} />;
       case "transactions":
         return <Transactions {...pageProps} />;
       case "reports":

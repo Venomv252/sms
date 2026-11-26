@@ -231,8 +231,8 @@ function AppContent() {
           {/* Driver routes */}
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
           
-          {/* Student routes */}
-          <Route path="/student/dashboard" element={<StudentDashboardApp />} />
+          {/* Student routes - nested with wildcard */}
+          <Route path="/student/dashboard/*" element={<StudentDashboardApp />} />
           
           {/* Parent routes */}
           <Route path="/parent/dashboard" element={<ParentDashboardApp />} />

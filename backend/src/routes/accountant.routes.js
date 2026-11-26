@@ -296,8 +296,6 @@ router.get("/defaulters", async (req, res, next) => {
   }
 });
 
-export default router;
-
 /**
  * POST /api/accountant/students
  * Create a new student account
@@ -509,17 +507,8 @@ router.post("/parents", async (req, res, next) => {
           username,
           password: hashedPassword,
           role: "PARENT",
-          schoolId
-        }
-      });
-
-      // Create parent profile
-      const parent = await tx.parent.create({
-        data: {
-          userId: user.id,
-          phoneNumber: phoneNumber || null,
-          address: address || null,
-          occupation: occupation || null
+          schoolId,
+          phoneNumber: phoneNumber || null
         }
       });
 
@@ -527,11 +516,11 @@ router.post("/parents", async (req, res, next) => {
       const parentStudentLink = await tx.parentStudent.create({
         data: {
           parentUserId: user.id,
-          studentUserId: student.userId
+          studentId: student.id
         }
       });
 
-      return { user, parent, parentStudentLink };
+      return { user, parentStudentLink };
     });
 
     return res.status(201).json({
@@ -543,7 +532,7 @@ router.post("/parents", async (req, res, next) => {
           password: temporaryPassword
         },
         parent: {
-          id: result.parent.id,
+          id: result.user.id,
           name: `${firstName} ${lastName}`,
           phoneNumber
         },
@@ -823,3 +812,640 @@ router.get("/fees/:feeId/invoice", async (req, res, next) => {
     next(error);
   }
 });
+
+
+/**
+ * GET /api/accountant/employees
+ * Get all employees (teachers and staff) with salary information
+ */
+router.get("/employees", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+
+    // Get all teachers
+    const teachers = await prisma.teacher.findMany({
+      where: {
+        user: { schoolId }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    // Get all staff (users with STAFF role or other staff roles)
+    const staff = await prisma.user.findMany({
+      where: {
+        schoolId,
+        role: { in: ["STAFF", "DRIVER", "ACCOUNTANT", "MANAGEMENT"] }
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    // Combine and format employee data
+    const employees = [
+      ...teachers.map(teacher => ({
+        id: teacher.user.id,
+        name: `${teacher.user.firstName} ${teacher.user.lastName}`,
+        email: teacher.user.email,
+        phoneNumber: teacher.user.phoneNumber,
+        role: "TEACHER",
+        employeeType: "Teaching Staff",
+        department: teacher.department || "Academic",
+        joiningDate: teacher.joiningDate || teacher.user.createdAt,
+        salary: teacher.salary ? Number(teacher.salary) : null,
+        status: "ACTIVE"
+      })),
+      ...staff.map(user => ({
+        id: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        employeeType: user.role === "DRIVER" ? "Support Staff" : 
+                     user.role === "ACCOUNTANT" ? "Administrative" :
+                     user.role === "MANAGEMENT" ? "Management" : "Staff",
+        department: user.role === "DRIVER" ? "Transport" :
+                   user.role === "ACCOUNTANT" ? "Accounts" :
+                   user.role === "MANAGEMENT" ? "Administration" : "General",
+        joiningDate: user.createdAt,
+        salary: null,
+        status: "ACTIVE"
+      }))
+    ];
+
+    return res.json({
+      status: "success",
+      data: employees.sort((a, b) => a.name.localeCompare(b.name))
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/accountant/salary-records
+ * Get salary records for employees
+ */
+router.get("/salary-records", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+
+    // Get teachers with salary info
+    const teachers = await prisma.teacher.findMany({
+      where: {
+        user: { schoolId }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
+
+    const records = teachers.map(teacher => ({
+      id: teacher.id,
+      employeeId: teacher.user.id,
+      employeeName: `${teacher.user.firstName} ${teacher.user.lastName}`,
+      role: "TEACHER",
+      department: teacher.department || "Academic",
+      monthlySalary: teacher.salary ? Number(teacher.salary) : 0,
+      status: "ACTIVE"
+    }));
+
+    return res.json({
+      status: "success",
+      data: records
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/accountant/students/:id
+ * Get single student details with full profile
+ */
+router.get("/students/:id", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { id } = req.params;
+
+    const student = await prisma.student.findFirst({
+      where: {
+        id,
+        user: { schoolId }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            username: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    if (!student) {
+      return res.status(404).json({
+        status: "error",
+        message: "Student not found"
+      });
+    }
+
+    return res.json({
+      status: "success",
+      ...student
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/accountant/students/:id
+ * Update student profile (not credentials)
+ */
+router.patch("/students/:id", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { id } = req.params;
+    const {
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      address,
+      bloodGroup,
+      parentName,
+      parentEmail,
+      parentPhone
+    } = req.body;
+
+    // Verify student belongs to this school
+    const student = await prisma.student.findFirst({
+      where: {
+        id,
+        user: { schoolId }
+      },
+      include: {
+        user: true
+      }
+    });
+
+    if (!student) {
+      return res.status(404).json({
+        status: "error",
+        message: "Student not found"
+      });
+    }
+
+    // Update in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update user info
+      if (firstName || lastName || email) {
+        await tx.user.update({
+          where: { id: student.userId },
+          data: {
+            ...(firstName && { firstName }),
+            ...(lastName && { lastName }),
+            ...(email && { email })
+          }
+        });
+      }
+
+      // Update student info
+      const updatedStudent = await tx.student.update({
+        where: { id },
+        data: {
+          ...(phoneNumber !== undefined && { phoneNumber }),
+          ...(address !== undefined && { address }),
+          ...(bloodGroup !== undefined && { bloodGroup }),
+          ...(parentName !== undefined && { parentName }),
+          ...(parentEmail !== undefined && { parentEmail }),
+          ...(parentPhone !== undefined && { parentPhone })
+        }
+      });
+
+      return updatedStudent;
+    });
+
+    return res.json({
+      status: "success",
+      message: "Student profile updated successfully",
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/accountant/parents
+ * Get all parents with their children
+ */
+router.get("/parents", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+
+    // Get all users with PARENT role
+    const parentUsers = await prisma.user.findMany({
+      where: {
+        schoolId,
+        role: "PARENT"
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        username: true,
+        phoneNumber: true,
+        createdAt: true
+      }
+    });
+
+    // Get parent-student links
+    const parentLinks = await prisma.parentStudent.findMany({
+      where: {
+        parentUserId: { in: parentUsers.map(p => p.id) }
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Map parents to their children
+    const formattedParents = parentUsers.map(parent => {
+      const links = parentLinks.filter(link => link.parentUserId === parent.id);
+      return {
+        id: parent.id,
+        name: `${parent.firstName} ${parent.lastName}`,
+        email: parent.email,
+        phoneNumber: parent.phoneNumber,
+        children: links.map(link => ({
+          firstName: link.student.user.firstName,
+          lastName: link.student.user.lastName,
+          grade: link.student.grade,
+          section: link.student.section,
+          rollNumber: link.student.rollNumber,
+          admissionNumber: link.student.admissionNumber
+        }))
+      };
+    });
+
+    return res.json({
+      status: "success",
+      data: formattedParents
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/accountant/parents/:id
+ * Get single parent details with children
+ */
+router.get("/parents/:id", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { id } = req.params;
+
+    // Get parent user
+    const parent = await prisma.user.findFirst({
+      where: {
+        id,
+        schoolId,
+        role: "PARENT"
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        username: true,
+        phoneNumber: true,
+        createdAt: true
+      }
+    });
+
+    if (!parent) {
+      return res.status(404).json({
+        status: "error",
+        message: "Parent not found"
+      });
+    }
+
+    // Get parent-student links
+    const parentLinks = await prisma.parentStudent.findMany({
+      where: {
+        parentUserId: id
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const formattedParent = {
+      id: parent.id,
+      user: parent,
+      phoneNumber: parent.phoneNumber,
+      children: parentLinks.map(link => ({
+        firstName: link.student.user.firstName,
+        lastName: link.student.user.lastName,
+        grade: link.student.grade,
+        section: link.student.section,
+        rollNumber: link.student.rollNumber,
+        admissionNumber: link.student.admissionNumber
+      }))
+    };
+
+    return res.json({
+      status: "success",
+      ...formattedParent
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/accountant/parents/:id
+ * Update parent profile (not credentials)
+ */
+router.patch("/parents/:id", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { id } = req.params;
+    const {
+      firstName,
+      lastName,
+      email,
+      phoneNumber
+    } = req.body;
+
+    // Verify parent belongs to this school
+    const parent = await prisma.user.findFirst({
+      where: {
+        id,
+        schoolId,
+        role: "PARENT"
+      }
+    });
+
+    if (!parent) {
+      return res.status(404).json({
+        status: "error",
+        message: "Parent not found"
+      });
+    }
+
+    // Update user info
+    const updatedParent = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(email && { email }),
+        ...(phoneNumber !== undefined && { phoneNumber })
+      }
+    });
+
+    return res.json({
+      status: "success",
+      message: "Parent profile updated successfully",
+      data: updatedParent
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/accountant/staff/:id
+ * Get single staff member details
+ */
+router.get("/staff/:id", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { id } = req.params;
+
+    // Try to find as teacher first
+    let staffMember = await prisma.teacher.findFirst({
+      where: {
+        userId: id,
+        user: { schoolId }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            username: true,
+            role: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    if (staffMember) {
+      return res.json({
+        status: "success",
+        id: staffMember.user.id,
+        user: staffMember.user,
+        role: "TEACHER",
+        department: staffMember.department,
+        salary: staffMember.salary ? Number(staffMember.salary) : null,
+        joiningDate: staffMember.joiningDate || staffMember.user.createdAt,
+        phoneNumber: staffMember.user.phoneNumber,
+        status: "ACTIVE"
+      });
+    }
+
+    // Otherwise find as general user (staff, driver, etc.)
+    const user = await prisma.user.findFirst({
+      where: {
+        id,
+        schoolId,
+        role: { in: ["STAFF", "DRIVER", "ACCOUNTANT", "MANAGEMENT"] }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "Staff member not found"
+      });
+    }
+
+    return res.json({
+      status: "success",
+      id: user.id,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        username: user.username,
+        role: user.role,
+        createdAt: user.createdAt
+      },
+      role: user.role,
+      department: user.role === "DRIVER" ? "Transport" :
+                 user.role === "ACCOUNTANT" ? "Accounts" :
+                 user.role === "MANAGEMENT" ? "Administration" : "General",
+      salary: null,
+      joiningDate: user.createdAt,
+      phoneNumber: user.phoneNumber,
+      status: "ACTIVE"
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/accountant/staff/:id
+ * Update staff profile (not credentials)
+ */
+router.patch("/staff/:id", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { id } = req.params;
+    const {
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      department,
+      salary
+    } = req.body;
+
+    // Check if teacher
+    const teacher = await prisma.teacher.findFirst({
+      where: {
+        userId: id,
+        user: { schoolId }
+      }
+    });
+
+    if (teacher) {
+      // Update teacher
+      const result = await prisma.$transaction(async (tx) => {
+        // Update user
+        if (firstName || lastName || email || phoneNumber) {
+          await tx.user.update({
+            where: { id },
+            data: {
+              ...(firstName && { firstName }),
+              ...(lastName && { lastName }),
+              ...(email && { email }),
+              ...(phoneNumber !== undefined && { phoneNumber })
+            }
+          });
+        }
+
+        // Update teacher
+        const updatedTeacher = await tx.teacher.update({
+          where: { id: teacher.id },
+          data: {
+            ...(department !== undefined && { department }),
+            ...(salary !== undefined && { salary: parseFloat(salary) || null })
+          }
+        });
+
+        return updatedTeacher;
+      });
+
+      return res.json({
+        status: "success",
+        message: "Staff profile updated successfully",
+        data: result
+      });
+    }
+
+    // Otherwise update as regular user
+    const user = await prisma.user.findFirst({
+      where: {
+        id,
+        schoolId,
+        role: { in: ["STAFF", "DRIVER", "ACCOUNTANT", "MANAGEMENT"] }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "Staff member not found"
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(email && { email }),
+        ...(phoneNumber !== undefined && { phoneNumber })
+      }
+    });
+
+    return res.json({
+      status: "success",
+      message: "Staff profile updated successfully",
+      data: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;
