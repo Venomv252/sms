@@ -1,0 +1,998 @@
+/* Accountant Dashboard Theme - Properly scoped to prevent CSS conflicts */
+/* All rules are scoped under .accountant-role-shell to ensure isolation */
+
+.accountant-role-shell {
+  --acc-bg: #f8fafb;
+  --acc-panel: #ffffff;
+  --acc-panel-2: #f9faf9;
+  --acc-border: #e1e9e4;
+  --acc-text: #18352b;
+  --acc-muted: #6d7c75;
+  --acc-green: #0a7c59;
+  --acc-green-dark: #065c41;
+  --acc-green-soft: #e6f4f0;
+  background: var(--acc-bg) !important;
+  color: var(--acc-text) !important;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+/* Main Content Area */
+.accountant-role-shell > .platform-main {
+  background: var(--acc-bg) !important;
+  padding-bottom: 42px !important;
+}
+
+/* Top Bar */
+.accountant-role-shell .platform-topbar {
+  min-height: 76px !important;
+  background: #fff !important;
+  border-bottom: 1px solid #e9edf0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px !important;
+}
+
+.accountant-role-shell .platform-topbar h1 {
+  color: #111827 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+.accountant-role-shell .platform-topbar > div:nth-child(2) > span {
+  color: #8b969e !important;
+  font-size: 9px !important;
+  letter-spacing: 0.13em !important;
+}
+
+.accountant-role-shell .platform-live {
+  background: var(--acc-green-soft) !important;
+  color: var(--acc-green) !important;
+  border-radius: 30px !important;
+  padding: 8px 12px !important;
+  font-size: 11px !important;
+  white-space: nowrap !important;
+  border: none !important;
+}
+
+.accountant-role-shell .platform-live i {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 3px #d1fae5 !important;
+}
+
+.accountant-role-shell .superadmin-refresh {
+  background: var(--acc-green) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  font-size: 12px !important;
+  border: none !important;
+}
+
+.accountant-role-shell .platform-menu-toggle {
+  background: #f0f4f2 !important;
+  color: var(--acc-green) !important;
+}
+
+/* Page Intro Section */
+.accountant-role-shell .platform-page-intro {
+  border-radius: 14px !important;
+  border: 1px solid #e5e7eb !important;
+  background: linear-gradient(110deg, #fff 0%, #fff 55%, var(--acc-green-soft) 100%) !important;
+  padding: 24px 26px !important;
+}
+
+.accountant-role-shell .platform-page-intro h2 {
+  font-size: 25px !important;
+  color: #111827 !important;
+}
+
+.accountant-role-shell .platform-page-intro p {
+  font-size: 13px !important;
+  color: #6b7280 !important;
+}
+
+/* KPI Cards */
+.accountant-role-shell .superadmin-kpis article {
+  border: 1px solid #e8ecef !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+}
+
+.accountant-role-shell .superadmin-kpis article > svg {
+  color: var(--acc-green) !important;
+  background: var(--acc-green-soft) !important;
+  border-radius: 50%;
+  padding: 6px;
+}
+
+.accountant-role-shell .superadmin-kpis article > span {
+  color: #6b7280 !important;
+}
+
+.accountant-role-shell .superadmin-kpis article > strong {
+  color: #111827 !important;
+}
+
+.accountant-role-shell .superadmin-kpis article small {
+  color: #9ca3af !important;
+}
+
+/* Panels */
+.accountant-role-shell .superadmin-panel {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+}
+
+.accountant-role-shell .superadmin-section-title h2 {
+  color: #111827 !important;
+}
+
+.accountant-role-shell .superadmin-section-title p {
+  color: #6b7280 !important;
+}
+
+.accountant-role-shell .superadmin-section-title button {
+  background: rgba(10, 124, 89, 0.1) !important;
+  color: var(--acc-green) !important;
+  border: 1.5px solid rgba(10, 124, 89, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 10px 18px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.accountant-role-shell .superadmin-section-title button:hover {
+  background: rgba(10, 124, 89, 0.2) !important;
+  border-color: rgba(10, 124, 89, 0.5) !important;
+}
+
+.accountant-role-shell .superadmin-count {
+  background: var(--acc-green-soft) !important;
+  color: var(--acc-green) !important;
+}
+
+/* Network/Content Cards */
+.accountant-role-shell .network-card {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.accountant-role-shell .network-school-mark {
+  background: var(--acc-green-soft) !important;
+  color: var(--acc-green) !important;
+}
+
+.accountant-role-shell .network-school-title strong {
+  color: #111827 !important;
+}
+
+.accountant-role-shell .network-school-title span {
+  color: #6b7280 !important;
+}
+
+.accountant-role-shell .network-metrics > div {
+  background: #f9fafb !important;
+  border: 1px solid #e9edf0 !important;
+}
+
+.accountant-role-shell .network-metrics span {
+  color: #6b7280 !important;
+}
+
+.accountant-role-shell .network-metrics strong {
+  color: #111827 !important;
+}
+
+/* Buttons */
+.accountant-role-shell .director-open-school,
+.accountant-role-shell .director-submit {
+  background: var(--acc-green) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  border: none !important;
+}
+
+.accountant-role-shell .superadmin-panel button:not(.superadmin-icon-button) {
+  border-radius: 8px;
+}
+
+/* Empty States and Messages */
+.accountant-role-shell .superadmin-empty {
+  background: #f9fafb !important;
+  border: 1px dashed #e1e9e4 !important;
+  color: #6b7280 !important;
+}
+
+.accountant-role-shell .superadmin-error {
+  background: #fff0f0 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.accountant-role-shell .superadmin-success {
+  background: var(--acc-green-soft) !important;
+  color: var(--acc-green) !important;
+  border: 1px solid #c7e9dd !important;
+}
+
+.accountant-role-shell .superadmin-loading {
+  background: #f9fafb !important;
+  color: #6b7280 !important;
+}
+
+/* Stat Tables */
+.accountant-role-shell .platform-stat-row {
+  border-color: #e9edf0 !important;
+}
+
+.accountant-role-shell .platform-stat-row.heading {
+  background: #f6f8fa !important;
+  color: #6b7280 !important;
+}
+
+.accountant-role-shell .platform-stat-row strong {
+  color: #111827 !important;
+}
+
+.accountant-role-shell .platform-stat-row small {
+  color: #6b7280 !important;
+}
+
+.accountant-role-shell .platform-stat-row b {
+  color: #111827 !important;
+}
+
+.accountant-role-shell .platform-compact-row {
+  border-color: #eef1f3 !important;
+}
+
+.accountant-role-shell .platform-compact-row strong {
+  color: #111827 !important;
+}
+
+.accountant-role-shell .platform-compact-row small {
+  color: #6b7280 !important;
+}
+
+/* Modals */
+.accountant-role-shell .superadmin-modal-backdrop {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.accountant-role-shell .superadmin-modal {
+  background: #fff !important;
+  border: 1px solid #e9edf0 !important;
+}
+
+.accountant-role-shell .superadmin-modal h2 {
+  color: #111827 !important;
+}
+
+.accountant-role-shell .superadmin-modal label {
+  color: #111827 !important;
+}
+
+.accountant-role-shell .superadmin-modal input,
+.accountant-role-shell .superadmin-modal textarea,
+.accountant-role-shell .superadmin-modal select {
+  background: #fff !important;
+  border: 1px solid #e1e9e4 !important;
+  color: #111827 !important;
+}
+
+/* Form Elements */
+.accountant-role-shell input,
+.accountant-role-shell textarea,
+.accountant-role-shell select {
+  background: #ffffff !important;
+  color: #18352b !important;
+  border: 1px solid #e1e9e4 !important;
+  border-radius: 7px !important;
+}
+
+.accountant-role-shell input::placeholder,
+.accountant-role-shell textarea::placeholder {
+  color: #87919a !important;
+}
+
+.accountant-role-shell label {
+  color: #18352b !important;
+}
+
+.accountant-role-shell fieldset {
+  border-color: #e1e9e4 !important;
+}
+
+.accountant-role-shell legend {
+  color: #18352b !important;
+}
+
+/* Icon Buttons */
+.accountant-role-shell .superadmin-icon-button {
+  background: #f6f8fa !important;
+  color: #111827 !important;
+  border: 1px solid #e1e9e4 !important;
+  border-radius: 8px !important;
+}
+
+.accountant-role-shell .superadmin-icon-button:hover {
+  background: #edf0f2 !important;
+}
+
+.accountant-role-shell .superadmin-icon-button.danger {
+  color: #dc2626 !important;
+}
+
+/* School Assignment Controls */
+.accountant-role-shell .school-assignment-results,
+.accountant-role-shell .director-school-options {
+  background: #ffffff !important;
+  border-color: #e1e9e4 !important;
+}
+
+.accountant-role-shell .school-assignment-results label,
+.accountant-role-shell .director-school-options label {
+  border-color: #e1e9e4 !important;
+  color: #18352b !important;
+}
+
+.accountant-role-shell .school-assignment-results small,
+.accountant-role-shell .director-school-options small {
+  color: #6d7c75 !important;
+}
+
+/* Director/School Specific Elements */
+.accountant-role-shell .superadmin-school-row,
+.accountant-role-shell .superadmin-director-list article,
+.accountant-role-shell .superadmin-detail-grid > div {
+  background: #ffffff !important;
+  border-color: var(--acc-border) !important;
+  color: #18352b !important;
+}
+
+.accountant-role-shell .superadmin-school-main strong,
+.accountant-role-shell .superadmin-director-info strong {
+  color: #18352b !important;
+}
+
+.accountant-role-shell .superadmin-school-main span,
+.accountant-role-shell .superadmin-school-main small,
+.accountant-role-shell .superadmin-director-info span,
+.accountant-role-shell .superadmin-director-info small {
+  color: #6d7c75 !important;
+}
+
+.accountant-role-shell .superadmin-detail-grid span {
+  color: #6d7c75 !important;
+}
+
+.accountant-role-shell .superadmin-detail-grid strong {
+  color: #18352b !important;
+}
+
+.accountant-role-shell .director-avatar {
+  background: #e6f4f0 !important;
+  color: var(--acc-green) !important;
+}
+
+.accountant-role-shell .network-director {
+  border-color: var(--acc-border) !important;
+}
+
+.accountant-role-shell .network-director strong {
+  color: #18352b !important;
+}
+
+.accountant-role-shell .network-director > span {
+  color: #6d7c75 !important;
+}
+
+.accountant-role-shell .network-card-foot {
+  color: #7f91a7 !important;
+}
+
+/* Confirmation Dialogs */
+.accountant-role-shell .superadmin-confirm-modal {
+  background: #ffffff !important;
+  border: 1px solid #e1e9e4 !important;
+  color: #18352b !important;
+}
+
+.accountant-role-shell .superadmin-confirm-modal p,
+.accountant-role-shell .superadmin-delete-details {
+  color: #6d7c75 !important;
+}
+
+.accountant-role-shell .superadmin-cancel-button {
+  background: #f6f8fa !important;
+  color: #18352b !important;
+  border: 1px solid #e1e9e4 !important;
+}
+
+.accountant-role-shell .superadmin-delete-confirm {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
+
+/* Health Panel */
+.accountant-role-shell .platform-health-panel .health-notice {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+
+.accountant-role-shell .platform-health-panel .health-notice strong {
+  color: #92400e !important;
+}
+
+.accountant-role-shell .platform-health-panel .health-notice p,
+.accountant-role-shell .platform-health-panel .health-notice small {
+  color: #78716c !important;
+}
+
+.accountant-role-shell .platform-health-panel .health-status-row {
+  border-color: var(--acc-border) !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 680px) {
+  .accountant-role-shell .platform-topbar {
+    gap: 9px;
+  }
+
+  .accountant-role-shell .platform-page-intro {
+    border-radius: 16px;
+    padding: 18px;
+  }
+
+  .accountant-role-shell .platform-page-intro h2 {
+    font-size: 20px;
+  }
+
+  .accountant-role-shell .superadmin-kpis article {
+    border-radius: 14px;
+  }
+
+  .accountant-role-shell .superadmin-panel {
+    border-radius: 15px;
+  }
+}
+
+/* Fee Management Specific Styles */
+.accountant-role-shell .fee-status-paid {
+  color: #10b981 !important;
+}
+
+.accountant-role-shell .fee-status-pending {
+  color: #f59e0b !important;
+}
+
+.accountant-role-shell .fee-status-overdue {
+  color: #ef4444 !important;
+}
+
+.accountant-role-shell .fee-status-partial {
+  color: #3b82f6 !important;
+}
+
+/* Student/Parent Forms */
+.accountant-role-shell .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.accountant-role-shell .form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acc-text);
+}
+
+@media (max-width: 768px) {
+  .accountant-role-shell .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Accountant sidebar: same shared green navigation system as Super Admin. */
+.accountant-role-shell > .platform-sidebar {
+  background: #0a7c59 !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 2px 0 14px rgba(15, 55, 42, 0.08) !important;
+  padding: 0 12px 14px !important;
+}
+.accountant-role-shell .platform-brand {
+  min-height: 92px;
+  padding: 16px 8px;
+  border-bottom: 1px solid rgba(255,255,255,.16);
+}
+.accountant-role-shell .platform-brand strong,
+.accountant-role-shell .platform-brand small,
+.accountant-role-shell .platform-user strong,
+.accountant-role-shell .platform-user small { color: #fff !important; }
+.accountant-role-shell .platform-brand strong { font-size: 16px; font-weight: 750; }
+.accountant-role-shell .platform-brand small,
+.accountant-role-shell .platform-user small { opacity: .75; }
+.accountant-role-shell .platform-brand-icon,
+.accountant-role-shell .platform-user-avatar { background: rgba(255,255,255,.18) !important; color: #fff !important; }
+.accountant-role-shell .platform-nav-label { color: rgba(255,255,255,.62) !important; }
+.accountant-role-shell .platform-nav-group-label { color: rgba(255,255,255,.55) !important; }
+.accountant-role-shell .platform-sidebar nav button { color: rgba(255,255,255,.86) !important; }
+.accountant-role-shell .platform-sidebar nav button:hover { color: #fff !important; background: rgba(255,255,255,.12) !important; }
+.accountant-role-shell .platform-sidebar nav button.active { color: #065c41 !important; background: #fff !important; box-shadow: 0 4px 12px rgba(0,0,0,.08) !important; }
+.accountant-role-shell .platform-sidebar nav button.active .sidebar-badge { color: #065c41 !important; background: #e6f4f0 !important; }
+.accountant-role-shell .platform-sidebar-bottom { border-top: 1px solid rgba(255,255,255,.16) !important; }
+.accountant-role-shell .platform-sidebar .platform-signout { color: rgba(255,255,255,.88) !important; border-radius: 8px !important; }
+.accountant-role-shell .platform-sidebar .platform-signout:hover { color: #fff !important; background: rgba(255,255,255,.12) !important; }
+.accountant-role-shell .platform-close-nav { color: #fff !important; }
+
+/* ============================================================
+   ENHANCED TOP NAVBAR STYLES
+   ============================================================ */
+
+/* Top Bar - Enhanced Layout */
+.accountant-role-shell .platform-topbar {
+  min-height: 76px !important;
+  background: #fff !important;
+  border-bottom: 1px solid #e9edf0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  margin-bottom: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 0 clamp(20px, 3vw, 40px) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
+/* Page Title Section */
+.accountant-role-shell .platform-topbar > div:nth-child(2) {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.accountant-role-shell .platform-topbar > div:nth-child(2) > span {
+  color: #6b7280 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+.accountant-role-shell .platform-topbar h1 {
+  color: #111827 !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+/* Top Actions Container */
+.accountant-role-shell .platform-top-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Finance Active Badge */
+.accountant-role-shell .platform-live {
+  background: var(--acc-green-soft) !important;
+  color: var(--acc-green) !important;
+  border-radius: 24px !important;
+  padding: 9px 14px !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  white-space: nowrap !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.accountant-role-shell .platform-live:hover {
+  background: rgba(10, 124, 89, 0.15) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(10, 124, 89, 0.15) !important;
+}
+
+.accountant-role-shell .platform-live i {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  display: block !important;
+  animation: pulse-finance 2s ease-in-out infinite !important;
+}
+
+@keyframes pulse-finance {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+/* User Mini Profile */
+.accountant-role-shell .platform-user-mini {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 12px !important;
+  background: #f8fafb !important;
+  border-radius: 10px !important;
+  border: 1px solid #e9edf0 !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.accountant-role-shell .platform-user-mini:hover {
+  background: #f1f5f3 !important;
+  border-color: var(--acc-green-soft) !important;
+  box-shadow: 0 2px 6px rgba(10, 124, 89, 0.08) !important;
+}
+
+.accountant-role-shell .platform-user-mini > span {
+  width: 38px !important;
+  height: 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: var(--acc-green) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+  letter-spacing: 0.5px !important;
+}
+
+.accountant-role-shell .platform-user-mini > div {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.accountant-role-shell .platform-user-mini strong {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.accountant-role-shell .platform-user-mini small {
+  font-size: 11px !important;
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+}
+
+/* Menu Toggle Button */
+.accountant-role-shell .platform-menu-toggle {
+  display: none !important;
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: var(--acc-green-soft) !important;
+  color: var(--acc-green) !important;
+  border-radius: 9px !important;
+  cursor: pointer !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.accountant-role-shell .platform-menu-toggle:hover {
+  background: rgba(10, 124, 89, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.accountant-role-shell .platform-menu-toggle:active {
+  transform: translateY(0) !important;
+}
+
+/* Refresh Button (if added in future) */
+.accountant-role-shell .superadmin-refresh {
+  background: var(--acc-green) !important;
+  color: #fff !important;
+  border-radius: 9px !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  border: none !important;
+  width: 38px !important;
+  height: 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 5px rgba(10, 124, 89, 0.25) !important;
+}
+
+.accountant-role-shell .superadmin-refresh:hover {
+  background: var(--acc-green-dark) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(10, 124, 89, 0.35) !important;
+}
+
+.accountant-role-shell .superadmin-refresh:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.3) !important;
+}
+
+.accountant-role-shell .superadmin-refresh svg {
+  transition: transform 0.3s ease !important;
+}
+
+.accountant-role-shell .superadmin-refresh:hover svg {
+  transform: rotate(90deg) !important;
+}
+
+/* Responsive Topbar */
+@media (max-width: 768px) {
+  .accountant-role-shell .platform-topbar {
+    gap: 10px !important;
+    padding: 0 16px !important;
+    min-height: 68px !important;
+  }
+
+  .accountant-role-shell .platform-menu-toggle {
+    display: flex !important;
+  }
+
+  .accountant-role-shell .platform-topbar h1 {
+    font-size: 18px !important;
+  }
+
+  .accountant-role-shell .platform-top-actions {
+    gap: 10px !important;
+  }
+
+  /* Hide user mini on small screens */
+  .accountant-role-shell .platform-user-mini {
+    display: none !important;
+  }
+
+  /* Show only finance badge on mobile */
+  .accountant-role-shell .platform-live {
+    padding: 7px 12px !important;
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .accountant-role-shell .platform-topbar > div:nth-child(2) > span {
+    font-size: 9px !important;
+  }
+
+  .accountant-role-shell .platform-topbar h1 {
+    font-size: 16px !important;
+  }
+
+  .accountant-role-shell .platform-live span {
+    display: none !important;
+  }
+
+  .accountant-role-shell .platform-live {
+    padding: 8px !important;
+    min-width: 38px !important;
+    justify-content: center !important;
+  }
+}
+
+/* ============================================================
+   ENHANCED MESSAGE ALERTS
+   ============================================================ */
+
+/* Success/Error Messages - Better Positioning */
+.accountant-role-shell .superadmin-error,
+.accountant-role-shell .superadmin-success {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 14px 20px !important;
+  border-radius: 12px !important;
+  margin: 0 clamp(20px, 3vw, 40px) 20px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  animation: slideDown 0.3s ease !important;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.accountant-role-shell .superadmin-error button,
+.accountant-role-shell .superadmin-success button {
+  background: transparent !important;
+  border: none !important;
+  padding: 4px !important;
+  cursor: pointer !important;
+  opacity: 0.7 !important;
+  transition: opacity 0.2s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.accountant-role-shell .superadmin-error button:hover,
+.accountant-role-shell .superadmin-success button:hover {
+  opacity: 1 !important;
+}
+
+
+/* Accountant header profile and refresh control */
+.accountant-role-shell .accountant-page-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.accountant-role-shell .accountant-page-heading > span {
+  color: #6b7280 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+.accountant-role-shell .accountant-page-heading h1 {
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+.accountant-role-shell .superadmin-refresh:focus-visible,
+.accountant-role-shell .platform-menu-toggle:focus-visible {
+  outline: 3px solid rgba(10, 124, 89, 0.25) !important;
+  outline-offset: 2px !important;
+}
+
+@media (max-width: 768px) {
+  .accountant-role-shell .accountant-page-heading {
+    flex: 1;
+  }
+
+  .accountant-role-shell .platform-top-actions {
+    gap: 8px !important;
+  }
+}
+
+
+/* Accountant navbar — aligned with the Director dashboard profile header */
+.accountant-role-shell .platform-topbar {
+  min-height: 76px !important;
+}
+
+.accountant-role-shell .platform-top-actions {
+  gap: 14px !important;
+}
+
+.accountant-role-shell .platform-user-mini {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 0 0 0 16px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-left: 1px solid #e8edf0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  cursor: default !important;
+}
+
+.accountant-role-shell .platform-user-mini:hover {
+  background: transparent !important;
+  border-color: #e8edf0 !important;
+  box-shadow: none !important;
+}
+
+.accountant-role-shell .platform-user-mini > span {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  border-radius: 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  background: #e6f4ef !important;
+  color: #008765 !important;
+  font-size: 14px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0 !important;
+}
+
+.accountant-role-shell .platform-user-mini .platform-user-details {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.accountant-role-shell .platform-user-mini strong {
+  color: #111827 !important;
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+
+.accountant-role-shell .platform-user-mini small {
+  color: #87919b !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  font-weight: 400 !important;
+}
+
+.accountant-role-shell .superadmin-refresh {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 11px !important;
+  background: #07845f !important;
+  color: #fff !important;
+  box-shadow: 0 3px 6px rgba(0, 105, 76, 0.2) !important;
+}
+
+.accountant-role-shell .superadmin-refresh:hover {
+  background: #067653 !important;
+}
+
+@media (max-width: 640px) {
+  .accountant-role-shell .platform-top-actions {
+    gap: 10px !important;
+  }
+
+  .accountant-role-shell .platform-user-mini {
+    gap: 8px !important;
+    padding-left: 10px !important;
+  }
+
+  .accountant-role-shell .platform-user-mini > span {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+
+  .accountant-role-shell .platform-user-mini strong {
+    max-width: 110px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .accountant-role-shell .superadmin-refresh {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+  }
+}

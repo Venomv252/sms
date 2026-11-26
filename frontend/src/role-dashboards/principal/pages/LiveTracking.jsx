@@ -51,8 +51,19 @@ export default function LiveTracking({ setError, setMessage }) {
   const [mapZoom, setMapZoom] = useState(13);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const { busLocations, watchTrip, connected } = useTracking();
+  const { busLocations, watchTrip, connected, activateTracking, deactivateTracking } = useTracking();
   const refreshIntervalRef = useRef(null);
+
+  // Activate tracking when component mounts, deactivate when unmounts
+  useEffect(() => {
+    console.log('LiveTracking: Activating GPS tracking');
+    activateTracking();
+
+    return () => {
+      console.log('LiveTracking: Deactivating GPS tracking');
+      deactivateTracking();
+    };
+  }, [activateTracking, deactivateTracking]);
 
   // Load tracking data
   const loadTrackingData = async () => {

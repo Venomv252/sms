@@ -84,9 +84,9 @@ router.get(
         pending: 0,
         overdue: 0,
       };
-      
+
       const paymentCount = await prisma.feePayment.count();
-      
+
       if (paymentCount > 0) {
         // Only fetch revenue if there are payments
         const [paidRev, pendingRev, overdueRev] = await Promise.all([
@@ -311,27 +311,27 @@ async function deleteSchoolAndData(tx, schoolId) {
 
   const teachers = userIds.length
     ? await tx.teacher.findMany({
-        where: { userId: { in: userIds } },
-        select: { id: true },
-      })
+      where: { userId: { in: userIds } },
+      select: { id: true },
+    })
     : [];
 
   const teacherIds = teachers.map(({ id }) => id);
 
   const students = userIds.length
     ? await tx.student.findMany({
-        where: { userId: { in: userIds } },
-        select: { id: true },
-      })
+      where: { userId: { in: userIds } },
+      select: { id: true },
+    })
     : [];
 
   const studentIds = students.map(({ id }) => id);
 
   const subjects = teacherIds.length
     ? await tx.subject.findMany({
-        where: { teacherId: { in: teacherIds } },
-        select: { id: true },
-      })
+      where: { teacherId: { in: teacherIds } },
+      select: { id: true },
+    })
     : [];
 
   const subjectIds = subjects.map(({ id }) => id);
@@ -339,22 +339,22 @@ async function deleteSchoolAndData(tx, schoolId) {
   const classes =
     teacherIds.length || subjectIds.length
       ? await tx.class.findMany({
-          where: {
-            OR: [
-              ...(teacherIds.length
-                ? [{ teacherId: { in: teacherIds } }]
-                : []),
-              ...(subjectIds.length
-                ? [{ subjectId: { in: subjectIds } }]
-                : []),
-            ],
-          },
-          select: {
-            id: true,
-            teacherId: true,
-            subjectId: true,
-          },
-        })
+        where: {
+          OR: [
+            ...(teacherIds.length
+              ? [{ teacherId: { in: teacherIds } }]
+              : []),
+            ...(subjectIds.length
+              ? [{ subjectId: { in: subjectIds } }]
+              : []),
+          ],
+        },
+        select: {
+          id: true,
+          teacherId: true,
+          subjectId: true,
+        },
+      })
       : [];
 
   const classIds = classes.map(({ id }) => id);
@@ -377,18 +377,18 @@ async function deleteSchoolAndData(tx, schoolId) {
   const homeworks =
     classIds.length || subjectIds.length
       ? await tx.homework.findMany({
-          where: {
-            OR: [
-              ...(classIds.length
-                ? [{ classId: { in: classIds } }]
-                : []),
-              ...(subjectIds.length
-                ? [{ subjectId: { in: subjectIds } }]
-                : []),
-            ],
-          },
-          select: { id: true },
-        })
+        where: {
+          OR: [
+            ...(classIds.length
+              ? [{ classId: { in: classIds } }]
+              : []),
+            ...(subjectIds.length
+              ? [{ subjectId: { in: subjectIds } }]
+              : []),
+          ],
+        },
+        select: { id: true },
+      })
       : [];
 
   const homeworkIds = homeworks.map(({ id }) => id);
@@ -452,43 +452,43 @@ async function deleteSchoolAndData(tx, schoolId) {
   const [deletedHomework, deletedResults] = await Promise.all([
     homeworkIds.length
       ? tx.homework.deleteMany({
-          where: { id: { in: homeworkIds } },
-        })
+        where: { id: { in: homeworkIds } },
+      })
       : Promise.resolve({ count: 0 }),
 
     resultConditions.length
       ? tx.result.deleteMany({
-          where: { OR: resultConditions },
-        })
+        where: { OR: resultConditions },
+      })
       : Promise.resolve({ count: 0 }),
   ]);
 
   // Class deletion cascades attendance and timetable rows.
   const deletedClasses = classIds.length
     ? await tx.class.deleteMany({
-        where: { id: { in: classIds } },
-      })
+      where: { id: { in: classIds } },
+    })
     : { count: 0 };
 
   // Delete subjects before teachers because Subject references Teacher.
   const deletedSubjects = subjectIds.length
     ? await tx.subject.deleteMany({
-        where: { id: { in: subjectIds } },
-      })
+      where: { id: { in: subjectIds } },
+    })
     : { count: 0 };
 
   const deletedTeachers = teacherIds.length
     ? await tx.teacher.deleteMany({
-        where: { id: { in: teacherIds } },
-      })
+      where: { id: { in: teacherIds } },
+    })
     : { count: 0 };
 
   // User deletion cascades student/profile data, parent links, notes,
   // doubts/comments, leave requests and other user-owned records.
   const deletedUsers = userIds.length
     ? await tx.user.deleteMany({
-        where: { id: { in: userIds } },
-      })
+      where: { id: { in: userIds } },
+    })
     : { count: 0 };
 
   // School deletion cascades notices and DirectorSchool assignments.
@@ -722,7 +722,7 @@ router.post("/directors", allowRoles("SUPER_ADMIN"), async (req, res, next) => {
     const existingUser = await prisma.user.findUnique({
       where: { username: normalizedUsername }
     });
-    
+
     if (existingUser) {
       return res.status(409).json({
         message: "Username already exists",
@@ -783,7 +783,7 @@ router.post("/directors", allowRoles("SUPER_ADMIN"), async (req, res, next) => {
       return created;
     });
 
-    res.status(201).json({ 
+    res.status(201).json({
       data: {
         director,
         credentials: {
@@ -1498,11 +1498,11 @@ router.get(
 
           const attendanceRate = attendanceTotal
             ? Number(
-                (
-                  (attendancePresent / attendanceTotal) *
-                  100
-                ).toFixed(1)
-              )
+              (
+                (attendancePresent / attendanceTotal) *
+                100
+              ).toFixed(1)
+            )
             : null;
 
           return {
@@ -2266,12 +2266,7 @@ router.get(
             priority: true,
             publishDate: true,
             expiryDate: true,
-            createdBy: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
+
           },
         }),
         prisma.notice.count({ where: { schoolId, isActive: true } }),
@@ -2333,11 +2328,17 @@ router.get(
             dueDate: true,
             totalMarks: true,
             subject: { select: { name: true, code: true } },
-            class: { select: { name: true, grade: true, section: true } },
-            teacher: {
+            class: {
               select: {
-                user: { select: { firstName: true, lastName: true } },
-              },
+                name: true,
+                grade: true,
+                section: true,
+                teacher: {
+                  select: {
+                    user: { select: { firstName: true, lastName: true } },
+                  },
+                },
+              }
             },
             _count: { select: { submissions: true } },
           },

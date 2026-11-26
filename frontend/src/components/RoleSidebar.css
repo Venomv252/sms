@@ -1,15 +1,18 @@
 /* Reusable Sidebar Theme - Dark with Green Header/Footer */
 
 .platform-sidebar {
-  width: 280px;
+  width: 264px;
   height: 100vh;
-  background: #1e293b;
+  height: 100dvh;
+  background: #0a7c59;
   display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 100;
+  overflow: hidden;
+  box-sizing: border-box;
   transition: transform 0.3s ease;
 }
 
@@ -22,9 +25,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 16px;
-  background: #2d8e6a;
-  border-bottom: none;
+  min-height: 92px;
+  padding: 16px 8px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  box-sizing: border-box;
 }
 
 .platform-brand-icon {
@@ -39,8 +44,9 @@
   flex-shrink: 0;
 }
 
-.platform-brand > div {
+.platform-brand > div:not(.platform-brand-icon) {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -98,40 +104,48 @@
 
 /* Navigation */
 .platform-sidebar nav {
+  display: flex;
   flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 5px;
   overflow-y: auto;
-  padding-bottom: 20px;
+  padding: 0 0 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
 }
 
 .platform-sidebar nav button {
   width: calc(100% - 24px);
+  min-height: 43px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  margin: 0 12px 4px;
+  margin: 0 12px;
   border: none;
   background: transparent;
-  color: rgba(203, 213, 225, 0.9);
+  color: rgba(255, 255, 255, 0.86);
   font-size: 14px;
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  border-radius: 10px;
-  transition: all 0.2s;
+  border-radius: 8px;
+  transition: background-color 0.18s ease, color 0.18s ease;
   position: relative;
 }
 
 .platform-sidebar nav button:hover {
-  background: rgba(51, 65, 85, 0.6);
+  background: rgba(255, 255, 255, 0.12);
   color: white;
 }
 
 .platform-sidebar nav button.active {
-  background: #2d8e6a;
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(45, 142, 106, 0.3);
+  background: #fff;
+  color: #065c41;
+  font-weight: 650;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .platform-sidebar nav button span {
@@ -162,10 +176,11 @@
 
 /* Sidebar Bottom - User & Sign Out - Green Background */
 .platform-sidebar-bottom {
+  flex: 0 0 auto;
   margin-top: auto;
-  padding: 16px;
-  border-top: none;
-  background: #2d8e6a;
+  padding: 14px 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
 }
 
 .platform-user {
@@ -175,7 +190,7 @@
   margin-bottom: 12px;
   padding: 12px;
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.12);
   min-height: 64px;
 }
 
@@ -289,4 +304,95 @@
 
 .platform-sidebar nav::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+
+/* Shared layout contract - SCOPED to prevent affecting dashboard content */
+/* Only affects immediate children to avoid conflicts with dashboard elements */
+
+/* Layout Shell - Direct descendant selectors only */
+.platform-shell {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  background: #f8fafb;
+}
+
+.platform-shell > .platform-main {
+  flex: 1 1 auto;
+  width: calc(100% - 264px);
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin-left: 264px;
+  box-sizing: border-box;
+}
+
+/* Brand Icon - Scoped to sidebar only */
+.platform-sidebar .platform-brand-icon {
+  flex: 0 0 42px;
+}
+
+/* Text Overflow - Scoped to sidebar only */
+.platform-sidebar .platform-brand strong,
+.platform-sidebar .platform-brand small,
+.platform-sidebar .platform-user strong,
+.platform-sidebar .platform-user small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Nav Labels - Already scoped with .platform-nav-label (unique class) */
+.platform-nav-label {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.62);
+  margin: 0;
+  padding: 25px 10px 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.platform-nav-group-label {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 14px 12px 4px;
+  padding: 0;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+}
+
+/* Badge Active State - Scoped to sidebar navigation */
+.platform-sidebar nav button.active .sidebar-badge {
+  color: #065c41;
+  background: #e6f4f0;
+}
+
+/* User Container - Scoped to sidebar only */
+.platform-sidebar .platform-user {
+  min-width: 0;
+}
+
+.platform-sidebar .platform-user > div:not(.platform-user-avatar) {
+  min-width: 0;
+}
+
+/* Responsive Behavior - Direct descendant selectors */
+@media (max-width: 768px) {
+  .platform-shell > .platform-sidebar {
+    width: min(280px, 86vw);
+    transform: translateX(-100%);
+  }
+
+  .platform-shell > .platform-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .platform-shell > .platform-main {
+    width: 100%;
+    margin-left: 0;
+  }
 }

@@ -12,6 +12,7 @@ export function TrackingProvider({ children }) {
   const [busLocations, setBusLocations] = useState({});
   const [connected, setConnected] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [isActive, setIsActive] = useState(false); // Track if tracking is actively needed
   
   const wsRef = useRef(null);
   const reconnectTimerRef = useRef(null);
@@ -38,10 +39,28 @@ export function TrackingProvider({ children }) {
   }, []);
 
   /**
+   * Activate tracking - Call this when entering bus tracking page
+   */
+  const activateTracking = useCallback(() => {
+    setIsActive(true);
+  }, []);
+
+  /**
+   * Deactivate tracking - Call this when leaving bus tracking page
+   */
+  const deactivateTracking = useCallback(() => {
+    setIsActive(false);
+    disconnectWebSocket();
+  }, []);
+
+  /**
    * Subscribe to a trip's GPS updates
    */
   const watchTrip = useCallback((tripId) => {
     if (!tripId) return;
+    
+    // Activate tracking when a trip is watched
+    setIsActive(true);
     
     watchedTripsRef.current.add(tripId);
     
@@ -228,8 +247,15 @@ export function TrackingProvider({ children }) {
     }
   }, []);
 
-  // Connect on mount
+  // Connect only when tracking is active
   useEffect(() => {
+    if (!isActive) {
+      // If not active, disconnect
+      disconnectWebSocket();
+      return;
+    }
+
+    // Active - connect WebSocket
     connectWebSocket();
     
     // Send ping every 30 seconds to keep connection alive
@@ -237,14 +263,17 @@ export function TrackingProvider({ children }) {
     
     return () => {
       clearInterval(pingInterval);
-      disconnectWebSocket();
+      // Don't disconnect here - let deactivateTracking handle it
     };
-  }, [connectWebSocket, disconnectWebSocket, sendPing]);
+  }, [isActive, connectWebSocket, disconnectWebSocket, sendPing]);
 
   const value = {
     busLocations,
     connected,
     notifications,
+    isActive,
+    activateTracking,
+    deactivateTracking,
     watchTrip,
     unwatchTrip,
     addNotification,

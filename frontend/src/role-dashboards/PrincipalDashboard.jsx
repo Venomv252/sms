@@ -32,7 +32,6 @@ import {
 } from "../api.js";
 import RoleSidebar from "../components/RoleSidebar.jsx";
 import "../role-dashboards/admin.css";
-import "../role-dashboards/platform-role-theme.css";
 import "../role-dashboards/director-theme.css";
 import "../role-dashboards/principal.css";
 import Overview from "./principal/pages/Overview.jsx";
@@ -193,13 +192,7 @@ export default function PrincipalDashboard() {
           </div>
         )}
 
-        {loading && (
-          <div className="superadmin-loading">
-            Loading...
-          </div>
-        )}
-
-        {!loading && renderPage()}
+        {renderPage()}
       </main>
     </div>
   );

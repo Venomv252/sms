@@ -1,322 +1,14 @@
 
-/* Light green and white theme for Director dashboard - matching other dashboards */
-.platform-shell,
-.director-workspace {
-  --rp-bg: #f4f7f5;
-  --rp-sidebar: #1a2332;
-  --rp-panel: #ffffff;
-  --rp-panel-2: #f9faf9;
-  --rp-border: #e1e9e4;
-  --rp-text: #18352b;
-  --rp-muted: #6d7c75;
-  --rp-green: #16a36a;
-  --rp-green-soft: rgba(22,163,106,.14);
-  background: var(--rp-bg) !important;
-  color: var(--rp-text) !important;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-}
-.platform-shell { min-height:100vh; }
-.platform-sidebar {
-  background: var(--rp-sidebar) !important;
-  border-right: 1px solid rgba(255,255,255,0.08) !important;
-  box-shadow: 2px 0 8px rgba(0,0,0,.04) !important;
-  padding: 0 10px !important;
-}
-.platform-brand {
-  min-height: 80px !important;
-  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-}
-.platform-brand-icon {
-  background: #16a36a !important;
-  color: white !important;
-}
-.platform-brand strong { color: #ffffff !important; }
-.platform-brand small { color: rgba(255,255,255,0.45) !important; }
-.platform-nav-label,
-.platform-nav-group-label {
-  color: rgba(255,255,255,0.3) !important;
-  font-size: 9px !important;
-  font-weight: 800 !important;
-  letter-spacing: .13em !important;
-  padding: 22px 10px 8px !important;
-}
-.platform-nav-group-label:first-child { padding-top: 18px !important; }
-.platform-sidebar nav { gap: 0px !important; }
-.platform-sidebar nav button {
-  min-height: 40px !important;
-  color: rgba(255,255,255,0.6) !important;
-  background: transparent !important;
-  border-radius: 8px !important;
-  border: none !important;
-  padding: 9px 10px !important;
-  font-size: 12px !important;
-  margin: 0 0 2px 0 !important;
-}
-.platform-sidebar nav button:hover {
-  background: rgba(255,255,255,0.07) !important;
-  color: #fff !important;
-}
-.platform-sidebar nav button.active {
-  color: #fff !important;
-  background: #16a34a !important;
-  font-weight: 600 !important;
-}
-.platform-sidebar nav button em {
-  color: #fff !important;
-  background: #dc2626 !important;
-  font-size: 9px !important;
-  font-weight: 700 !important;
-  padding: 1px 5px !important;
-  border-radius: 10px !important;
-  min-width: 16px !important;
-  text-align: center !important;
-}
-.platform-sidebar-bottom { border-top: 1px solid rgba(255,255,255,0.08) !important; }
-.platform-user-avatar {
-  color: #b5f4d5 !important;
-  background: #15533f !important;
-}
-.platform-user strong { color: #fff !important; }
-.platform-user small { color: rgba(255,255,255,0.45) !important; }
-.platform-sidebar .platform-signout {
-  color: rgba(255,255,255,0.6) !important;
-}
-.platform-sidebar .platform-signout:hover {
-  background: rgba(255,255,255,0.07) !important;
-  color: #fff !important;
-}
-.platform-main {
-  background: var(--rp-bg) !important;
-  padding-bottom: 42px !important;
-}
-.platform-topbar {
-  background: #ffffff !important;
-  border-bottom: 1px solid var(--rp-border) !important;
-  margin-bottom: 20px !important;
-}
-.platform-topbar > div:nth-child(2) > span {
-  color: #23815f !important;
-  font-size: 9px !important;
-  letter-spacing: .15em !important;
-}
-.platform-topbar h1 {
-  color: #18352b !important;
-  font-size: 21px !important;
-  font-weight: 700 !important;
-}
-.platform-menu-toggle {
-  background: #f0f4f2 !important;
-  color: #18352b !important;
-}
-.platform-live {
-  color: #16a36a !important;
-  background: rgba(22,163,106,.12) !important;
-  border: 1px solid rgba(22,163,106,.25) !important;
-  border-radius: 7px !important;
-}
-.platform-live i {
-  background: #16a36a !important;
-  box-shadow: 0 0 0 4px rgba(22,163,106,.15) !important;
-}
-.superadmin-refresh {
-  background: #16a36a !important;
-  color: #fff !important;
-  border: 1px solid #16a36a !important;
-  border-radius: 7px !important;
-}
-.platform-page-intro {
-  background: linear-gradient(110deg, #e7f4ed 0%, #f0f7f3 100%) !important;
-  border: 1px solid var(--rp-border) !important;
-  border-radius: 11px !important;
-  padding: 21px 23px !important;
-}
-.platform-page-intro h2 { color: #18352b !important; font-size:20px !important; }
-.platform-page-intro p { color: #6d7c75 !important; }
-.superadmin-overview article,
-.superadmin-panel,
-.network-card {
-  background: var(--rp-panel) !important;
-  border: 1px solid var(--rp-border) !important;
-  color: var(--rp-text) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,.04) !important;
-}
-.superadmin-overview article { min-height: 112px; }
-.superadmin-overview svg { color: #16a36a !important; }
-.superadmin-overview span,
-.superadmin-kpis article > span { color: #6d7c75 !important; }
-.superadmin-overview strong,
-.superadmin-kpis article > strong { color: #18352b !important; }
-.superadmin-overview small,
-.superadmin-kpis article small { color: #829087 !important; }
-.superadmin-section-title {
-  border-bottom: 1px solid var(--rp-border) !important;
-  padding-bottom: 13px !important;
-  margin-bottom: 13px !important;
-}
-.superadmin-section-title h2 { color: #18352b !important; }
-.superadmin-section-title p { color: #6d7c75 !important; }
-.superadmin-section-title button,
-.superadmin-panel button:not(.superadmin-icon-button) {
-  background: rgba(16, 185, 129, 0.15) !important;
-  color: #10b981 !important;
-  border: 1.5px solid rgba(16, 185, 129, 0.3) !important;
-  border-radius: 8px !important;
-  padding: 10px 18px !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  transition: all 0.2s ease !important;
-  cursor: pointer !important;
-}
-.superadmin-section-title button:hover,
-.superadmin-panel button:not(.superadmin-icon-button):hover {
-  background: rgba(16, 185, 129, 0.25) !important;
-  border-color: rgba(16, 185, 129, 0.5) !important;
-  transform: translateY(-1px) !important;
-}
-.superadmin-count { color: #6d7c75 !important; background: #f0f4f2 !important; }
-.platform-compact-row { border-color:var(--rp-border) !important; }
-.platform-compact-row strong,
-.platform-stat-row strong { color:#18352b !important; }
-.platform-compact-row small,
-.platform-stat-row small { color:#6d7c75 !important; }
-.platform-compact-row > b,
-.platform-stat-row b { color:#18352b !important; }
-.network-school-mark,
-.director-avatar {
-  background: #e7f4ed !important;
-  color: #16a36a !important;
-}
-.network-school-title strong,
-.network-director strong { color: #18352b !important; }
-.network-school-title span,
-.network-director > span { color: #6d7c75 !important; }
-.network-metrics > div {
-  background: #f9faf9 !important;
-  border: 1px solid #e7efeb !important;
-}
-.network-metrics span { color: #728078 !important; }
-.network-metrics strong { color: #18352b !important; }
-.network-director { border-color:var(--rp-border) !important; }
-.network-card-foot { color:#7f91a7 !important; }
-.director-open-school {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: white !important;
-  border-radius: 8px !important;
-  padding: 12px 18px !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  border: none !important;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
-  transition: all 0.2s ease !important;
-  cursor: pointer !important;
-}
-.director-open-school:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
-}
-.platform-stat-row { border-color:var(--rp-border) !important; color:#18352b !important; }
-.platform-stat-row.heading {
-  background:#f6f8fa !important;
-  color:#6d7c75 !important;
-}
-.platform-stat-row.heading span { color:#6d7c75 !important; }
-.platform-stat-row > span:first-child { color:#18352b !important; }
-.superadmin-school-row,
-.superadmin-director-list article,
-.superadmin-detail-grid > div {
-  background:#ffffff !important;
-  border-color:var(--rp-border) !important;
-  color:#18352b !important;
-}
-.superadmin-school-main strong,
-.superadmin-director-info strong { color:#18352b !important; }
-.superadmin-school-main span,
-.superadmin-school-main small,
-.superadmin-director-info span,
-.superadmin-director-info small { color:#6d7c75 !important; }
-.superadmin-detail-grid span { color:#6d7c75 !important; }
-.superadmin-detail-grid strong { color:#18352b !important; }
-.platform-shell input,
-.platform-shell textarea,
-.platform-shell select,
-.superadmin-modal input,
-.superadmin-modal textarea,
-.superadmin-modal select {
-  background:#ffffff !important;
-  color:#18352b !important;
-  border:1px solid #e1e9e4 !important;
-  border-radius:7px !important;
-}
-.platform-shell input::placeholder,
-.platform-shell textarea::placeholder { color:#87919a !important; }
-.platform-shell label,
-.superadmin-modal label { color:#18352b !important; }
-.platform-shell fieldset { border-color:#e1e9e4 !important; }
-.platform-shell legend { color:#18352b !important; }
-.platform-shell .school-assignment-results,
-.platform-shell .director-school-options {
-  background:#ffffff !important;
-  border-color:#e1e9e4 !important;
-}
-.platform-shell .school-assignment-results label,
-.platform-shell .director-school-options label {
-  border-color:#e1e9e4 !important;
-  color:#18352b !important;
-}
-.platform-shell .school-assignment-results small,
-.platform-shell .director-school-options small { color:#6d7c75 !important; }
-.platform-shell .superadmin-icon-button {
-  background:#f6f8fa !important;
-  color:#18352b !important;
-  border:1px solid #e1e9e4 !important;
-}
-.platform-shell .superadmin-icon-button:hover { background:#edf0f2 !important; }
-.platform-shell .superadmin-icon-button.danger { color:#dc2626 !important; }
-.platform-shell .director-submit {
-  background:#07845f !important;
-  color:#fff !important;
-}
-.superadmin-error,
-.superadmin-success {
-  border:1px solid var(--rp-border) !important;
-}
-.superadmin-error { background:#fff0f0 !important; color:#dc2626 !important; }
-.superadmin-success { background:#e7f4ed !important; color:#16a36a !important; }
-.superadmin-loading,
-.superadmin-empty {
-  background:#f9fafb !important;
-  border:1px dashed #e1e9e4 !important;
-  color:#6d7c75 !important;
-}
-.platform-health-panel .health-notice {
-  background:#fffbeb !important;
-  border-color:#fde68a !important;
-}
-.platform-health-panel .health-notice strong { color:#92400e !important; }
-.platform-health-panel .health-notice p,
-.platform-health-panel .health-notice small { color:#78716c !important; }
-.platform-health-panel .health-status-row { border-color:var(--rp-border) !important; }
-.platform-shell .superadmin-modal-backdrop { background:rgba(0,0,0,0.5) !important; }
-.platform-shell .superadmin-modal,
-.platform-shell .superadmin-confirm-modal {
-  background:#ffffff !important;
-  border:1px solid #e1e9e4 !important;
-  color:#18352b !important;
-}
-.platform-shell .superadmin-modal h2 { color:#18352b !important; }
-.platform-shell .superadmin-confirm-modal p,
-.platform-shell .superadmin-delete-details { color:#6d7c75 !important; }
-.platform-shell .superadmin-cancel-button {
-  background:#f6f8fa !important;
-  color:#18352b !important;
-  border:1px solid #e1e9e4 !important;
-}
-.platform-shell .superadmin-delete-confirm {
-  background:#dc2626 !important;
-  color:#fff !important;
-}
+/* DEPRECATED: This file contained generic .platform-shell rules that caused CSS conflicts */
+/* All these styles have been moved to role-specific theme files with proper scoping: */
+/* - SuperAdmin: superadmin-zip-theme.css with .superadmin-role-shell */
+/* - Director: director-theme.css with .director-role-shell */  
+/* - Principal: principal.css with .principal-role-shell */
+/* - Accountant: accountant-theme.css with .accountant-role-shell */
+
+/* This file is kept for the legacy director-workspace and sw-shell styles below */
+/* which are still used by the Director's school workspace view */
+
 /* Director's opened school workspace follows the same control-plane palette. */
 .director-workspace .director-workspace-bar {
   background: #ffffff !important;
@@ -405,12 +97,13 @@
 .sw-credential-row button { background: #f0f4f2 !important; border-color: #e1e9e4 !important; color: #16a36a !important; }
 .sw-credentials-success { background: #e7f4ed !important; color: #16a36a !important; }
 .sw-credentials-warning { background: #fffbeb !important; border-color: #fde68a !important; color: #92400e !important; }
-@media (max-width: 680px) {
-  .platform-sidebar { background:var(--rp-sidebar) !important; }
-}
 
 /* Platform User Mini - Top Header User Info */
-.platform-user-mini {
+/* Scoped to specific shells to prevent conflicts */
+.superadmin-role-shell .platform-user-mini,
+.director-role-shell .platform-user-mini,
+.principal-role-shell .platform-user-mini,
+.accountant-role-shell .platform-user-mini {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -420,7 +113,10 @@
   border-radius: 8px;
 }
 
-.platform-user-mini > span {
+.superadmin-role-shell .platform-user-mini > span,
+.director-role-shell .platform-user-mini > span,
+.principal-role-shell .platform-user-mini > span,
+.accountant-role-shell .platform-user-mini > span {
   min-width: 32px;
   width: 32px;
   height: 32px;
@@ -440,31 +136,46 @@
   aspect-ratio: 1 / 1;
 }
 
-.platform-user-mini > div {
+.superadmin-role-shell .platform-user-mini > div,
+.director-role-shell .platform-user-mini > div,
+.principal-role-shell .platform-user-mini > div,
+.accountant-role-shell .platform-user-mini > div {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.platform-user-mini strong {
+.superadmin-role-shell .platform-user-mini strong,
+.director-role-shell .platform-user-mini strong,
+.principal-role-shell .platform-user-mini strong,
+.accountant-role-shell .platform-user-mini strong {
   font-size: 13px;
   font-weight: 600;
   color: var(--rp-text);
   line-height: 1.2;
 }
 
-.platform-user-mini small {
+.superadmin-role-shell .platform-user-mini small,
+.director-role-shell .platform-user-mini small,
+.principal-role-shell .platform-user-mini small,
+.accountant-role-shell .platform-user-mini small {
   font-size: 11px;
   color: var(--rp-muted);
   line-height: 1.2;
 }
 
 @media (max-width: 768px) {
-  .platform-user-mini > div {
+  .superadmin-role-shell .platform-user-mini > div,
+  .director-role-shell .platform-user-mini > div,
+  .principal-role-shell .platform-user-mini > div,
+  .accountant-role-shell .platform-user-mini > div {
     display: none;
   }
   
-  .platform-user-mini {
+  .superadmin-role-shell .platform-user-mini,
+  .director-role-shell .platform-user-mini,
+  .principal-role-shell .platform-user-mini,
+  .accountant-role-shell .platform-user-mini {
     padding: 6px;
   }
 }

@@ -72,7 +72,8 @@
   padding: 11px 12px !important;
   font-size: 13px !important;
   font-weight: 550 !important;
-  margin: 0 !important;
+  margin: 0 12px !important;
+  width: calc(100% - 24px) !important;
 }
 
 .director-role-shell .platform-sidebar nav button:hover {
@@ -148,18 +149,103 @@
   border-bottom: 1px solid #e9edf0 !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   margin-bottom: 24px !important;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 clamp(18px, 3vw, 38px);
 }
 
 .director-role-shell .platform-topbar h1 {
   color: #111827 !important;
   font-size: 20px !important;
   font-weight: 700 !important;
+  margin: 4px 0 0;
+}
+
+.director-role-shell .platform-topbar > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
 }
 
 .director-role-shell .platform-topbar > div:nth-child(2) > span {
   color: #8b969e !important;
   font-size: 9px !important;
   letter-spacing: 0.13em !important;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.director-role-shell .superadmin-header-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding-left: 12px;
+  border-left: 1px solid #edf0f2;
+  flex-shrink: 1;
+}
+
+.director-role-shell .superadmin-header-user > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  background: var(--d-green-soft);
+  color: var(--d-green);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.director-role-shell .superadmin-header-user > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.director-role-shell .superadmin-header-user strong,
+.director-role-shell .superadmin-header-user small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.director-role-shell .superadmin-header-user strong {
+  color: #111827;
+  font-size: 11px;
+}
+
+.director-role-shell .superadmin-header-user small {
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.director-role-shell .platform-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.director-role-shell .platform-menu-toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border: none;
+  background: #f3f7f5 !important;
+  color: var(--d-green) !important;
+  border-radius: 8px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.director-role-shell .platform-menu-toggle:hover {
+  background: var(--d-green-soft) !important;
 }
 
 .director-role-shell .platform-live {
@@ -170,20 +256,55 @@
   font-size: 11px !important;
   white-space: nowrap !important;
   border: none !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
 }
 
 .director-role-shell .platform-live i {
   background: #10b981 !important;
   box-shadow: 0 0 0 3px #d1fae5 !important;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: block;
 }
 
 .director-role-shell .superadmin-refresh {
   background: var(--d-green) !important;
   color: #fff !important;
   border-radius: 8px !important;
-  padding: 10px 16px !important;
+  padding: 0 !important;
   font-size: 12px !important;
   border: none !important;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(10, 124, 89, 0.2);
+}
+
+.director-role-shell .superadmin-refresh:hover {
+  background: var(--d-green-dark) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(10, 124, 89, 0.3);
+}
+
+.director-role-shell .superadmin-refresh:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(10, 124, 89, 0.2);
+}
+
+.director-role-shell .superadmin-refresh svg {
+  transition: transform 0.3s ease;
+}
+
+.director-role-shell .superadmin-refresh:hover svg {
+  transform: rotate(90deg);
 }
 
 /* Page intro section */
@@ -192,17 +313,44 @@
   border: 1px solid #e5e7eb !important;
   background: linear-gradient(110deg, #fff 0%, #fff 55%, var(--d-green-soft) 100%) !important;
   padding: 24px 26px !important;
+  margin-bottom: 20px;
 }
 
 .director-role-shell .platform-page-intro h2 {
   font-size: 25px !important;
   color: #111827 !important;
+  font-weight: 700;
+  margin: 0 0 6px;
 }
 
 .director-role-shell .platform-page-intro p {
   font-size: 13px !important;
   color: #6b7280 !important;
+  margin: 0;
+  line-height: 1.5;
 }
+
+/* KPI Overview Section */
+.director-role-shell .superadmin-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Platform Overview Grid - Two Column Layout for Panels */
+.director-role-shell .platform-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.director-role-shell .platform-overview-grid > .superadmin-panel {
+  margin-bottom: 0;
+}
+
+
 
 /* KPI cards */
 .director-role-shell .superadmin-kpis article {
@@ -237,29 +385,68 @@
   border-radius: 14px !important;
   background: #fff !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.director-role-shell .superadmin-section-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.director-role-shell .superadmin-section-title > div {
+  flex: 1;
+  min-width: 0;
 }
 
 .director-role-shell .superadmin-section-title h2 {
   color: #111827 !important;
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .director-role-shell .superadmin-section-title p {
   color: #6b7280 !important;
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .director-role-shell .superadmin-section-title button {
+  flex-shrink: 0;
   background: rgba(10, 124, 89, 0.1) !important;
   color: var(--d-green) !important;
   border: 1.5px solid rgba(10, 124, 89, 0.3) !important;
   border-radius: 8px !important;
-  padding: 10px 18px !important;
+  padding: 9px 16px !important;
   font-weight: 600 !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(10, 124, 89, 0.1);
+  white-space: nowrap;
 }
 
 .director-role-shell .superadmin-section-title button:hover {
-  background: rgba(10, 124, 89, 0.2) !important;
-  border-color: rgba(10, 124, 89, 0.5) !important;
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border-color: var(--d-green) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(10, 124, 89, 0.25);
+}
+
+.director-role-shell .superadmin-section-title button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(10, 124, 89, 0.2);
 }
 
 .director-role-shell .superadmin-count {
@@ -300,42 +487,170 @@
   color: #111827 !important;
 }
 
-/* Buttons */
+/* Open School Workspace Button */
 .director-role-shell .director-open-school {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: var(--d-green) !important;
   color: #fff !important;
+  border: 1.5px solid var(--d-green) !important;
   border-radius: 8px !important;
-  border: none !important;
+  padding: 11px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(10, 124, 89, 0.2);
+  margin-top: 14px;
 }
 
+.director-role-shell .director-open-school:hover {
+  background: var(--d-green-dark) !important;
+  border-color: var(--d-green-dark) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(10, 124, 89, 0.3);
+}
+
+.director-role-shell .director-open-school:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.2);
+}
+
+.director-role-shell .director-open-school svg {
+  transition: transform 0.2s ease;
+}
+
+.director-role-shell .director-open-school:hover svg {
+  transform: translateX(2px);
+}
+
+/* Submit Button */
 .director-role-shell .director-submit {
   background: var(--d-green) !important;
   color: #fff !important;
   border-radius: 8px !important;
+  border: 1.5px solid var(--d-green) !important;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(10, 124, 89, 0.2);
+}
+
+.director-role-shell .director-submit:hover {
+  background: var(--d-green-dark) !important;
+  border-color: var(--d-green-dark) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(10, 124, 89, 0.3);
+}
+
+.director-role-shell .director-submit:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.2);
 }
 
 /* Empty states and messages */
 .director-role-shell .superadmin-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
   background: #f9fafb !important;
   border: 1px dashed #e1e9e4 !important;
-  color: #6b7280 !important;
+  border-radius: 10px;
+}
+
+.director-role-shell .superadmin-loading {
+  padding: 32px 20px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  background: #f9fafb !important;
+  border-radius: 10px;
 }
 
 .director-role-shell .superadmin-error {
   background: #fff0f0 !important;
   color: #dc2626 !important;
   border: 1px solid #fecaca !important;
+  padding: 14px 18px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .director-role-shell .superadmin-success {
   background: var(--d-green-soft) !important;
   color: var(--d-green) !important;
   border: 1px solid #c7e9dd !important;
+  padding: 14px 18px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-.director-role-shell .superadmin-loading {
-  background: #f9fafb !important;
-  color: #6b7280 !important;
+/* Platform Compact Rows - Used in Panels */
+.director-role-shell .platform-compact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid #f1f3f5;
+  transition: background-color 0.15s ease;
+}
+
+.director-role-shell .platform-compact-row:first-of-type {
+  border-top: none;
+}
+
+.director-role-shell .platform-compact-row:hover {
+  background: #f9fafb;
+  margin: 0 -12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: 8px;
+}
+
+.director-role-shell .platform-compact-row > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.director-role-shell .platform-compact-row strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.director-role-shell .platform-compact-row small {
+  font-size: 11px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.director-role-shell .platform-compact-row > b {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Stat tables */
@@ -405,8 +720,289 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .director-role-shell .superadmin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 950px) {
+  .director-role-shell .platform-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 680px) {
   .director-role-shell .platform-sidebar {
     background: var(--d-green) !important;
   }
+  
+  .director-role-shell .platform-topbar {
+    gap: 9px;
+    padding: 0 14px;
+  }
+  
+  .director-role-shell .platform-menu-toggle {
+    display: flex !important;
+  }
+  
+  .director-role-shell .platform-top-actions {
+    gap: 6px;
+  }
+  
+  .director-role-shell .superadmin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  
+  .director-role-shell .platform-overview-grid {
+    gap: 14px;
+  }
+  
+  .director-role-shell .platform-page-intro {
+    padding: 18px;
+    border-radius: 12px !important;
+  }
+  
+  .director-role-shell .platform-page-intro h2 {
+    font-size: 20px !important;
+  }
 }
+
+/* Skeleton Loading Styles */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.director-role-shell .skeleton-loading {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.director-role-shell .skeleton-text {
+  display: inline-block;
+  min-width: 60px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  color: transparent !important;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.director-role-shell .skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid #f1f3f5;
+}
+
+.director-role-shell .skeleton-row:first-of-type {
+  border-top: none;
+}
+
+.director-role-shell .skeleton-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.director-role-shell .skeleton-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.director-role-shell .skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.director-role-shell .skeleton-line-title {
+  width: 70%;
+  height: 14px;
+}
+
+.director-role-shell .skeleton-line-subtitle {
+  width: 50%;
+  height: 10px;
+}
+
+.director-role-shell .skeleton-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+
+/* Shared sidebar geometry and shell layout */
+.director-role-shell > .platform-sidebar { width: 264px; height: 100vh; height: 100dvh; box-sizing: border-box; overflow: hidden; }
+.director-role-shell .platform-sidebar nav { display: flex; flex-direction: column; min-height: 0; }
+.director-role-shell .platform-brand > div:not(.platform-brand-icon) { flex: 1; min-width: 0; }
+.director-role-shell > .platform-main { width: calc(100% - 264px); min-width: 0; margin-left: 264px; box-sizing: border-box; }
+@media (max-width: 768px) {
+  .director-role-shell > .platform-sidebar { width: min(280px, 86vw); transform: translateX(-100%); }
+  .director-role-shell > .platform-sidebar.is-open { transform: translateX(0); }
+  .director-role-shell > .platform-main { width: 100%; margin-left: 0; }
+}
+
+/* School Comparison Table - Improved Design */
+.director-role-shell .platform-stat-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e9edf0;
+  background: #fff;
+}
+
+.director-role-shell .platform-stat-row {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr 1fr !important;
+  gap: 16px !important;
+  padding: 16px 20px !important;
+  align-items: center !important;
+  border-bottom: 1px solid #e9edf0 !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.director-role-shell .platform-stat-row:last-child {
+  border-bottom: none !important;
+}
+
+.director-role-shell .platform-stat-row:not(.heading):hover {
+  background: #f9fafb !important;
+}
+
+.director-role-shell .platform-stat-row.heading {
+  background: #f6f8fa !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #6b7280 !important;
+  padding: 12px 20px !important;
+  border-bottom: 2px solid #e9edf0 !important;
+}
+
+.director-role-shell .platform-stat-row.heading span {
+  font-weight: 700 !important;
+}
+
+.director-role-shell .platform-stat-row > span {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+
+.director-role-shell .platform-stat-row strong {
+  color: #111827 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.director-role-shell .platform-stat-row small {
+  color: #6b7280 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.director-role-shell .platform-stat-row b {
+  color: #111827 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  text-align: right !important;
+}
+
+/* Empty State for No Schools */
+.director-role-shell .platform-stat-table-empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px dashed #e5e7eb;
+}
+
+/* Responsive Table */
+@media (max-width: 950px) {
+  .director-role-shell .platform-stat-row {
+    grid-template-columns: 2fr 1fr 1fr 1fr !important;
+    gap: 12px !important;
+    padding: 14px 16px !important;
+  }
+  
+  .director-role-shell .platform-stat-row strong {
+    font-size: 13px !important;
+  }
+  
+  .director-role-shell .platform-stat-row b {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .director-role-shell .platform-stat-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  
+  .director-role-shell .platform-stat-row > * {
+    text-align: left !important;
+  }
+  
+  .director-role-shell .platform-stat-row b {
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  
+  .director-role-shell .platform-stat-row:not(.heading) > span:first-child {
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+  }
+  
+  .director-role-shell .platform-stat-row:not(.heading) b::before {
+    content: attr(data-label) !important;
+    display: inline-block !important;
+    font-weight: 500 !important;
+    color: #6b7280 !important;
+    margin-right: 8px !important;
+    font-size: 12px !important;
+  }
+}
+

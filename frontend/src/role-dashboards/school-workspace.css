@@ -42,3 +42,47 @@
 .sw-icon-button-danger{color:#b6422d !important}
 .sw-icon-button-danger:hover{background:#fff0ed !important;border-color:#ffcdc4 !important}
 .sw-success{padding:11px 14px;margin:0 0 14px;border-radius:8px;background:#eaf7ee;color:#187642;font-size:12px}
+
+/* Skeleton loading animation */
+.sw-shell .skeleton-loading {
+  position: relative;
+  overflow: hidden;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  pointer-events: none;
+}
+
+.sw-shell .skeleton-loading::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: skeleton-shimmer 2s infinite;
+}
+
+.sw-shell .skeleton-text {
+  display: inline-block;
+  min-width: 60px;
+  background: linear-gradient(90deg, #e8ede9 25%, #f2f5f3 50%, #e8ede9 75%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  color: transparent !important;
+  user-select: none;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

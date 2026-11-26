@@ -1,32 +1,24 @@
 import React, { useState } from "react";
 import {
-  BarChart3,
-  Bell,
-  CircleDollarSign,
-  CreditCard,
-  DollarSign,
-  FileText,
   LayoutDashboard,
   Menu,
-  Percent,
-  PieChart,
-  Receipt,
   School,
-  TrendingDown,
-  TrendingUp,
-  Users,
   UserPlus,
   UsersRound,
-  Wallet,
+  CircleDollarSign,
+  DollarSign,
+  TrendingDown,
+  Percent,
+  Receipt,
+  BarChart3,
   X,
+  RefreshCw,
+  GraduationCap,
+  Briefcase,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { clearApiSession } from "../api.js";
 import RoleSidebar from "../components/RoleSidebar.jsx";
 import "./admin.css";
-import "./platform-role-theme.css";
-import "./director-theme.css";
-import "./principal.css";
+import "./accountant-theme.css";
 
 // Import Accountant pages
 import AccountantOverview from "./accountant/pages/AccountantOverview.jsx";
@@ -37,12 +29,16 @@ import FinanceReports from "./accountant/pages/FinanceReports.jsx";
 import Transactions from "./accountant/pages/Transactions.jsx";
 import StudentRegistration from "./accountant/pages/StudentRegistration.jsx";
 import ParentRegistration from "./accountant/pages/ParentRegistration.jsx";
+import TeacherRegistration from "./accountant/pages/TeacherRegistration.jsx";
+import StaffRegistration from "./accountant/pages/StaffRegistration.jsx";
 import StudentFeeManagement from "./accountant/pages/StudentFeeManagement.jsx";
 
 const NAV = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard, group: "OVERVIEW" },
   { id: "student-registration", label: "Register Student", icon: UserPlus, group: "USER MANAGEMENT" },
   { id: "parent-registration", label: "Register Parent", icon: UsersRound, group: "USER MANAGEMENT" },
+  { id: "teacher-registration", label: "Register Teacher", icon: GraduationCap, group: "USER MANAGEMENT" },
+  { id: "staff-registration", label: "Register Staff", icon: Briefcase, group: "USER MANAGEMENT" },
   { id: "student-fees", label: "Student Fee Management", icon: CircleDollarSign, group: "FEE MANAGEMENT" },
   { id: "fee-collection", label: "Fee Collection", icon: DollarSign, group: "FEE MANAGEMENT" },
   { id: "defaulters", label: "Fee Defaulters", icon: TrendingDown, group: "FEE MANAGEMENT" },
@@ -52,7 +48,6 @@ const NAV = [
 ];
 
 export default function AccountantDashboard() {
-  const navigate = useNavigate();
   const user = JSON.parse(
     sessionStorage.getItem("sms_authenticated_user") || "{}",
   );
@@ -62,38 +57,61 @@ export default function AccountantDashboard() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const pageTitle = NAV.find((n) => n.id === page)?.label || "Dashboard";
-  
-  // Prepare navigation items for RoleSidebar
+  const pageTitle = NAV.find((item) => item.id === page)?.label || "Dashboard";
   const navItems = NAV;
+  const firstName = String(user.firstName || "").trim();
+  const lastName = String(user.lastName || "").trim();
+  const cleanLastName = /^[.\s]+$/.test(lastName) ? "" : lastName;
+  const displayName =
+    String(user.name || "").trim() ||
+    [firstName, cleanLastName].filter(Boolean).join(" ") ||
+    "Accountant";
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("");
+
+  const handleNavigate = (pageId) => {
+    setPage(pageId);
+    setError("");
+    setMessage("");
+    setMobileNav(false);
+  };
 
   const renderPage = () => {
+    const pageProps = { setError, setMessage };
+
     switch (page) {
-      case "overview":
-        return <AccountantOverview setError={setError} setMessage={setMessage} />;
       case "student-registration":
-        return <StudentRegistration setError={setError} setMessage={setMessage} />;
+        return <StudentRegistration {...pageProps} />;
       case "parent-registration":
-        return <ParentRegistration setError={setError} setMessage={setMessage} />;
+        return <ParentRegistration {...pageProps} />;
+      case "teacher-registration":
+        return <TeacherRegistration {...pageProps} />;
+      case "staff-registration":
+        return <StaffRegistration {...pageProps} />;
       case "student-fees":
-        return <StudentFeeManagement setError={setError} setMessage={setMessage} />;
+        return <StudentFeeManagement {...pageProps} />;
       case "fee-collection":
-        return <FeeCollection setError={setError} setMessage={setMessage} />;
+        return <FeeCollection {...pageProps} />;
       case "defaulters":
-        return <FeeDefaulters setError={setError} setMessage={setMessage} />;
+        return <FeeDefaulters {...pageProps} />;
       case "concessions":
-        return <Concessions setError={setError} setMessage={setMessage} />;
+        return <Concessions {...pageProps} />;
       case "transactions":
-        return <Transactions setError={setError} setMessage={setMessage} />;
+        return <Transactions {...pageProps} />;
       case "reports":
-        return <FinanceReports setError={setError} setMessage={setMessage} />;
+        return <FinanceReports {...pageProps} />;
+      case "overview":
       default:
-        return <AccountantOverview setError={setError} setMessage={setMessage} />;
+        return <AccountantOverview {...pageProps} />;
     }
   };
 
   return (
-    <div className="platform-shell director-shell principal-role-shell accountant-role-shell">
+    <div className="platform-shell accountant-role-shell">
       <RoleSidebar
         brandTitle={user.school?.name || "School ERP"}
         brandSubtitle="Accountant Portal"
@@ -101,11 +119,7 @@ export default function AccountantDashboard() {
         navLabel="FINANCE MANAGEMENT"
         navItems={navItems}
         currentPage={page}
-        onNavigate={(pageId) => {
-          setPage(pageId);
-          setError("");
-          setMessage("");
-        }}
+        onNavigate={handleNavigate}
         mobileNav={mobileNav}
         setMobileNav={setMobileNav}
         user={user}
@@ -115,6 +129,7 @@ export default function AccountantDashboard() {
       {mobileNav && (
         <button
           className="platform-nav-scrim"
+          type="button"
           aria-label="Close menu"
           onClick={() => setMobileNav(false)}
         />
@@ -124,35 +139,45 @@ export default function AccountantDashboard() {
         <header className="platform-topbar">
           <button
             className="platform-menu-toggle"
+            type="button"
+            aria-label="Open navigation menu"
             onClick={() => setMobileNav(true)}
           >
             <Menu />
           </button>
 
-          <div>
+          <div className="accountant-page-heading">
             <span>ACCOUNTANT WORKSPACE</span>
             <h1>{pageTitle}</h1>
           </div>
 
           <div className="platform-top-actions">
-            <span className="platform-live">
-              <i /> Finance Active
-            </span>
-            
             <div className="platform-user-mini">
-              <span>{user.firstName?.[0]}{user.lastName?.[0]}</span>
-              <div>
-                <strong>{user.firstName} {user.lastName}</strong>
+              <span aria-hidden="true">{initials || "A"}</span>
+              <div className="platform-user-details">
+                <strong>{displayName}</strong>
                 <small>Accountant</small>
               </div>
             </div>
+
+            <button
+              className="superadmin-refresh"
+              type="button"
+              onClick={() => window.location.reload()}
+              title="Refresh dashboard"
+              aria-label="Refresh dashboard"
+            >
+              <RefreshCw size={17} />
+            </button>
           </div>
         </header>
 
         {(error || message) && (
-          <div className={error ? "superadmin-error" : "superadmin-success"}>
-            {error || message}
+          <div className={error ? "superadmin-error" : "superadmin-success"} role="alert">
+            <span>{error || message}</span>
             <button
+              type="button"
+              aria-label="Dismiss message"
               onClick={() => {
                 setError("");
                 setMessage("");

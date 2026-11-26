@@ -35,7 +35,6 @@ import RoleSidebar from "../components/RoleSidebar.jsx";
 import CredentialDisplay from "../components/CredentialDisplay.jsx";
 import SuperAdminDeleteConfirmation from "../components/SuperAdminDeleteConfirmation.jsx";
 import "./admin.css";
-import "./platform-role-theme.css";
 import "./superadmin-zip-theme.css";
 
 const EMPTY_SCHOOL = { name: "", code: "", address: "" };
@@ -629,12 +628,12 @@ export default function SuperAdminDashboard() {
             <span>SUPER ADMIN PORTAL</span>
             <h1>{pageTitle}</h1>
           </div>
-          <div className="superadmin-header-search">
+          {/* <div className="superadmin-header-search">
             <Search size={16} />
             <input type="search" aria-label="Search schools and directors" placeholder="Search schools, directors…" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} />
-          </div>
+          </div> */}
           <div className="platform-top-actions superadmin-header-actions">
-            <span className="platform-live"><i /> Live workspace</span>
+            {/* <span className="platform-live"><i /> Live workspace</span> */}
             <button className="superadmin-header-icon" type="button" title="Notifications" aria-label="Notifications"><Bell size={18} /></button>
             <button className="superadmin-header-icon" type="button" title="Settings" aria-label="Settings"><Settings size={18} /></button>
             <div className="superadmin-header-user">
@@ -660,9 +659,6 @@ export default function SuperAdminDashboard() {
             </button>
           </div>
         )}
-        {loading && (
-          <div className="superadmin-loading">Loading platform data…</div>
-        )}
         
         <Routes>
           {/* Overview/Dashboard Route */}
@@ -679,7 +675,102 @@ export default function SuperAdminDashboard() {
               </section>
               
               {loading && !dashboardStats ? (
-                <div className="superadmin-empty">Loading dashboard...</div>
+                <>
+                  {/* Skeleton KPI Cards */}
+                  <section className="superadmin-overview superadmin-kpis">
+                    <article className="skeleton-loading">
+                      <Building2 />
+                      <span>Schools</span>
+                      <strong className="skeleton-text">--</strong>
+                      <small>Registered institutions</small>
+                    </article>
+                    <article className="skeleton-loading">
+                      <UserRound />
+                      <span>Directors</span>
+                      <strong className="skeleton-text">--</strong>
+                      <small>Platform accounts</small>
+                    </article>
+                    <article className="skeleton-loading">
+                      <GraduationCap />
+                      <span>Total students</span>
+                      <strong className="skeleton-text">--</strong>
+                      <small>Across all schools</small>
+                    </article>
+                    <article className="skeleton-loading">
+                      <CircleDollarSign />
+                      <span>Fees collected</span>
+                      <strong className="skeleton-text">₹--</strong>
+                      <small>Recorded as paid</small>
+                    </article>
+                  </section>
+                  
+                  {/* Skeleton Panels */}
+                  <div className="platform-overview-grid">
+                    <section className="superadmin-panel skeleton-loading">
+                      <div className="superadmin-section-title">
+                        <div>
+                          <h2>
+                            <Building2 size={19} /> Top Schools
+                          </h2>
+                          <p>Schools with highest enrollment</p>
+                        </div>
+                      </div>
+                      <div className="skeleton-row">
+                        <div className="skeleton-icon"></div>
+                        <div className="skeleton-content">
+                          <div className="skeleton-line skeleton-line-title"></div>
+                          <div className="skeleton-line skeleton-line-subtitle"></div>
+                        </div>
+                      </div>
+                      <div className="skeleton-row">
+                        <div className="skeleton-icon"></div>
+                        <div className="skeleton-content">
+                          <div className="skeleton-line skeleton-line-title"></div>
+                          <div className="skeleton-line skeleton-line-subtitle"></div>
+                        </div>
+                      </div>
+                      <div className="skeleton-row">
+                        <div className="skeleton-icon"></div>
+                        <div className="skeleton-content">
+                          <div className="skeleton-line skeleton-line-title"></div>
+                          <div className="skeleton-line skeleton-line-subtitle"></div>
+                        </div>
+                      </div>
+                    </section>
+                    
+                    <section className="superadmin-panel skeleton-loading">
+                      <div className="superadmin-section-title">
+                        <div>
+                          <h2>
+                            <Users size={19} /> Recent Schools
+                          </h2>
+                          <p>Recently created schools</p>
+                        </div>
+                      </div>
+                      <div className="skeleton-row">
+                        <div className="skeleton-icon"></div>
+                        <div className="skeleton-content">
+                          <div className="skeleton-line skeleton-line-title"></div>
+                          <div className="skeleton-line skeleton-line-subtitle"></div>
+                        </div>
+                      </div>
+                      <div className="skeleton-row">
+                        <div className="skeleton-icon"></div>
+                        <div className="skeleton-content">
+                          <div className="skeleton-line skeleton-line-title"></div>
+                          <div className="skeleton-line skeleton-line-subtitle"></div>
+                        </div>
+                      </div>
+                      <div className="skeleton-row">
+                        <div className="skeleton-icon"></div>
+                        <div className="skeleton-content">
+                          <div className="skeleton-line skeleton-line-title"></div>
+                          <div className="skeleton-line skeleton-line-subtitle"></div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </>
               ) : dashboardStats ? (
                     <>
                       <section className="superadmin-overview superadmin-kpis">

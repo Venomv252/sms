@@ -411,12 +411,56 @@ export default function SchoolWorkspace({ school, onBack }) {
           </div>
 
           <section className="sw-stats-grid">
-            <StatCard icon={GraduationCap} label="Students" value={stats.students ?? 0} note="Enrolled student records" />
-            <StatCard icon={Users} label="Teachers" value={stats.teachers ?? 0} note={`${stats.otherStaff ?? 0} other staff accounts`} />
-            <StatCard icon={BookOpen} label="Classes" value={stats.classes ?? 0} note={`${stats.subjects ?? 0} subjects configured`} />
-            <StatCard icon={Activity} label="Today's attendance" value={stats.attendanceToday == null ? "No data" : `${stats.attendanceToday}%`} note={`${stats.presentToday ?? 0} present / ${stats.attendanceRecordsToday ?? 0} marked`} />
-            <StatCard icon={IndianRupee} label="Fees collected" value={money(stats.feeCollected)} note="Paid fee records only" />
-            <StatCard icon={ClipboardList} label="Results published" value={stats.resultsPublished ?? 0} note={`${stats.pendingFeeRecords ?? 0} pending fee records`} />
+            {loading && !stats ? (
+              <>
+                {/* Skeleton Stat Cards */}
+                <article className="sw-stat-card skeleton-loading">
+                  <div className="sw-stat-icon"><GraduationCap size={19} /></div>
+                  <div className="sw-stat-label">Students</div>
+                  <strong className="skeleton-text">--</strong>
+                  <small>Enrolled student records</small>
+                </article>
+                <article className="sw-stat-card skeleton-loading">
+                  <div className="sw-stat-icon"><Users size={19} /></div>
+                  <div className="sw-stat-label">Teachers</div>
+                  <strong className="skeleton-text">--</strong>
+                  <small>-- other staff accounts</small>
+                </article>
+                <article className="sw-stat-card skeleton-loading">
+                  <div className="sw-stat-icon"><BookOpen size={19} /></div>
+                  <div className="sw-stat-label">Classes</div>
+                  <strong className="skeleton-text">--</strong>
+                  <small>-- subjects configured</small>
+                </article>
+                <article className="sw-stat-card skeleton-loading">
+                  <div className="sw-stat-icon"><Activity size={19} /></div>
+                  <div className="sw-stat-label">Today's attendance</div>
+                  <strong className="skeleton-text">--</strong>
+                  <small>-- present / -- marked</small>
+                </article>
+                <article className="sw-stat-card skeleton-loading">
+                  <div className="sw-stat-icon"><IndianRupee size={19} /></div>
+                  <div className="sw-stat-label">Fees collected</div>
+                  <strong className="skeleton-text">₹--</strong>
+                  <small>Paid fee records only</small>
+                </article>
+                <article className="sw-stat-card skeleton-loading">
+                  <div className="sw-stat-icon"><ClipboardList size={19} /></div>
+                  <div className="sw-stat-label">Results published</div>
+                  <strong className="skeleton-text">--</strong>
+                  <small>-- pending fee records</small>
+                </article>
+              </>
+            ) : (
+              <>
+                <StatCard icon={GraduationCap} label="Students" value={stats.students ?? 0} note="Enrolled student records" />
+                <StatCard icon={Users} label="Teachers" value={stats.teachers ?? 0} note={`${stats.otherStaff ?? 0} other staff accounts`} />
+                <StatCard icon={BookOpen} label="Classes" value={stats.classes ?? 0} note={`${stats.subjects ?? 0} subjects configured`} />
+                <StatCard icon={Activity} label="Today's attendance" value={stats.attendanceToday == null ? "No data" : `${stats.attendanceToday}%`} note={`${stats.presentToday ?? 0} present / ${stats.attendanceRecordsToday ?? 0} marked`} />
+                <StatCard icon={IndianRupee} label="Fees collected" value={money(stats.feeCollected)} note="Paid fee records only" />
+                <StatCard icon={ClipboardList} label="Results published" value={stats.resultsPublished ?? 0} note={`${stats.pendingFeeRecords ?? 0} pending fee records`} />
+              </>
+            )}
           </section>
 
           <div className="sw-content-grid">

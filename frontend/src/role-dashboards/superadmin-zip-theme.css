@@ -1,62 +1,676 @@
 /* Adapt the existing live Super Admin dashboard to the supplied SchoolERP visual design. */
 .superadmin-role-shell {
-  --sa-green:#0a7c59; --sa-green-dark:#065c41; --sa-green-soft:#e6f4f0;
-  background:#f8fafb!important; color:#111827!important;
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  --sa-green: #0a7c59;
+  --sa-green-dark: #065c41;
+  --sa-green-soft: #e6f4f0;
+  background: #f8fafb !important;
+  color: #111827 !important;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif !important;
 }
-.superadmin-role-shell>.platform-sidebar {
-  background:#0a7c59!important; color:#fff!important; border:0!important;
-  box-shadow:2px 0 14px rgba(15,55,42,.08); padding:0 12px 14px!important;
+.superadmin-role-shell > .platform-sidebar {
+  background: #0a7c59 !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 2px 0 14px rgba(15, 55, 42, 0.08);
+  padding: 0 12px 14px !important;
 }
-.superadmin-role-shell .platform-brand {min-height:92px;padding:16px 8px!important;border-bottom:1px solid rgba(255,255,255,.16)!important;}
-.superadmin-role-shell .platform-brand-icon {width:42px;height:42px;background:rgba(255,255,255,.16)!important;color:#fff!important;border-radius:10px;}
-.superadmin-role-shell .platform-brand strong,.superadmin-role-shell .platform-brand small {color:#fff!important;}
-.superadmin-role-shell .platform-brand strong {font-size:16px;font-weight:750;}
-.superadmin-role-shell .platform-brand small {opacity:.75;}
-.superadmin-role-shell .platform-nav-label {color:rgba(255,255,255,.62)!important;padding:25px 10px 12px!important;font-size:10px;letter-spacing:.1em;}
-.superadmin-role-shell .platform-nav-group-label {color:rgba(255,255,255,.55)!important;}
-.superadmin-role-shell .platform-sidebar nav {gap:5px;}
-.superadmin-role-shell .platform-sidebar nav button {color:rgba(255,255,255,.86)!important;border-radius:8px!important;min-height:43px;padding:11px 12px!important;font-weight:550;}
-.superadmin-role-shell .platform-sidebar nav button:hover {color:#fff!important;background:rgba(255,255,255,.12)!important;}
-.superadmin-role-shell .platform-sidebar nav button.active {color:#065c41!important;background:#fff!important;box-shadow:0 4px 12px rgba(0,0,0,.08)!important;}
-.superadmin-role-shell .platform-sidebar nav button.active em {color:#065c41!important;background:#e6f4f0!important;}
-.superadmin-role-shell .platform-sidebar-bottom {border-top:1px solid rgba(255,255,255,.16)!important;}
-.superadmin-role-shell .platform-user-avatar {background:rgba(255,255,255,.18)!important;color:#fff!important;}
-.superadmin-role-shell .platform-user strong,.superadmin-role-shell .platform-user small {color:#fff!important;}
-.superadmin-role-shell .platform-user small {opacity:.72;}
-.superadmin-role-shell .platform-sidebar .platform-signout {color:rgba(255,255,255,.85)!important;border-radius:8px;}
-.superadmin-role-shell .platform-sidebar .platform-signout:hover {color:#fff!important;background:rgba(255,255,255,.12)!important;}
-.superadmin-role-shell .platform-close-nav {color:#fff!important;}
-.superadmin-role-shell>.platform-main {background:#f8fafb;padding-bottom:42px;}
-.superadmin-role-shell .platform-topbar {min-height:76px;background:#fff!important;border-bottom:1px solid #e9edf0!important;box-shadow:0 1px 2px rgba(0,0,0,.02);margin-bottom:24px;}
-.superadmin-role-shell .platform-topbar h1 {color:#111827!important;font-size:20px;font-weight:700;}
-.superadmin-role-shell .platform-topbar>div:nth-child(2)>span {color:#8b969e!important;}
-.superadmin-role-shell .superadmin-header-search {display:flex;align-items:center;gap:9px;width:min(330px,28vw);min-width:130px;height:38px;padding:0 12px;border:1px solid #e5e7eb;border-radius:8px;color:#9ca3af;background:#f9fafb;}
-.superadmin-role-shell .superadmin-header-search input {min-width:0;width:100%;border:0;outline:0;background:transparent;color:#111827;font:inherit;font-size:12px;}
-.superadmin-role-shell .superadmin-header-actions {gap:12px;}
-.superadmin-role-shell .platform-live {background:#e6f4f0!important;color:#0a7c59!important;border-radius:30px;padding:8px 12px;font-size:11px;white-space:nowrap;}
-.superadmin-role-shell .platform-live i {background:#10b981!important;box-shadow:0 0 0 3px #d1fae5!important;}
-.superadmin-role-shell .superadmin-header-icon {display:grid;place-items:center;width:36px;height:36px;border:1px solid #e8ecef;border-radius:8px;background:#fff;color:#59656d;cursor:pointer;}
-.superadmin-role-shell .superadmin-header-icon:hover {background:#f3f7f5;color:#0a7c59;}
-.superadmin-role-shell .superadmin-header-user {display:flex;align-items:center;gap:9px;padding-left:8px;border-left:1px solid #edf0f2;}
-.superadmin-role-shell .superadmin-header-user>span {display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#e6f4f0;color:#0a7c59;font-size:12px;font-weight:800;}
-.superadmin-role-shell .superadmin-header-user>div {display:grid;gap:2px;}
-.superadmin-role-shell .superadmin-header-user strong {color:#111827;font-size:11px;white-space:nowrap;}
-.superadmin-role-shell .superadmin-header-user small {color:#9ca3af;font-size:10px;white-space:nowrap;}
-.superadmin-role-shell .superadmin-refresh {display:grid;place-items:center;width:36px;height:36px;padding:0!important;border-radius:8px!important;}
-.superadmin-role-shell .platform-page-intro {border-radius:14px!important;border:1px solid #e5e7eb!important;background:linear-gradient(110deg,#fff 0%,#fff 55%,#e6f4f0 100%)!important;padding:24px 26px!important;}
-.superadmin-role-shell .superadmin-kpis article {border:1px solid #e8ecef!important;border-radius:13px!important;background:#fff!important;box-shadow:0 1px 3px rgba(0,0,0,.035)!important;}
-.superadmin-role-shell .superadmin-kpis article>svg {color:#0a7c59!important;background:#e6f4f0!important;}
-.superadmin-role-shell .superadmin-kpis article>span {color:#6b7280!important;}
-.superadmin-role-shell .superadmin-kpis article>strong {color:#111827!important;}
-.superadmin-role-shell .superadmin-kpis article small {color:#9ca3af!important;}
-.superadmin-role-shell .superadmin-panel {border:1px solid #e5e7eb!important;border-radius:14px!important;background:#fff!important;box-shadow:0 1px 3px rgba(0,0,0,.035)!important;}
-.superadmin-role-shell .superadmin-section-title h2 {color:#111827!important;}
-.superadmin-role-shell .superadmin-section-title p {color:#6b7280!important;}
-.superadmin-role-shell .network-card {border:1px solid #e5e7eb!important;border-radius:12px!important;box-shadow:none!important;}
-.superadmin-role-shell .network-school-mark {background:#e6f4f0!important;color:#0a7c59!important;}
-.superadmin-role-shell .director-submit,.superadmin-role-shell .director-open-school {background:#0a7c59!important;border-radius:8px!important;}
-.superadmin-role-shell .superadmin-count {background:#e6f4f0!important;color:#0a7c59!important;}
-@media(max-width:1050px){.superadmin-role-shell .superadmin-header-search{display:none}.superadmin-role-shell .superadmin-header-user>div{display:none}}
-@media(max-width:850px){.superadmin-role-shell .platform-live{display:none}}
-@media(max-width:680px){.superadmin-role-shell .platform-topbar{gap:9px}.superadmin-role-shell .superadmin-header-actions{gap:6px}.superadmin-role-shell .superadmin-header-icon,.superadmin-role-shell .superadmin-header-user{display:none}}
+.superadmin-role-shell .platform-brand {
+  min-height: 92px;
+  padding: 16px 8px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+.superadmin-role-shell .platform-brand-icon {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+  border-radius: 10px;
+}
+.superadmin-role-shell .platform-brand strong,
+.superadmin-role-shell .platform-brand small {
+  color: #fff !important;
+}
+.superadmin-role-shell .platform-brand strong {
+  font-size: 16px;
+  font-weight: 750;
+}
+.superadmin-role-shell .platform-brand small {
+  opacity: 0.75;
+}
+.superadmin-role-shell .platform-nav-label {
+  color: rgba(255, 255, 255, 0.62) !important;
+  padding: 25px 10px 12px !important;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.superadmin-role-shell .platform-nav-group-label {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+.superadmin-role-shell .platform-sidebar nav {
+  gap: 5px;
+}
+.superadmin-role-shell .platform-sidebar nav button {
+  color: rgba(255, 255, 255, 0.86) !important;
+  border-radius: 8px !important;
+  min-height: 43px;
+  padding: 11px 12px !important;
+  font-weight: 550;
+}
+.superadmin-role-shell .platform-sidebar nav button:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+.superadmin-role-shell .platform-sidebar nav button.active {
+  color: #065c41 !important;
+  background: #fff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+.superadmin-role-shell .platform-sidebar nav button.active em {
+  color: #065c41 !important;
+  background: #e6f4f0 !important;
+}
+.superadmin-role-shell .platform-sidebar-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+.superadmin-role-shell .platform-user-avatar {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #fff !important;
+}
+.superadmin-role-shell .platform-user strong,
+.superadmin-role-shell .platform-user small {
+  color: #fff !important;
+}
+.superadmin-role-shell .platform-user small {
+  opacity: 0.72;
+}
+.superadmin-role-shell .platform-sidebar .platform-signout {
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-radius: 8px;
+}
+.superadmin-role-shell .platform-sidebar .platform-signout:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+.superadmin-role-shell .platform-close-nav {
+  color: #fff !important;
+}
+.superadmin-role-shell > .platform-main {
+  background: #f8fafb;
+  padding-bottom: 42px;
+}
+.superadmin-role-shell .platform-topbar {
+  min-height: 76px;
+  background: #fff !important;
+  border-bottom: 1px solid #e9edf0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 clamp(18px, 3vw, 38px);
+}
+.superadmin-role-shell .platform-topbar h1 {
+  color: #111827 !important;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 4px 0 0;
+}
+.superadmin-role-shell .platform-topbar > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.superadmin-role-shell .platform-topbar > div:nth-child(2) > span {
+  color: #8b969e !important;
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+.superadmin-role-shell .platform-menu-toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border: none;
+  background: #f3f7f5;
+  color: #0a7c59;
+  border-radius: 8px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+.superadmin-role-shell .platform-menu-toggle:hover {
+  background: #e6f4f0;
+}
+.superadmin-role-shell .superadmin-header-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: min(330px, 28vw);
+  min-width: 130px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #9ca3af;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+.superadmin-role-shell .superadmin-header-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #111827;
+  font: inherit;
+  font-size: 12px;
+}
+.superadmin-role-shell .superadmin-header-actions {
+  gap: 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+.superadmin-role-shell .platform-top-actions {
+  display: flex;
+  align-items: center;
+}
+.superadmin-role-shell .platform-live {
+  background: #e6f4f0 !important;
+  color: #0a7c59 !important;
+  border-radius: 30px;
+  padding: 8px 12px;
+  font-size: 11px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.superadmin-role-shell .platform-live i {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 3px #d1fae5 !important;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: block;
+}
+.superadmin-role-shell .superadmin-header-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e8ecef;
+  border-radius: 8px;
+  background: #fff;
+  color: #59656d;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.superadmin-role-shell .superadmin-header-icon:hover {
+  background: #f3f7f5;
+  color: #0a7c59;
+}
+.superadmin-role-shell .superadmin-header-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: 12px;
+  border-left: 1px solid #edf0f2;
+  flex-shrink: 0;
+}
+.superadmin-role-shell .superadmin-header-user > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e6f4f0;
+  color: #0a7c59;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.superadmin-role-shell .superadmin-header-user > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.superadmin-role-shell .superadmin-header-user strong {
+  color: #111827;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.superadmin-role-shell .superadmin-header-user small {
+  color: #9ca3af;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.superadmin-role-shell .superadmin-refresh {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  background: #0a7c59 !important;
+  color: #fff !important;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(10, 124, 89, 0.2);
+}
+.superadmin-role-shell .superadmin-refresh:hover {
+  background: #065c41 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(10, 124, 89, 0.3);
+}
+.superadmin-role-shell .superadmin-refresh:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(10, 124, 89, 0.2);
+}
+.superadmin-role-shell .superadmin-refresh svg {
+  transition: transform 0.3s ease;
+}
+.superadmin-role-shell .superadmin-refresh:hover svg {
+  transform: rotate(90deg);
+}
+.superadmin-role-shell .platform-page-intro {
+  border-radius: 14px !important;
+  border: 1px solid #e5e7eb !important;
+  background: linear-gradient(
+    110deg,
+    #fff 0%,
+    #fff 55%,
+    #e6f4f0 100%
+  ) !important;
+  padding: 24px 26px !important;
+  margin-bottom: 20px;
+}
+.superadmin-role-shell .platform-page-intro h2 {
+  font-size: 25px;
+  color: #111827;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.superadmin-role-shell .platform-page-intro p {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* KPI Overview Section */
+.superadmin-role-shell .superadmin-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Platform Overview Grid - Two Column Layout for Panels */
+.superadmin-role-shell .platform-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.superadmin-role-shell .platform-overview-grid > .superadmin-panel {
+  margin-bottom: 0;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1200px) {
+  .superadmin-role-shell .superadmin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 950px) {
+  .superadmin-role-shell .platform-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 680px) {
+  .superadmin-role-shell .superadmin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .superadmin-role-shell .platform-overview-grid {
+    gap: 14px;
+  }
+  .superadmin-role-shell .platform-page-intro {
+    padding: 18px;
+    border-radius: 12px !important;
+  }
+  .superadmin-role-shell .platform-page-intro h2 {
+    font-size: 20px;
+  }
+}
+
+/* Skeleton Loading Styles */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.superadmin-role-shell .skeleton-loading {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.superadmin-role-shell .skeleton-text {
+  display: inline-block;
+  min-width: 60px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  color: transparent !important;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.superadmin-role-shell .skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid #f1f3f5;
+}
+
+.superadmin-role-shell .skeleton-row:first-of-type {
+  border-top: none;
+}
+
+.superadmin-role-shell .skeleton-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.superadmin-role-shell .skeleton-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.superadmin-role-shell .skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.superadmin-role-shell .skeleton-line-title {
+  width: 70%;
+  height: 14px;
+}
+
+.superadmin-role-shell .skeleton-line-subtitle {
+  width: 50%;
+  height: 10px;
+}
+.superadmin-role-shell .superadmin-kpis article {
+  border: 1px solid #e8ecef !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+}
+.superadmin-role-shell .superadmin-kpis article > svg {
+  color: #0a7c59 !important;
+  background: #e6f4f0 !important;
+}
+.superadmin-role-shell .superadmin-kpis article > span {
+  color: #6b7280 !important;
+}
+.superadmin-role-shell .superadmin-kpis article > strong {
+  color: #111827 !important;
+}
+.superadmin-role-shell .superadmin-kpis article small {
+  color: #9ca3af !important;
+}
+.superadmin-role-shell .superadmin-panel {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+  padding: 22px;
+  margin-bottom: 18px;
+}
+.superadmin-role-shell .superadmin-section-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f3f5;
+}
+.superadmin-role-shell .superadmin-section-title > div {
+  flex: 1;
+  min-width: 0;
+}
+.superadmin-role-shell .superadmin-section-title h2 {
+  color: #111827 !important;
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.superadmin-role-shell .superadmin-section-title p {
+  color: #6b7280 !important;
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.4;
+}
+.superadmin-role-shell .superadmin-section-title button {
+  flex-shrink: 0;
+  background: rgba(10, 124, 89, 0.1);
+  color: #0a7c59;
+  border: 1.5px solid rgba(10, 124, 89, 0.3);
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(10, 124, 89, 0.1);
+  white-space: nowrap;
+}
+.superadmin-role-shell .superadmin-section-title button:hover {
+  background: #0a7c59;
+  color: #fff;
+  border-color: #0a7c59;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(10, 124, 89, 0.25);
+}
+.superadmin-role-shell .superadmin-section-title button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(10, 124, 89, 0.2);
+}
+.superadmin-role-shell .network-card {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+.superadmin-role-shell .network-school-mark {
+  background: #e6f4f0 !important;
+  color: #0a7c59 !important;
+}
+.superadmin-role-shell .director-submit,
+.superadmin-role-shell .director-open-school {
+  background: #0a7c59 !important;
+  border-radius: 8px !important;
+}
+.superadmin-role-shell .superadmin-count {
+  background: #e6f4f0 !important;
+  color: #0a7c59 !important;
+}
+
+/* Platform Compact Rows - Used in Panels */
+.superadmin-role-shell .platform-compact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid #f1f3f5;
+  transition: background-color 0.15s ease;
+}
+.superadmin-role-shell .platform-compact-row:first-of-type {
+  border-top: none;
+}
+.superadmin-role-shell .platform-compact-row:hover {
+  background: #f9fafb;
+  margin: 0 -12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: 8px;
+}
+.superadmin-role-shell .platform-compact-row > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.superadmin-role-shell .platform-compact-row strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.superadmin-role-shell .platform-compact-row small {
+  font-size: 11px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.superadmin-role-shell .platform-compact-row > b {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Empty States */
+.superadmin-role-shell .superadmin-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px dashed #e5e7eb;
+}
+.superadmin-role-shell .superadmin-loading {
+  padding: 32px 20px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+@media (max-width: 1050px) {
+  .superadmin-role-shell .superadmin-header-search {
+    display: none;
+  }
+  .superadmin-role-shell .superadmin-header-user > div {
+    display: none;
+  }
+}
+@media (max-width: 850px) {
+  .superadmin-role-shell .platform-live {
+    display: none;
+  }
+}
+@media (max-width: 680px) {
+  .superadmin-role-shell .platform-topbar {
+    gap: 9px;
+    padding: 0 14px;
+  }
+  .superadmin-role-shell .superadmin-header-actions {
+    gap: 6px;
+  }
+  .superadmin-role-shell .superadmin-header-icon,
+  .superadmin-role-shell .superadmin-header-user {
+    display: none;
+  }
+  .superadmin-role-shell .platform-menu-toggle {
+    display: flex !important;
+  }
+}
+
+/* Shared sidebar geometry and shell layout */
+.superadmin-role-shell > .platform-sidebar {
+  width: 264px;
+  height: 100vh;
+  height: 100dvh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.superadmin-role-shell .platform-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.superadmin-role-shell .platform-brand > div:not(.platform-brand-icon) {
+  flex: 1;
+  min-width: 0;
+}
+.superadmin-role-shell > .platform-main {
+  width: calc(100% - 264px);
+  min-width: 0;
+  margin-left: 264px;
+  box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .superadmin-role-shell > .platform-sidebar {
+    width: min(280px, 86vw);
+    transform: translateX(-100%);
+  }
+  .superadmin-role-shell > .platform-sidebar.is-open {
+    transform: translateX(0);
+  }
+  .superadmin-role-shell > .platform-main {
+    width: 100%;
+    margin-left: 0;
+  }
+}
