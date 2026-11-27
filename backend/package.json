@@ -12,6 +12,8 @@
     "db:status": "prisma migrate status",
     "db:seed": "prisma db seed",
     "db:seed:superadmin": "node prisma/seed-superadmin.js",
+    "db:seed:all-roles": "node prisma/seed-all-roles.js",
+    "db:reset": "node prisma/reset-db.js",
     "db:studio": "prisma studio",
     "setup-and-start": "npm install && npm run db:generate && npm run db:deploy && npm start"
   },

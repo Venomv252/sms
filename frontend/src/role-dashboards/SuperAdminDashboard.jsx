@@ -29,7 +29,6 @@ import {
   apiPost,
   apiPatch,
   apiDelete,
-  clearApiSession,
 } from "../api.js";
 import RoleSidebar from "../components/RoleSidebar.jsx";
 import CredentialDisplay from "../components/CredentialDisplay.jsx";
@@ -77,6 +76,7 @@ export default function SuperAdminDashboard() {
   const [schoolForm, setSchoolForm] = useState(EMPTY_SCHOOL);
   const [saving, setSaving] = useState(false);
   const [savingSchool, setSavingSchool] = useState(false);
+  const [savingDirector, setSavingDirector] = useState(false);
   const [editingSchool, setEditingSchool] = useState(null);
   const [editingDirector, setEditingDirector] = useState(null);
   const [directorSchoolSearch, setDirectorSchoolSearch] = useState("");
@@ -85,66 +85,129 @@ export default function SuperAdminDashboard() {
   const [deletingRecord, setDeletingRecord] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [healthStatus, setHealthStatus] = useState({ backend: "checking", database: "checking" });
+  const [checkingHealth, setCheckingHealth] = useState(false);
   
-  // Cache to avoid re-fetching - PERFORMANCE OPTIMIZATION
-  const [dataCache, setDataCache] = useState({ schools: null, directors: null, dashboardStats: null, timestamp: null });
+  // Independent cache for each dataset - PREVENTS CROSS-PAGE DATA POLLUTION
+  const [dataCache, setDataCache] = useState({
+    schools: { data: null, timestamp: null },
+    directors: { data: null, timestamp: null },
+    dashboardStats: { data: null, timestamp: null },
+  });
   const CACHE_DURATION = 30000; // 30 seconds
   
   // Determine current page from route
   const currentPath = location.pathname;
-  const currentPage = currentPath.split('/').pop() || 'dashboard';
+  const page = currentPath.split('/').pop() || 'dashboard';
   
-  // Lazy load data based on current route - PERFORMANCE OPTIMIZATION
+  // Lazy load data based on current route - FIXED CACHING LOGIC
   const loadData = useCallback(async (force = false) => {
-    const page = location.pathname.split('/').pop() || 'dashboard';
+    const currentPage = location.pathname.split('/').pop() || 'dashboard';
     
     setLoading(true);
     setError("");
     
     try {
-      // Check cache first (unless force refresh)
       const now = Date.now();
-      const isCacheValid = !force && dataCache.timestamp && (now - dataCache.timestamp) < CACHE_DURATION;
       
-      if (isCacheValid) {
-        // Use cached data
-        if (dataCache.schools) setSchools(dataCache.schools);
-        if (dataCache.directors) setDirectors(dataCache.directors);
-        if (dataCache.dashboardStats) setDashboardStats(dataCache.dashboardStats);
-        setLoading(false);
-        return;
-      }
-      
-      // Only load what's needed for current page
-      if (page === 'dashboard' || page === 'superadmin') {
-        // Dashboard: Load lightweight stats only (OPTIMIZED!)
-        const stats = await apiGet("/platform/superadmin/dashboard/stats");
-        setDashboardStats(stats);
-        setDataCache({ dashboardStats: stats, timestamp: Date.now() });
-      } else if (page === 'schools') {
-        // Schools page: Load full school list with details
-        const s = await apiGet("/platform/schools");
-        setSchools(s || []);
-        setDataCache({ schools: s || [], timestamp: Date.now() });
-      } else if (page === 'directors') {
-        // Directors page: Need both directors and schools for assignment
-        const [d, s] = await Promise.all([
-          apiGet("/platform/directors"),
-          apiGet("/platform/schools"),
-        ]);
-        setDirectors(d || []);
-        setSchools(s || []);
-        setDataCache({ directors: d || [], schools: s || [], timestamp: Date.now() });
-      } else if (page === 'statistics') {
-        // Statistics: Need both for graphs
-        const [s, d] = await Promise.all([
-          apiGet("/platform/schools"),
-          apiGet("/platform/directors"),
-        ]);
-        setSchools(s || []);
-        setDirectors(d || []);
-        setDataCache({ schools: s || [], directors: d || [], timestamp: Date.now() });
-      } else if (page === 'health') {
+      // Only load what's needed for current page with independent cache validation
+      if (currentPage === 'dashboard' || currentPage === 'superadmin') {
+        // Check if dashboard stats cache is valid
+        const isCacheValid = !force && 
+          dataCache.dashboardStats.data && 
+          dataCache.dashboardStats.timestamp && 
+          (now - dataCache.dashboardStats.timestamp) < CACHE_DURATION;
+        
+        if (isCacheValid) {
+          setDashboardStats(dataCache.dashboardStats.data);
+        } else {
+          const stats = await apiGet("/platform/superadmin/dashboard/stats");
+          const statsData = stats?.data || stats;
+          setDashboardStats(statsData);
+          setDataCache(prev => ({
+            ...prev,
+            dashboardStats: { data: statsData, timestamp: now }
+          }));
+        }
+      } else if (currentPage === 'schools') {
+        // Check if schools cache is valid
+        const isCacheValid = !force && 
+          dataCache.schools.data && 
+          dataCache.schools.timestamp && 
+          (now - dataCache.schools.timestamp) < CACHE_DURATION;
+        
+        if (isCacheValid) {
+          setSchools(dataCache.schools.data);
+        } else {
+          const s = await apiGet("/platform/schools");
+          const schoolsData = s?.data || s || [];
+          setSchools(schoolsData);
+          setDataCache(prev => ({
+            ...prev,
+            schools: { data: schoolsData, timestamp: now }
+          }));
+        }
+      } else if (currentPage === 'directors') {
+        // Check if directors cache is valid
+        const isDirectorsCacheValid = !force && 
+          dataCache.directors.data && 
+          dataCache.directors.timestamp && 
+          (now - dataCache.directors.timestamp) < CACHE_DURATION;
+        
+        const isSchoolsCacheValid = !force && 
+          dataCache.schools.data && 
+          dataCache.schools.timestamp && 
+          (now - dataCache.schools.timestamp) < CACHE_DURATION;
+        
+        if (isDirectorsCacheValid && isSchoolsCacheValid) {
+          setDirectors(dataCache.directors.data);
+          setSchools(dataCache.schools.data);
+        } else {
+          const [d, s] = await Promise.all([
+            apiGet("/platform/directors"),
+            apiGet("/platform/schools"),
+          ]);
+          const directorsData = d?.data || d || [];
+          const schoolsData = s?.data || s || [];
+          setDirectors(directorsData);
+          setSchools(schoolsData);
+          setDataCache(prev => ({
+            ...prev,
+            directors: { data: directorsData, timestamp: now },
+            schools: { data: schoolsData, timestamp: now }
+          }));
+        }
+      } else if (currentPage === 'statistics') {
+        // Statistics needs both datasets
+        const isSchoolsCacheValid = !force && 
+          dataCache.schools.data && 
+          dataCache.schools.timestamp && 
+          (now - dataCache.schools.timestamp) < CACHE_DURATION;
+        
+        const isDirectorsCacheValid = !force && 
+          dataCache.directors.data && 
+          dataCache.directors.timestamp && 
+          (now - dataCache.directors.timestamp) < CACHE_DURATION;
+        
+        if (isSchoolsCacheValid && isDirectorsCacheValid) {
+          setSchools(dataCache.schools.data);
+          setDirectors(dataCache.directors.data);
+        } else {
+          const [s, d] = await Promise.all([
+            apiGet("/platform/schools"),
+            apiGet("/platform/directors"),
+          ]);
+          const schoolsData = s?.data || s || [];
+          const directorsData = d?.data || d || [];
+          setSchools(schoolsData);
+          setDirectors(directorsData);
+          setDataCache(prev => ({
+            ...prev,
+            schools: { data: schoolsData, timestamp: now },
+            directors: { data: directorsData, timestamp: now }
+          }));
+        }
+      } else if (currentPage === 'health') {
         // Health page doesn't need data
         setLoading(false);
         return;
@@ -154,11 +217,11 @@ export default function SuperAdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [location.pathname]);
+  }, [location.pathname, dataCache]);
   
   useEffect(() => {
     loadData();
-  }, [loadData]); // Reload when loadData changes
+  }, [location.pathname]); // Reload when pathname changes
   const totals = useMemo(
     () =>
       schools.reduce(
@@ -274,6 +337,8 @@ export default function SuperAdminDashboard() {
   };
   const saveSchool = async (e) => {
     e.preventDefault();
+    setSavingSchool(true);
+    setError("");
     try {
       await apiPatch(`/platform/schools/${editingSchool.id}`, {
         name: editingSchool.name,
@@ -285,6 +350,8 @@ export default function SuperAdminDashboard() {
       await loadData(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSavingSchool(false);
     }
   };
   const deleteSchool = (s) => {
@@ -294,6 +361,8 @@ export default function SuperAdminDashboard() {
   };
   const saveDirector = async (e) => {
     e.preventDefault();
+    setSavingDirector(true);
+    setError("");
     try {
       await apiPatch(`/platform/directors/${editingDirector.id}`, {
         firstName: editingDirector.firstName,
@@ -310,6 +379,8 @@ export default function SuperAdminDashboard() {
       await loadData(true); // Force refresh, bypass cache
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSavingDirector(false);
     }
   };
   const deleteDirector = (d) => {
@@ -317,6 +388,44 @@ export default function SuperAdminDashboard() {
     setMessage("");
     setDeleteConfirmation({ type: "director", item: d });
   };
+  
+  const checkHealth = async () => {
+    setCheckingHealth(true);
+    try {
+      // Check backend liveness
+      const liveResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/health/live`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const backendStatus = liveResponse.ok ? "responding" : "unavailable";
+      
+      // Check database readiness
+      let databaseStatus = "unavailable";
+      try {
+        const readyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/health/ready`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        databaseStatus = readyResponse.ok ? "responding" : "unavailable";
+      } catch {
+        databaseStatus = "unavailable";
+      }
+      
+      setHealthStatus({ backend: backendStatus, database: databaseStatus });
+    } catch (err) {
+      setHealthStatus({ backend: "unavailable", database: "unavailable" });
+    } finally {
+      setCheckingHealth(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (page === 'health') {
+      checkHealth();
+    }
+  }, [page]);
+  
   const confirmDelete = async () => {
     if (!deleteConfirmation || deletingRecord) return;
     const { type, item } = deleteConfirmation;
@@ -524,7 +633,7 @@ export default function SuperAdminDashboard() {
                   )}
                 </div>
               </div>
-              <button className="superadmin-icon-button">
+              <button className="superadmin-icon-button" disabled={savingDirector}>
                 <Save size={15} />
               </button>
               <button
@@ -628,10 +737,10 @@ export default function SuperAdminDashboard() {
             <span>SUPER ADMIN PORTAL</span>
             <h1>{pageTitle}</h1>
           </div>
-          {/* <div className="superadmin-header-search">
+          <div className="superadmin-header-search">
             <Search size={16} />
             <input type="search" aria-label="Search schools and directors" placeholder="Search schools, directors…" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} />
-          </div> */}
+          </div>
           <div className="platform-top-actions superadmin-header-actions">
             {/* <span className="platform-live"><i /> Live workspace</span> */}
             <button className="superadmin-header-icon" type="button" title="Notifications" aria-label="Notifications"><Bell size={18} /></button>
@@ -777,25 +886,25 @@ export default function SuperAdminDashboard() {
                         <article>
                           <Building2 />
                           <span>Schools</span>
-                          <strong>{dashboardStats.overview.totalSchools}</strong>
+                          <strong>{dashboardStats.overview?.totalSchools || 0}</strong>
                           <small>Registered institutions</small>
                         </article>
                         <article>
                           <UserRound />
                           <span>Directors</span>
-                          <strong>{dashboardStats.overview.totalDirectors}</strong>
+                          <strong>{dashboardStats.overview?.totalDirectors || 0}</strong>
                           <small>Platform accounts</small>
                         </article>
                         <article>
                           <GraduationCap />
                           <span>Total students</span>
-                          <strong>{dashboardStats.overview.totalStudents.toLocaleString("en-IN")}</strong>
+                          <strong>{(dashboardStats.overview?.totalStudents || 0).toLocaleString("en-IN")}</strong>
                           <small>Across all schools</small>
                         </article>
                         <article>
                           <CircleDollarSign />
                           <span>Fees collected</span>
-                          <strong>{money(dashboardStats.revenue.collected)}</strong>
+                          <strong>{money(dashboardStats.revenue?.collected || 0)}</strong>
                           <small>Recorded as paid</small>
                         </article>
                       </section>
@@ -940,7 +1049,17 @@ export default function SuperAdminDashboard() {
                   {schools.length} schools
                 </span>
               </div>
-              {schools.length ? (
+              {loading ? (
+                <div className="superadmin-loading">
+                  <RefreshCw size={20} className="spin" /> Loading schools...
+                </div>
+              ) : error ? (
+                <div className="superadmin-empty">
+                  <AlertTriangle size={20} />
+                  <p>Failed to load schools. {error}</p>
+                  <button onClick={() => loadData(true)}>Retry</button>
+                </div>
+              ) : schools.length ? (
                 schoolCards
               ) : (
                 <div className="superadmin-empty">
@@ -1134,7 +1253,23 @@ export default function SuperAdminDashboard() {
                   {directors.length} Directors
                 </span>
               </div>
-              {directorCards}
+              {loading ? (
+                <div className="superadmin-loading">
+                  <RefreshCw size={20} className="spin" /> Loading directors...
+                </div>
+              ) : error ? (
+                <div className="superadmin-empty">
+                  <AlertTriangle size={20} />
+                  <p>Failed to load directors. {error}</p>
+                  <button onClick={() => loadData(true)}>Retry</button>
+                </div>
+              ) : directors.length ? (
+                directorCards
+              ) : (
+                <div className="superadmin-empty">
+                  No directors created yet. Create your first director above.
+                </div>
+              )}
             </section>
           </>
           } />
@@ -1142,7 +1277,19 @@ export default function SuperAdminDashboard() {
           {/* Statistics Route */}
           <Route path="statistics" element={
           <>
-            <section className="superadmin-overview superadmin-kpis">
+            {loading ? (
+              <div className="superadmin-loading">
+                <RefreshCw size={20} className="spin" /> Loading statistics...
+              </div>
+            ) : error ? (
+              <div className="superadmin-empty">
+                <AlertTriangle size={20} />
+                <p>Failed to load statistics. {error}</p>
+                <button onClick={() => loadData(true)}>Retry</button>
+              </div>
+            ) : (
+              <>
+                <section className="superadmin-overview superadmin-kpis">
               <article>
                 <Building2 />
                 <span>Schools</span>
@@ -1205,6 +1352,8 @@ export default function SuperAdminDashboard() {
                 profit or net income.
               </p>
             </section>
+              </>
+            )}
           </>
           } />
           
@@ -1214,14 +1363,69 @@ export default function SuperAdminDashboard() {
             <div className="superadmin-section-title">
               <div>
                 <h2>
-                  <Activity size={19} /> Platform health & school issues
+                  <Activity size={19} /> Platform health & system status
                 </h2>
-                <p>Operational visibility and application health.</p>
+                <p>Monitor backend services and database connectivity.</p>
               </div>
-              <span className="health-badge">
-                <AlertTriangle size={13} /> Monitoring setup needed
-              </span>
+              {checkingHealth ? (
+                <span className="health-badge">
+                  <RefreshCw size={13} /> Checking...
+                </span>
+              ) : (
+                <button onClick={checkHealth} className="superadmin-refresh" title="Recheck health">
+                  <RefreshCw size={15} /> Recheck
+                </button>
+              )}
             </div>
+            
+            <div className="health-status-row">
+              <span>
+                <Activity size={16} /> Backend API Server
+              </span>
+              <strong className={
+                healthStatus.backend === "responding" ? "health-ok" : 
+                healthStatus.backend === "checking" ? "health-unknown" : 
+                "health-error"
+              }>
+                {healthStatus.backend === "responding" ? "Responding" : 
+                 healthStatus.backend === "checking" ? "Checking..." : 
+                 "Unavailable"}
+              </strong>
+            </div>
+            
+            <div className="health-status-row">
+              <span>
+                <Activity size={16} /> Database Connection
+              </span>
+              <strong className={
+                healthStatus.database === "responding" ? "health-ok" : 
+                healthStatus.database === "checking" ? "health-unknown" : 
+                "health-error"
+              }>
+                {healthStatus.database === "responding" ? "Connected" : 
+                 healthStatus.database === "checking" ? "Checking..." : 
+                 "Unavailable"}
+              </strong>
+            </div>
+            
+            {(healthStatus.backend === "unavailable" || healthStatus.database === "unavailable") && (
+              <div className="health-notice">
+                <div className="health-notice-icon">
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <strong>Service unavailable</strong>
+                  <p>
+                    One or more services are not responding. Please ensure the backend server is running 
+                    and the database is accessible.
+                  </p>
+                  <small>
+                    Backend URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}
+                  </small>
+                </div>
+              </div>
+            )}
+            
             <div className="health-notice">
               <div className="health-notice-icon">
                 <AlertTriangle size={20} />
@@ -1240,14 +1444,6 @@ export default function SuperAdminDashboard() {
                   module, error code, timestamp, and resolution status.
                 </small>
               </div>
-            </div>
-            <div className="health-status-row">
-              <span>
-                <CheckCircle2 size={16} /> Dashboard data API
-              </span>
-              <strong className={error ? "health-unknown" : "health-ok"}>
-                {error ? "Unavailable" : "Responding"}
-              </strong>
             </div>
           </section>
           } />
@@ -1321,8 +1517,8 @@ export default function SuperAdminDashboard() {
                 }
               />
             </label>
-            <button className="director-submit">
-              <Save size={16} /> Save changes
+            <button className="director-submit" disabled={savingSchool}>
+              <Save size={16} /> {savingSchool ? "Saving…" : "Save changes"}
             </button>
           </form>
         </div>
