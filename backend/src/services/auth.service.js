@@ -1,7 +1,13 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
 import config from "../config/config.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  hashRefreshToken,
+  storeRefreshToken,
+  getDeviceFingerprint,
+} from "../utils/tokens.js";
 
 const fail = (message, statusCode) =>
   Object.assign(new Error(message), { statusCode });
@@ -9,21 +15,17 @@ const fail = (message, statusCode) =>
 const normalizeUsername = (value) =>
   String(value ?? "").trim().toLowerCase();
 
-function accessToken(user) {
-  return jwt.sign(
-    {
-      id: user.id,
-      role: user.role,
-      schoolId: user.schoolId ?? null,
-    },
-    config.jwt.accessSecret,
-    {
-      expiresIn: config.jwt.accessExpiry,
-      issuer: "school-management-system",
-      audience: "sms-web",
-    },
-  );
-}
+const safeUserSelect = {
+  id: true,
+  email: true,
+  username: true,
+  role: true,
+  schoolId: true,
+  firstName: true,
+  lastName: true,
+  tokenVersion: true,
+  createdAt: true,
+};
 
 const safeUserSelect = {
   id: true,
@@ -84,7 +86,16 @@ async function register(input = {}) {
       },
       select: { ...safeUserSelect, student: true },
     });
-    return { user, token: accessToken(user) };
+    
+    // Generate tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken();
+    const refreshTokenHash = await hashRefreshToken(refreshToken);
+    
+    // Store refresh token in database
+    await storeRefreshToken(user.id, refreshTokenHash);
+    
+    return { user, accessToken, refreshToken };
   } catch (error) {
     if (error.code === "P2002") {
       throw fail("Username, email, roll number, or admission number already exists", 409);
@@ -93,7 +104,7 @@ async function register(input = {}) {
   }
 }
 
-async function login(username, password) {
+async function login(username, password, deviceInfo = null) {
   const normalizedUsername = normalizeUsername(username);
   if (!normalizedUsername || typeof password !== "string" || !password) {
     throw fail("Username and password are required", 400);
@@ -117,7 +128,16 @@ async function login(username, password) {
   }
 
   const { password: _password, ...safeUser } = user;
-  return { user: safeUser, token: accessToken(safeUser) };
+  
+  // Generate tokens
+  const accessToken = generateAccessToken(safeUser);
+  const refreshToken = generateRefreshToken();
+  const refreshTokenHash = await hashRefreshToken(refreshToken);
+  
+  // Store refresh token in database
+  await storeRefreshToken(safeUser.id, refreshTokenHash, deviceInfo);
+  
+  return { user: safeUser, accessToken, refreshToken };
 }
 
 async function getMe(userId) {

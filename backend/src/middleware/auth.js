@@ -1,19 +1,24 @@
-import jwt from "jsonwebtoken";
+import { verifyAccessToken } from "../utils/tokens.js";
 import prisma from "../config/prisma.js";
-import config from "../config/config.js";
 
 export async function auth(req, res, next) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ status: "error", message: "Bearer token required" });
+  // Try to get token from cookie first, fallback to Authorization header for backward compatibility
+  let token = req.cookies?.accessToken;
+  
+  if (!token) {
+    const header = req.headers.authorization;
+    if (header?.startsWith("Bearer ")) {
+      token = header.slice(7);
+    }
+  }
+
+  if (!token) {
+    return res.status(401).json({ status: "error", message: "Authentication required" });
   }
 
   let payload;
   try {
-    payload = jwt.verify(header.slice(7), config.jwt.accessSecret, {
-      issuer: "school-management-system",
-      audience: "sms-web",
-    });
+    payload = verifyAccessToken(token);
   } catch (error) {
     return res.status(401).json({
       status: "error",
@@ -21,41 +26,45 @@ export async function auth(req, res, next) {
     });
   }
 
-  if (!payload || typeof payload !== "object" || !payload.id) {
+  if (!payload || typeof payload !== "object" || !payload.sub) {
     return res.status(401).json({ status: "error", message: "Invalid token payload" });
   }
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: payload.id },
-      select: { id: true, email: true, username: true, role: true, schoolId: true },
-    });
-    if (!user) {
-      return res.status(401).json({ status: "error", message: "User account no longer exists" });
-    }
-    if (user.role === "DIRECTOR") {
-      const ownedSchools = await prisma.directorSchool.findMany({
-        where: { directorId: user.id },
-        select: { schoolId: true },
+  // Use token payload directly - NO DATABASE LOOKUP
+  // This makes auth checks extremely fast (cryptographic verification only)
+  const user = {
+    id: payload.sub,
+    role: payload.role,
+    schoolId: payload.schoolId,
+    tokenVersion: payload.tokenVersion,
+  };
+
+  // For directors, handle multi-school access
+  if (user.role === "DIRECTOR") {
+    const requestedSchoolId = req.headers["x-school-id"];
+    
+    // If a specific school is requested, we need to verify ownership (requires DB lookup)
+    // This is the ONLY case where we hit the database in auth middleware
+    if (requestedSchoolId) {
+      const hasAccess = await prisma.directorSchool.findFirst({
+        where: {
+          directorId: user.id,
+          schoolId: requestedSchoolId,
+        },
       });
-      const requestedSchoolId = req.headers["x-school-id"];
-      let activeSchoolId = null;
-      if (requestedSchoolId) {
-        if (!ownedSchools.some((item) => item.schoolId === requestedSchoolId)) {
-          return res.status(403).json({ status: "error", message: "You do not have access to this school" });
-        }
-        activeSchoolId = requestedSchoolId;
-      } else if (ownedSchools.length === 1) {
-        activeSchoolId = ownedSchools[0].schoolId;
+      
+      if (!hasAccess) {
+        return res.status(403).json({ status: "error", message: "You do not have access to this school" });
       }
-      req.user = { ...user, schoolId: activeSchoolId, ownedSchoolIds: ownedSchools.map((item) => item.schoolId) };
-    } else {
-      req.user = user;
+      
+      user.schoolId = requestedSchoolId;
     }
-    return next();
-  } catch (error) {
-    return next(error);
+    // If no specific school requested, leave schoolId as null
+    // The endpoint can fetch owned schools if needed
   }
+
+  req.user = user;
+  return next();
 }
 
 export function allowRoles(...roles) {

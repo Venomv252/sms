@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 
 import config from "./config/config.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -69,6 +70,7 @@ app.use(
 );
 
 // Request parsers
+app.use(cookieParser()); // Parse cookies
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
