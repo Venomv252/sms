@@ -1,38 +1,210 @@
 import authService from "../services/auth.service.js";
+import {
+  setAuthCookies,
+  clearAuthCookies,
+  verifyAccessToken,
+  verifyRefreshToken,
+  hashRefreshToken,
+  generateAccessToken,
+  generateRefreshToken,
+  revokeRefreshToken,
+  revokeAllUserTokens,
+  invalidateAllUserSessions,
+  getDeviceFingerprint,
+  storeRefreshToken,
+} from "../utils/tokens.js";
+import prisma from "../config/prisma.js";
 
 const register = async (req, res, next) => {
   try {
     const result = await authService.register(req.body);
-    res.status(201).json({ status: "success", data: result });
-  } catch (error) { next(error); }
+    
+    // Set httpOnly cookies
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+    
+    // Return user data only (tokens in cookies)
+    res.status(201).json({ 
+      status: "success", 
+      data: { user: result.user } 
+    });
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 const login = async (req, res, next) => {
   try {
     const { username, password } = req.body ?? {};
-    const result = await authService.login(username, password);
-    res.status(200).json({ status: "success", data: result });
-  } catch (error) { next(error); }
+    const deviceInfo = getDeviceFingerprint(req);
+    
+    const result = await authService.login(username, password, deviceInfo);
+    
+    // Set httpOnly cookies
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+    
+    // Return user data only (tokens in cookies)
+    res.status(200).json({ 
+      status: "success", 
+      data: { user: result.user } 
+    });
+  } catch (error) { 
+    next(error); 
+  }
 };
 
 const getMe = async (req, res, next) => {
   try {
     const user = await authService.getMe(req.user.id);
     res.status(200).json({ status: "success", data: user });
-  } catch (error) { next(error); }
+  } catch (error) { 
+    next(error); 
+  }
 };
 
-const logout = (req, res) => {
-  // Stateless access JWT is not revoked here; client must discard it.
-  res.status(200).json({ status: "success", message: "Logged out successfully" });
+const refresh = async (req, res, next) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    
+    if (!refreshToken) {
+      return res.status(401).json({ 
+        status: "error", 
+        message: "Refresh token required" 
+      });
+    }
+    
+    // Hash the token to look it up in database
+    const tokenHash = await hashRefreshToken(refreshToken);
+    
+    // Find token in database
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { tokenHash },
+      include: { 
+        user: {
+          select: {
+            id: true,
+            role: true,
+            schoolId: true,
+            tokenVersion: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+          }
+        }
+      },
+    });
+    
+    if (!storedToken) {
+      // Token not found - possible reuse attack
+      // Clear cookies and return error
+      clearAuthCookies(res);
+      return res.status(401).json({ 
+        status: "error", 
+        message: "Invalid refresh token" 
+      });
+    }
+    
+    // Check if token expired
+    if (new Date() > storedToken.expiresAt) {
+      await revokeRefreshToken(tokenHash);
+      clearAuthCookies(res);
+      return res.status(401).json({ 
+        status: "error", 
+        message: "Refresh token expired" 
+      });
+    }
+    
+    // Check token version (for session invalidation)
+    const user = storedToken.user;
+    
+    // Try to verify existing access token to check version
+    let accessTokenPayload = null;
+    try {
+      if (req.cookies?.accessToken) {
+        accessTokenPayload = verifyAccessToken(req.cookies.accessToken);
+      }
+    } catch {
+      // Access token invalid/expired - that's why we're refreshing
+      accessTokenPayload = null;
+    }
+    
+    if (accessTokenPayload && accessTokenPayload.tokenVersion !== user.tokenVersion) {
+      // Token version mismatch - all sessions invalidated
+      await revokeAllUserTokens(user.id);
+      clearAuthCookies(res);
+      return res.status(401).json({ 
+        status: "error", 
+        message: "Session invalidated" 
+      });
+    }
+    
+    // Revoke old refresh token (one-time use)
+    await revokeRefreshToken(tokenHash);
+    
+    // Generate new tokens
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken();
+    const newRefreshTokenHash = await hashRefreshToken(newRefreshToken);
+    
+    // Store new refresh token
+    const deviceInfo = getDeviceFingerprint(req);
+    await storeRefreshToken(user.id, newRefreshTokenHash, deviceInfo);
+    
+    // Set new cookies
+    setAuthCookies(res, newAccessToken, newRefreshToken);
+    
+    res.status(200).json({ 
+      status: "success", 
+      message: "Token refreshed" 
+    });
+  } catch (error) { 
+    clearAuthCookies(res);
+    next(error); 
+  }
+};
+
+const logout = async (req, res, next) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    
+    if (refreshToken) {
+      // Revoke refresh token
+      const tokenHash = await hashRefreshToken(refreshToken);
+      await revokeRefreshToken(tokenHash);
+    }
+    
+    // Clear cookies
+    clearAuthCookies(res);
+    
+    res.status(200).json({ 
+      status: "success", 
+      message: "Logged out successfully" 
+    });
+  } catch (error) { 
+    // Always clear cookies even if revocation fails
+    clearAuthCookies(res);
+    next(error); 
+  }
 };
 
 const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body ?? {};
     await authService.changePassword(req.user.id, currentPassword, newPassword);
-    res.status(200).json({ status: "success", message: "Password changed successfully" });
-  } catch (error) { next(error); }
+    
+    // Invalidate all user sessions on password change
+    await invalidateAllUserSessions(req.user.id);
+    
+    // Clear current user's cookies
+    clearAuthCookies(res);
+    
+    res.status(200).json({ 
+      status: "success", 
+      message: "Password changed successfully. Please log in again." 
+    });
+  } catch (error) { 
+    next(error); 
+  }
 };
 
-export default { register, login, getMe, logout, changePassword };
+export default { register, login, getMe, refresh, logout, changePassword };

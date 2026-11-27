@@ -113,55 +113,6 @@ function AppContent() {
     };
   }, [navigate]);
 
-  // Redirect at the token's actual expiry time, even if the user is idle
-  // and no API request is made to discover the expired token.
-  useEffect(() => {
-    if (authState !== "authenticated") return undefined;
-
-    const token = sessionStorage.getItem("sms_access_token");
-    if (!token) {
-      clearApiSession();
-      setUser(null);
-      setAuthState("anonymous");
-      navigate("/login");
-      return undefined;
-    }
-
-    let timeoutId;
-
-    try {
-      const encodedPayload = token.split(".")[1];
-      if (!encodedPayload) throw new Error("Invalid token");
-
-      const base64 = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
-      const payload = JSON.parse(atob(base64));
-      const expiresAt = Number(payload.exp) * 1000;
-      const remainingMs = expiresAt - Date.now();
-
-      if (!Number.isFinite(expiresAt) || remainingMs <= 0) {
-        clearApiSession();
-        setUser(null);
-        setAuthState("anonymous");
-        navigate("/login");
-        return undefined;
-      }
-
-      timeoutId = window.setTimeout(() => {
-        clearApiSession();
-        setUser(null);
-        setAuthState("anonymous");
-        navigate("/login");
-      }, remainingMs);
-    } catch {
-      // The backend remains authoritative. Invalid/malformed tokens are
-      // rejected by /auth/me or the next API request and handled there.
-    }
-
-    return () => {
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
-  }, [authState, navigate]);
-
   const handleLoginSuccess = (authenticatedUser) => {
     const userInfo = authenticatedUser?.user || authenticatedUser;
     setUser(userInfo);

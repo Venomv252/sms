@@ -2,9 +2,11 @@ const API_BASE_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:5000/api"
 ).replace(/\/$/, "");
 
-const TOKEN_KEY = "sms_access_token";
 const USER_KEY = "sms_authenticated_user";
 const ACTIVE_SCHOOL_KEY = "sms_active_school_id";
+
+// Track ongoing refresh request to prevent concurrent refreshes
+let refreshPromise = null;
 
 async function parseResponse(response) {
   const payload = await response.json().catch(() => ({}));
@@ -26,6 +28,7 @@ export async function loginUser(username, password) {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include", // Send cookies
     body: JSON.stringify({
       username: username.trim(),
       password,
@@ -34,14 +37,14 @@ export async function loginUser(username, password) {
 
   const result = await parseResponse(response);
 
-  if (!result?.token || !result?.user) {
-    throw new Error(
-      "The API response did not include a user and access token.",
-    );
+  if (!result?.user) {
+    throw new Error("The API response did not include user data.");
   }
 
+  // Clear active school on login
   sessionStorage.removeItem(ACTIVE_SCHOOL_KEY);
-  sessionStorage.setItem(TOKEN_KEY, result.token);
+  
+  // Store user data (tokens are in httpOnly cookies)
   sessionStorage.setItem(USER_KEY, JSON.stringify(result.user));
 
   return result;
@@ -49,7 +52,6 @@ export async function loginUser(username, password) {
 
 /**
  * Clear the current session and notify the React application.
- * This ensures the dashboard is unmounted when authentication expires.
  */
 function expireApiSession() {
   clearApiSession();
@@ -60,83 +62,76 @@ function expireApiSession() {
 }
 
 /**
- * Decode JWT expiry without verifying its signature.
- * The backend remains responsible for token verification.
+ * Refresh access token using refresh token
  */
-function getTokenExpiry(token) {
-  try {
-    const payload = token.split(".")[1];
-
-    if (!payload) return null;
-
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-
-    const decoded = JSON.parse(
-      atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "=")),
-    );
-
-    return typeof decoded.exp === "number" ? decoded.exp * 1000 : null;
-  } catch {
-    return null;
+async function refreshAccessToken() {
+  // If a refresh is already in progress, wait for it
+  if (refreshPromise) {
+    return refreshPromise;
   }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include", // Send refresh token cookie
+      });
+
+      if (!response.ok) {
+        throw new Error("Token refresh failed");
+      }
+
+      return true;
+    } catch (error) {
+      // Refresh failed - user needs to log in again
+      expireApiSession();
+      throw error;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
 
 /**
- * Check token expiry when the application starts
- * and when the browser tab becomes active.
- */
-export function checkApiSessionExpiry() {
-  const token = sessionStorage.getItem(TOKEN_KEY);
-
-  if (!token) return false;
-
-  const expiry = getTokenExpiry(token);
-
-  // If the token has no readable expiry, let the backend validate it.
-  if (expiry === null) return true;
-
-  if (Date.now() >= expiry) {
-    expireApiSession();
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Central API request handler.
+ * Central API request handler with automatic token refresh
  */
 export async function apiRequest(path, options = {}) {
-  const token = sessionStorage.getItem(TOKEN_KEY);
-
-  if (!token) {
-    expireApiSession();
-
-    throw new Error("Your session has expired. Please log in again.");
-  }
-
-  // Check expiry before sending a request.
-  if (!checkApiSessionExpiry()) {
-    throw new Error("Your session has expired. Please log in again.");
-  }
-
-  const response = await fetch(
-    `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`,
-    {
-      ...options,
-      headers: {
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
-        Authorization: `Bearer ${token}`,
-        ...(sessionStorage.getItem(ACTIVE_SCHOOL_KEY)
-          ? {
-              "X-School-Id": sessionStorage.getItem(ACTIVE_SCHOOL_KEY),
-            }
-          : {}),
-        ...(options.headers || {}),
+  const makeRequest = async () => {
+    return fetch(
+      `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`,
+      {
+        ...options,
+        credentials: "include", // Always send cookies
+        headers: {
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...(sessionStorage.getItem(ACTIVE_SCHOOL_KEY)
+            ? {
+                "X-School-Id": sessionStorage.getItem(ACTIVE_SCHOOL_KEY),
+              }
+            : {}),
+          ...(options.headers || {}),
+        },
       },
-    },
-  );
+    );
+  };
 
+  let response = await makeRequest();
+
+  // If 401 and not already a refresh attempt, try to refresh token
+  if (response.status === 401 && !path.includes("/auth/refresh")) {
+    try {
+      await refreshAccessToken();
+      // Retry original request with new access token
+      response = await makeRequest();
+    } catch {
+      // Refresh failed, don't retry
+      expireApiSession();
+    }
+  }
+
+  // If still 401 after refresh attempt, session expired
   if (response.status === 401) {
     expireApiSession();
   }
@@ -177,13 +172,14 @@ export async function apiDelete(path) {
  * Clear authentication and active school information.
  */
 export function clearApiSession() {
-  sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(USER_KEY);
   sessionStorage.removeItem(ACTIVE_SCHOOL_KEY);
 }
 
 export function hasApiSession() {
-  return Boolean(sessionStorage.getItem(TOKEN_KEY));
+  // With httpOnly cookies, we check if user data exists
+  // The actual auth state is managed by cookies
+  return Boolean(sessionStorage.getItem(USER_KEY));
 }
 
 export function setActiveSchoolId(schoolId) {
