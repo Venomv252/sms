@@ -27,17 +27,6 @@ const safeUserSelect = {
   createdAt: true,
 };
 
-const safeUserSelect = {
-  id: true,
-  email: true,
-  username: true,
-  role: true,
-  schoolId: true,
-  firstName: true,
-  lastName: true,
-  createdAt: true,
-};
-
 async function register(input = {}) {
   const {
     email, username, password, role, firstName, lastName,
