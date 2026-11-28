@@ -2707,4 +2707,498 @@ router.delete(
   },
 );
 
+// ============================================================
+// SUPER ADMIN: COMPANY EMPLOYEES (ERP PLATFORM STAFF)
+// ============================================================
+
+/**
+ * GET /platform/company-employees/stats
+ * Get company employee statistics
+ * SUPER_ADMIN only - Salary data is sensitive
+ */
+router.get(
+  "/company-employees/stats",
+  allowRoles("SUPER_ADMIN"),
+  async (req, res, next) => {
+    try {
+      const [
+        totalEmployees,
+        activeEmployees,
+        byRole,
+        byDepartment,
+        salaryStats,
+      ] = await Promise.all([
+        // Total employees count
+        prisma.companyEmployee.count(),
+
+        // Active employees count
+        prisma.companyEmployee.count({
+          where: { isActive: true },
+        }),
+
+        // Group by role
+        prisma.companyEmployee.groupBy({
+          by: ["role"],
+          _count: { id: true },
+          _sum: { monthlySalary: true },
+        }),
+
+        // Group by department
+        prisma.companyEmployee.groupBy({
+          by: ["department"],
+          _count: { id: true },
+          _sum: { monthlySalary: true },
+        }),
+
+        // Salary aggregates
+        prisma.companyEmployee.aggregate({
+          _sum: { monthlySalary: true },
+          _avg: { monthlySalary: true },
+          where: { isActive: true },
+        }),
+      ]);
+
+      const inactiveEmployees = totalEmployees - activeEmployees;
+      const totalMonthlySalary = Number(salaryStats._sum.monthlySalary || 0);
+      const averageMonthlySalary = Number(salaryStats._avg.monthlySalary || 0);
+      const totalAnnualSalary = totalMonthlySalary * 12;
+
+      res.json({
+        status: "success",
+        data: {
+          overview: {
+            totalEmployees,
+            activeEmployees,
+            inactiveEmployees,
+            totalMonthlySalary,
+            totalAnnualSalary,
+            averageMonthlySalary,
+          },
+          byRole: byRole.map((r) => ({
+            role: r.role,
+            count: r._count.id,
+            totalSalary: Number(r._sum.monthlySalary || 0),
+          })),
+          byDepartment: byDepartment.map((d) => ({
+            department: d.department,
+            count: d._count.id,
+            totalSalary: Number(d._sum.monthlySalary || 0),
+          })),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /platform/company-employees
+ * Get company employees with filters, search, and pagination
+ * SUPER_ADMIN only
+ */
+router.get(
+  "/company-employees",
+  allowRoles("SUPER_ADMIN"),
+  async (req, res, next) => {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        search = "",
+        role,
+        department,
+        status,
+        sortBy = "joiningDate",
+        sortOrder = "desc",
+      } = req.query;
+
+      const where = {
+        ...(role && { role }),
+        ...(department && { department }),
+        ...(status && { isActive: status === "active" }),
+        ...(search && {
+          OR: [
+            { employeeId: { contains: search, mode: "insensitive" } },
+            { fullName: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      };
+
+      // Validate sort field
+      const validSortFields = ["joiningDate", "monthlySalary", "fullName"];
+      const orderByField = validSortFields.includes(sortBy)
+        ? sortBy
+        : "joiningDate";
+      const orderByDirection =
+        sortOrder === "asc" ? "asc" : "desc";
+
+      const [employees, total] = await Promise.all([
+        prisma.companyEmployee.findMany({
+          where,
+          skip: (parseInt(page) - 1) * parseInt(limit),
+          take: parseInt(limit),
+          orderBy: { [orderByField]: orderByDirection },
+        }),
+        prisma.companyEmployee.count({ where }),
+      ]);
+
+      res.json({
+        status: "success",
+        data: {
+          employees: employees.map((e) => ({
+            id: e.id,
+            employeeId: e.employeeId,
+            fullName: e.fullName,
+            email: e.email,
+            phone: e.phone,
+            role: e.role,
+            department: e.department,
+            joiningDate: e.joiningDate,
+            employmentType: e.employmentType,
+            monthlySalary: Number(e.monthlySalary),
+            isActive: e.isActive,
+            createdAt: e.createdAt,
+          })),
+          pagination: {
+            total,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil(total / parseInt(limit)),
+          },
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /platform/company-employees
+ * Create a new company employee
+ * SUPER_ADMIN only
+ */
+router.post(
+  "/company-employees",
+  allowRoles("SUPER_ADMIN"),
+  async (req, res, next) => {
+    try {
+      const {
+        employeeId,
+        fullName,
+        email,
+        phone,
+        role,
+        department,
+        joiningDate,
+        employmentType,
+        monthlySalary,
+        isActive = true,
+      } = req.body ?? {};
+
+      // Validation
+      if (
+        !employeeId?.trim() ||
+        !fullName?.trim() ||
+        !email?.trim() ||
+        !role?.trim() ||
+        !department?.trim() ||
+        !joiningDate ||
+        !employmentType?.trim() ||
+        monthlySalary === undefined ||
+        monthlySalary === null
+      ) {
+        return res.status(400).json({
+          status: "error",
+          message:
+            "Employee ID, full name, email, role, department, joining date, employment type, and monthly salary are required",
+        });
+      }
+
+      // Validate email format
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid email format",
+        });
+      }
+
+      // Validate salary is positive
+      const salaryValue = parseFloat(monthlySalary);
+      if (isNaN(salaryValue) || salaryValue < 0) {
+        return res.status(400).json({
+          status: "error",
+          message: "Monthly salary must be a positive number",
+        });
+      }
+
+      // Validate employment type
+      const validTypes = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERN"];
+      if (!validTypes.includes(employmentType.trim())) {
+        return res.status(400).json({
+          status: "error",
+          message: `Employment type must be one of: ${validTypes.join(", ")}`,
+        });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedEmployeeId = employeeId.trim().toUpperCase();
+
+      const employee = await prisma.companyEmployee.create({
+        data: {
+          employeeId: normalizedEmployeeId,
+          fullName: fullName.trim(),
+          email: normalizedEmail,
+          phone: phone?.trim() || null,
+          role: role.trim(),
+          department: department.trim(),
+          joiningDate: new Date(joiningDate),
+          employmentType: employmentType.trim(),
+          monthlySalary: salaryValue,
+          isActive: Boolean(isActive),
+        },
+      });
+
+      res.status(201).json({
+        status: "success",
+        message: "Company employee created successfully",
+        data: {
+          employee: {
+            id: employee.id,
+            employeeId: employee.employeeId,
+            fullName: employee.fullName,
+            email: employee.email,
+            role: employee.role,
+            department: employee.department,
+          },
+        },
+      });
+    } catch (error) {
+      if (error.code === "P2002") {
+        const target = error.meta?.target;
+        if (target?.includes("employeeId")) {
+          return res.status(409).json({
+            status: "error",
+            message: "Employee ID already exists",
+          });
+        }
+        if (target?.includes("email")) {
+          return res.status(409).json({
+            status: "error",
+            message: "Email already exists",
+          });
+        }
+        return res.status(409).json({
+          status: "error",
+          message: "Employee ID or email already exists",
+        });
+      }
+
+      next(error);
+    }
+  }
+);
+
+/**
+ * PATCH /platform/company-employees/:id
+ * Update company employee details
+ * SUPER_ADMIN only
+ */
+router.patch(
+  "/company-employees/:id",
+  allowRoles("SUPER_ADMIN"),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const {
+        fullName,
+        email,
+        phone,
+        role,
+        department,
+        joiningDate,
+        employmentType,
+        monthlySalary,
+        isActive,
+      } = req.body ?? {};
+
+      // Check if employee exists
+      const existing = await prisma.companyEmployee.findUnique({
+        where: { id },
+      });
+
+      if (!existing) {
+        return res.status(404).json({
+          status: "error",
+          message: "Employee not found",
+        });
+      }
+
+      const data = {};
+
+      if (fullName !== undefined) {
+        if (!fullName?.trim()) {
+          return res.status(400).json({
+            status: "error",
+            message: "Full name cannot be empty",
+          });
+        }
+        data.fullName = fullName.trim();
+      }
+
+      if (email !== undefined) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+          return res.status(400).json({
+            status: "error",
+            message: "Invalid email format",
+          });
+        }
+        data.email = email.trim().toLowerCase();
+      }
+
+      if (phone !== undefined) {
+        data.phone = phone?.trim() || null;
+      }
+
+      if (role !== undefined) {
+        if (!role?.trim()) {
+          return res.status(400).json({
+            status: "error",
+            message: "Role cannot be empty",
+          });
+        }
+        data.role = role.trim();
+      }
+
+      if (department !== undefined) {
+        if (!department?.trim()) {
+          return res.status(400).json({
+            status: "error",
+            message: "Department cannot be empty",
+          });
+        }
+        data.department = department.trim();
+      }
+
+      if (joiningDate !== undefined) {
+        data.joiningDate = new Date(joiningDate);
+      }
+
+      if (employmentType !== undefined) {
+        const validTypes = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERN"];
+        if (!validTypes.includes(employmentType.trim())) {
+          return res.status(400).json({
+            status: "error",
+            message: `Employment type must be one of: ${validTypes.join(", ")}`,
+          });
+        }
+        data.employmentType = employmentType.trim();
+      }
+
+      if (monthlySalary !== undefined) {
+        const salaryValue = parseFloat(monthlySalary);
+        if (isNaN(salaryValue) || salaryValue < 0) {
+          return res.status(400).json({
+            status: "error",
+            message: "Monthly salary must be a positive number",
+          });
+        }
+        data.monthlySalary = salaryValue;
+      }
+
+      if (isActive !== undefined) {
+        data.isActive = Boolean(isActive);
+      }
+
+      if (Object.keys(data).length === 0) {
+        return res.status(400).json({
+          status: "error",
+          message: "No valid fields to update",
+        });
+      }
+
+      const updated = await prisma.companyEmployee.update({
+        where: { id },
+        data,
+      });
+
+      res.json({
+        status: "success",
+        message: "Employee updated successfully",
+        data: {
+          employee: {
+            id: updated.id,
+            employeeId: updated.employeeId,
+            fullName: updated.fullName,
+            email: updated.email,
+            phone: updated.phone,
+            role: updated.role,
+            department: updated.department,
+            joiningDate: updated.joiningDate,
+            employmentType: updated.employmentType,
+            monthlySalary: Number(updated.monthlySalary),
+            isActive: updated.isActive,
+          },
+        },
+      });
+    } catch (error) {
+      if (error.code === "P2002") {
+        const target = error.meta?.target;
+        if (target?.includes("email")) {
+          return res.status(409).json({
+            status: "error",
+            message: "Email already exists",
+          });
+        }
+        return res.status(409).json({
+          status: "error",
+          message: "Duplicate value conflict",
+        });
+      }
+
+      next(error);
+    }
+  }
+);
+
+/**
+ * DELETE /platform/company-employees/:id
+ * Delete company employee
+ * SUPER_ADMIN only
+ */
+router.delete(
+  "/company-employees/:id",
+  allowRoles("SUPER_ADMIN"),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      // Check if employee exists
+      const existing = await prisma.companyEmployee.findUnique({
+        where: { id },
+      });
+
+      if (!existing) {
+        return res.status(404).json({
+          status: "error",
+          message: "Employee not found",
+        });
+      }
+
+      await prisma.companyEmployee.delete({
+        where: { id },
+      });
+
+      res.json({
+        status: "success",
+        message: "Employee deleted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export default router;

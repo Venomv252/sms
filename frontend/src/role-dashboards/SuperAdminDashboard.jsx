@@ -4,6 +4,7 @@ import {
   Activity,
   AlertTriangle,
   BarChart3,
+  Briefcase,
   Building2,
   CheckCircle2,
   CircleDollarSign,
@@ -55,6 +56,7 @@ const NAV = [
   { id: "dashboard", label: "Overview", icon: LayoutDashboard, group: "PLATFORM", path: "/superadmin/dashboard" },
   { id: "schools", label: "Schools", icon: Building2, group: "INSTITUTIONS", path: "/superadmin/schools" },
   { id: "directors", label: "Directors", icon: Users, group: "INSTITUTIONS", path: "/superadmin/directors" },
+  { id: "company-stats", label: "Company Stats", icon: Briefcase, group: "COMPANY", path: "/superadmin/company-stats" },
   { id: "statistics", label: "Platform statistics", icon: BarChart3, group: "OVERSIGHT", path: "/superadmin/statistics" },
   { id: "health", label: "System health", icon: Activity, group: "OVERSIGHT", path: "/superadmin/health" },
 ];
