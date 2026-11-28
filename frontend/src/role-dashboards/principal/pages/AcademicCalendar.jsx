@@ -33,11 +33,17 @@ export default function AcademicCalendar({ setError, setMessage }) {
     
     try {
       const params = new URLSearchParams({
-        ...(typeFilter && { eventType: typeFilter }),
+        ...(typeFilter && { type: typeFilter }),
       });
 
-      const data = await apiGet(`/principal/academic-calendar?${params}`);
-      setEvents(data || []);
+      const response = await apiGet(`/principal/academic-calendar?${params}`);
+      
+      // Backend returns { events: {...grouped by month...} }
+      // We need to flatten it into an array
+      const eventsData = response?.events || {};
+      const eventsArray = Object.values(eventsData).flat();
+      
+      setEvents(eventsArray);
     } catch (err) {
       setError(err.message || "Unable to load academic calendar");
     } finally {
@@ -55,11 +61,22 @@ export default function AcademicCalendar({ setError, setMessage }) {
     setError("");
     
     try {
+      const payload = {
+        title: form.title,
+        description: form.description,
+        date: form.startDate,
+        endDate: form.endDate || null,
+        type: form.eventType,
+        notifyStaff: form.notifyStaff,
+        notifyStudents: form.notifyStudents,
+        notifyParents: form.notifyParents,
+      };
+      
       if (editingEvent) {
-        await apiPut(`/principal/academic-calendar/${editingEvent.id}`, form);
+        await apiPut(`/principal/academic-calendar/${editingEvent.id}`, payload);
         setMessage("Event updated successfully");
       } else {
-        await apiPost("/principal/academic-calendar", form);
+        await apiPost("/principal/academic-calendar", payload);
         setMessage("Event created successfully");
       }
       

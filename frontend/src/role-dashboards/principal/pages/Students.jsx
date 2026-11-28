@@ -48,7 +48,7 @@ export default function Students({ setError, setMessage }) {
     
     try {
       const data = await apiGet(`/principal/students/${studentId}`);
-      setStudentDetails(data.student);
+      setStudentDetails(data);
     } catch (err) {
       setError(err.message || "Unable to load student details");
     } finally {

@@ -241,27 +241,57 @@ router.get(
         ]);
 
       // Get student counts per school
-      const studentCounts = await Promise.all(
-        schools.map((school) =>
-          prisma.student.count({
-            where: {
-              user: {
-                schoolId: school.id,
+      const schoolsWithCounts = await Promise.all(
+        schools.map(async (school) => {
+          const [studentCount, teacherCount, staffCount, activeNotices] = await Promise.all([
+            // Student count
+            prisma.student.count({
+              where: {
+                user: {
+                  schoolId: school.id,
+                },
               },
-            },
-          })
-        )
-      );
+            }),
+            // Teacher count
+            prisma.user.count({
+              where: {
+                schoolId: school.id,
+                role: "TEACHER",
+              },
+            }),
+            // Staff count (all non-student roles)
+            prisma.user.count({
+              where: {
+                schoolId: school.id,
+                role: { in: ["TEACHER", "PRINCIPAL", "MANAGEMENT", "ACCOUNTANT", "DRIVER"] },
+              },
+            }),
+            // Active notices
+            prisma.notice.count({
+              where: {
+                schoolId: school.id,
+                isActive: true,
+              },
+            }),
+          ]);
 
-      const schoolsWithCounts = schools.map((school, index) => ({
-        id: school.id,
-        name: school.name,
-        code: school.code,
-        address: school.address,
-        createdAt: school.createdAt,
-        userCount: school._count.users,
-        studentCount: studentCounts[index],
-      }));
+          return {
+            id: school.id,
+            name: school.name,
+            code: school.code,
+            address: school.address,
+            createdAt: school.createdAt,
+            userCount: school._count.users,
+            studentCount,
+            students: studentCount, // Alias for consistency
+            staff: staffCount,
+            staffCount, // Alias for consistency
+            teachers: teacherCount,
+            activeNotices,
+            attendanceRate: null, // Set to null, can be calculated later if needed
+          };
+        })
+      );
 
       const totalStaff = totalTeachers + totalPrincipals;
 

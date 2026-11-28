@@ -1,13 +1,1111 @@
-/* Director Dashboard Theme - Light sidebar matching Super Admin design */
+/* Director Dashboard Theme - Modern Professional Design */
 
 /* Only target director dashboard specifically */
 .director-role-shell {
   --d-green: #0a7c59;
   --d-green-dark: #065c41;
   --d-green-soft: #e6f4f0;
+  --d-green-hover: #087550;
   background: #f8fafb !important;
   color: #111827 !important;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+/* ============================================================
+   SIDEBAR - Light Green Theme
+   ============================================================ */
+
+.director-role-shell > .platform-sidebar {
+  background: linear-gradient(180deg, var(--d-green) 0%, #087550 100%) !important;
+  color: #fff !important;
+  border-right: 0 !important;
+  box-shadow: 4px 0 20px rgba(10, 124, 89, 0.12) !important;
+  padding: 0 12px 14px !important;
+}
+
+/* Brand section */
+.director-role-shell .platform-brand {
+  min-height: 92px !important;
+  padding: 18px 10px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+  margin-bottom: 4px;
+}
+
+.director-role-shell .platform-brand-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #fff !important;
+  border-radius: 11px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.director-role-shell .platform-brand-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.director-role-shell .platform-brand strong {
+  color: #fff !important;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.director-role-shell .platform-brand small {
+  color: rgba(255, 255, 255, 0.78) !important;
+  font-size: 11px;
+}
+
+/* Navigation labels */
+.director-role-shell .platform-nav-label {
+  color: rgba(255, 255, 255, 0.65) !important;
+  padding: 26px 10px 13px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.11em !important;
+}
+
+.director-role-shell .platform-nav-group-label {
+  color: rgba(255, 255, 255, 0.58) !important;
+  padding-top: 20px !important;
+  padding-bottom: 10px !important;
+}
+
+/* Navigation buttons */
+.director-role-shell .platform-sidebar nav {
+  gap: 4px !important;
+}
+
+.director-role-shell .platform-sidebar nav button {
+  min-height: 44px !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  background: transparent !important;
+  border-radius: 9px !important;
+  border: none !important;
+  padding: 11px 13px !important;
+  font-size: 13px !important;
+  font-weight: 560 !important;
+  margin: 0 12px !important;
+  width: calc(100% - 24px) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.director-role-shell .platform-sidebar nav button::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: #fff;
+  border-radius: 0 2px 2px 0;
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.director-role-shell .platform-sidebar nav button:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+  transform: translateX(2px);
+}
+
+.director-role-shell .platform-sidebar nav button.active {
+  color: var(--d-green-dark) !important;
+  background: #fff !important;
+  font-weight: 630 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+  transform: translateX(0) !important;
+}
+
+.director-role-shell .platform-sidebar nav button.active::before {
+  height: 70%;
+}
+
+.director-role-shell .platform-sidebar nav button.active em {
+  color: var(--d-green-dark) !important;
+  background: var(--d-green-soft) !important;
+}
+
+.director-role-shell .platform-sidebar nav button em {
+  color: #fff !important;
+  background: rgba(220, 38, 38, 0.92) !important;
+  font-size: 9px !important;
+  font-weight: 740 !important;
+  padding: 2px 6px !important;
+  border-radius: 11px !important;
+  min-width: 18px !important;
+  text-align: center !important;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+}
+
+/* Sidebar bottom section */
+.director-role-shell .platform-sidebar-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+  padding-top: 14px;
+  margin-top: 12px;
+}
+
+.director-role-shell .platform-user-avatar {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.director-role-shell .platform-user strong {
+  color: #fff !important;
+  font-weight: 630;
+}
+
+.director-role-shell .platform-user small {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.director-role-shell .platform-sidebar .platform-signout {
+  color: rgba(255, 255, 255, 0.88) !important;
+  border-radius: 9px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.director-role-shell .platform-sidebar .platform-signout:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+  transform: translateX(2px);
+}
+
+.director-role-shell .platform-close-nav {
+  color: #fff !important;
+  transition: transform 0.2s ease;
+}
+
+.director-role-shell .platform-close-nav:hover {
+  transform: rotate(90deg);
+}
+
+/* ============================================================
+   MAIN CONTENT AREA
+   ============================================================ */
+
+.director-role-shell > .platform-main {
+  background: #f8fafb !important;
+  padding-bottom: 48px !important;
+}
+
+/* Top bar */
+.director-role-shell .platform-topbar {
+  min-height: 78px !important;
+  background: #fff !important;
+  border-bottom: 1px solid #e9edf0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 26px !important;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 clamp(18px, 3.5vw, 40px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+.director-role-shell .platform-topbar h1 {
+  color: #111827 !important;
+  font-size: 21px !important;
+  font-weight: 740 !important;
+  margin: 4px 0 0;
+  letter-spacing: -0.02em;
+}
+
+.director-role-shell .platform-topbar > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.director-role-shell .platform-topbar > div:nth-child(2) > span {
+  color: #8b969e !important;
+  font-size: 9px !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase;
+  font-weight: 820;
+}
+
+.director-role-shell .superadmin-header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-left: 14px;
+  border-left: 1px solid #edf0f2;
+  flex-shrink: 1;
+}
+
+.director-role-shell .superadmin-header-user > span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  background: var(--d-green-soft);
+  color: var(--d-green);
+  font-size: 12px;
+  font-weight: 820;
+  box-shadow: 0 2px 8px rgba(10, 124, 89, 0.12);
+  transition: all 0.2s ease;
+}
+
+.director-role-shell .superadmin-header-user > span:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(10, 124, 89, 0.2);
+}
+
+.director-role-shell .superadmin-header-user > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.director-role-shell .superadmin-header-user strong,
+.director-role-shell .superadmin-header-user small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.director-role-shell .superadmin-header-user strong {
+  color: #111827;
+  font-size: 11px;
+  font-weight: 630;
+}
+
+.director-role-shell .superadmin-header-user small {
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.director-role-shell .platform-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.director-role-shell .platform-menu-toggle {
+  display: none;
+  width: 38px;
+  height: 38px;
+  padding: 0 !important;
+  border: none;
+  background: #f3f7f5 !important;
+  color: var(--d-green) !important;
+  border-radius: 9px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.director-role-shell .platform-menu-toggle:hover {
+  background: var(--d-green-soft) !important;
+  transform: scale(1.05);
+}
+
+.director-role-shell .platform-live {
+  background: var(--d-green-soft) !important;
+  color: var(--d-green) !important;
+  border-radius: 32px !important;
+  padding: 9px 14px !important;
+  font-size: 11px !important;
+  white-space: nowrap !important;
+  border: none !important;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 630;
+  box-shadow: 0 2px 6px rgba(10, 124, 89, 0.12);
+}
+
+.director-role-shell .platform-live i {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: block;
+  animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.director-role-shell .superadmin-refresh {
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border-radius: 9px !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  border: none !important;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(10, 124, 89, 0.25), 0 1px 3px rgba(10, 124, 89, 0.15);
+}
+
+.director-role-shell .superadmin-refresh:hover {
+  background: var(--d-green-dark) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(10, 124, 89, 0.35), 0 2px 8px rgba(10, 124, 89, 0.2);
+}
+
+.director-role-shell .superadmin-refresh:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.3);
+}
+
+.director-role-shell .superadmin-refresh svg {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.director-role-shell .superadmin-refresh:hover svg {
+  transform: rotate(180deg);
+}
+
+/* ============================================================
+   PAGE INTRO SECTION
+   ============================================================ */
+
+.director-role-shell .platform-page-intro {
+  border-radius: 15px !important;
+  border: 1px solid #e5e7eb !important;
+  background: linear-gradient(115deg, #fff 0%, #fff 50%, var(--d-green-soft) 100%) !important;
+  padding: 26px 28px !important;
+  margin-bottom: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.director-role-shell .platform-page-intro::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(10, 124, 89, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.director-role-shell .platform-page-intro h2 {
+  font-size: 26px !important;
+  color: #111827 !important;
+  font-weight: 740;
+  margin: 0 0 7px;
+  letter-spacing: -0.02em;
+}
+
+.director-role-shell .platform-page-intro p {
+  font-size: 13px !important;
+  color: #6b7280 !important;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   KPI OVERVIEW SECTION
+   ============================================================ */
+
+.director-role-shell .superadmin-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 17px;
+  margin-bottom: 22px;
+}
+
+.director-role-shell .platform-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 19px;
+  margin-bottom: 22px;
+}
+
+.director-role-shell .platform-overview-grid > .superadmin-panel {
+  margin-bottom: 0;
+}
+
+/* KPI cards - Enhanced */
+.director-role-shell .superadmin-kpis article {
+  border: 1px solid #e8ecef !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.045), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.director-role-shell .superadmin-kpis article::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--d-green) 0%, #0ea576 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.director-role-shell .superadmin-kpis article:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(0, 0, 0, 0.04) !important;
+  border-color: #d1d8dc !important;
+}
+
+.director-role-shell .superadmin-kpis article:hover::before {
+  opacity: 1;
+}
+
+.director-role-shell .superadmin-kpis article > svg {
+  color: var(--d-green) !important;
+  background: var(--d-green-soft) !important;
+  border-radius: 50%;
+  padding: 7px;
+  box-shadow: 0 2px 8px rgba(10, 124, 89, 0.15);
+}
+
+.director-role-shell .superadmin-kpis article > span {
+  color: #6b7280 !important;
+  font-size: 11px;
+  font-weight: 560;
+}
+
+.director-role-shell .superadmin-kpis article > strong {
+  color: #111827 !important;
+  font-weight: 740;
+  letter-spacing: -0.01em;
+}
+
+.director-role-shell .superadmin-kpis article small {
+  color: #9ca3af !important;
+}
+
+/* ============================================================
+   PANELS - Enhanced
+   ============================================================ */
+
+.director-role-shell .superadmin-panel {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.045), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: box-shadow 0.3s ease;
+}
+
+.director-role-shell .superadmin-panel:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+}
+
+.director-role-shell .superadmin-section-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f5f7;
+}
+
+.director-role-shell .superadmin-section-title > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.director-role-shell .superadmin-section-title h2 {
+  color: #111827 !important;
+  font-size: 17px;
+  font-weight: 740;
+  margin: 0 0 5px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  letter-spacing: -0.01em;
+}
+
+.director-role-shell .superadmin-section-title p {
+  color: #6b7280 !important;
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.director-role-shell .superadmin-section-title button {
+  flex-shrink: 0;
+  background: rgba(10, 124, 89, 0.08) !important;
+  color: var(--d-green) !important;
+  border: 1.5px solid rgba(10, 124, 89, 0.25) !important;
+  border-radius: 9px !important;
+  padding: 10px 18px !important;
+  font-weight: 630 !important;
+  font-size: 12px !important;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.12);
+  white-space: nowrap;
+}
+
+.director-role-shell .superadmin-section-title button:hover {
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border-color: var(--d-green) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(10, 124, 89, 0.3);
+}
+
+.director-role-shell .superadmin-section-title button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.25);
+}
+
+.director-role-shell .superadmin-count {
+  background: var(--d-green-soft) !important;
+  color: var(--d-green) !important;
+  font-weight: 650;
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.1);
+}
+
+/* ============================================================
+   NETWORK CARDS - School Cards Enhanced
+   ============================================================ */
+
+.director-role-shell .network-card {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 13px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.director-role-shell .network-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--d-green) 0%, #0ea576 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.director-role-shell .network-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04) !important;
+  border-color: #d1d8dc !important;
+}
+
+.director-role-shell .network-card:hover::before {
+  opacity: 1;
+}
+
+.director-role-shell .network-school-mark {
+  background: var(--d-green-soft) !important;
+  color: var(--d-green) !important;
+  box-shadow: 0 2px 8px rgba(10, 124, 89, 0.15);
+  transition: all 0.3s ease;
+}
+
+.director-role-shell .network-card:hover .network-school-mark {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(10, 124, 89, 0.25);
+}
+
+.director-role-shell .network-school-title strong {
+  color: #111827 !important;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.director-role-shell .network-school-title span {
+  color: #6b7280 !important;
+}
+
+.director-role-shell .network-metrics > div {
+  background: #f9fafb !important;
+  border: 1px solid #e9edf0 !important;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.director-role-shell .network-card:hover .network-metrics > div {
+  background: #f3f7f5 !important;
+  border-color: var(--d-green-soft) !important;
+}
+
+.director-role-shell .network-metrics span {
+  color: #6b7280 !important;
+  font-size: 11px;
+}
+
+.director-role-shell .network-metrics strong {
+  color: #111827 !important;
+  font-weight: 680;
+}
+
+/* ============================================================
+   BUTTONS - Enhanced
+   ============================================================ */
+
+.director-role-shell .director-open-school {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border: 1.5px solid var(--d-green) !important;
+  border-radius: 9px !important;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 630;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(10, 124, 89, 0.25), 0 1px 3px rgba(10, 124, 89, 0.15);
+  margin-top: 16px;
+}
+
+.director-role-shell .director-open-school:hover {
+  background: var(--d-green-dark) !important;
+  border-color: var(--d-green-dark) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(10, 124, 89, 0.35), 0 3px 8px rgba(10, 124, 89, 0.2);
+}
+
+.director-role-shell .director-open-school:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.3);
+}
+
+.director-role-shell .director-open-school svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.director-role-shell .director-open-school:hover svg {
+  transform: translateX(3px);
+}
+
+.director-role-shell .director-submit {
+  background: var(--d-green) !important;
+  color: #fff !important;
+  border-radius: 9px !important;
+  border: 1.5px solid var(--d-green) !important;
+  padding: 11px 20px;
+  font-weight: 630;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(10, 124, 89, 0.25), 0 1px 3px rgba(10, 124, 89, 0.15);
+}
+
+.director-role-shell .director-submit:hover {
+  background: var(--d-green-dark) !important;
+  border-color: var(--d-green-dark) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(10, 124, 89, 0.35), 0 3px 8px rgba(10, 124, 89, 0.2);
+}
+
+.director-role-shell .director-submit:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.3);
+}
+
+/* ============================================================
+   EMPTY STATES AND MESSAGES
+   ============================================================ */
+
+.director-role-shell .superadmin-empty {
+  padding: 36px 22px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+  background: #f9fafb !important;
+  border: 1px dashed #dde3e7 !important;
+  border-radius: 11px;
+  line-height: 1.6;
+}
+
+.director-role-shell .superadmin-loading {
+  padding: 36px 22px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  background: #f9fafb !important;
+  border-radius: 11px;
+}
+
+.director-role-shell .superadmin-error {
+  background: #fff0f0 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+  padding: 15px 20px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+}
+
+.director-role-shell .superadmin-success {
+  background: var(--d-green-soft) !important;
+  color: var(--d-green) !important;
+  border: 1px solid #c7e9dd !important;
+  padding: 15px 20px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(10, 124, 89, 0.1);
+}
+
+/* ============================================================
+   STATISTICS TABLE - Enhanced
+   ============================================================ */
+
+.director-role-shell .platform-stat-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 13px;
+  overflow: hidden;
+  border: 1px solid #e9edf0;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.director-role-shell .platform-stat-row {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr 1fr !important;
+  gap: 18px !important;
+  padding: 17px 22px !important;
+  align-items: center !important;
+  border-bottom: 1px solid #e9edf0 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.director-role-shell .platform-stat-row:last-child {
+  border-bottom: none !important;
+}
+
+.director-role-shell .platform-stat-row:not(.heading):hover {
+  background: #f9fafb !important;
+  transform: scale(1.005);
+}
+
+.director-role-shell .platform-stat-row.heading {
+  background: linear-gradient(180deg, #f9fafb 0%, #f6f8fa 100%) !important;
+  font-size: 11px !important;
+  font-weight: 740 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #6b7280 !important;
+  padding: 13px 22px !important;
+  border-bottom: 2px solid #e9edf0 !important;
+}
+
+.director-role-shell .platform-stat-row.heading span {
+  font-weight: 740 !important;
+}
+
+.director-role-shell .platform-stat-row > span {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+
+.director-role-shell .platform-stat-row strong {
+  color: #111827 !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  letter-spacing: -0.01em;
+}
+
+.director-role-shell .platform-stat-row small {
+  color: #6b7280 !important;
+  font-size: 12px !important;
+  font-weight: 520 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.director-role-shell .platform-stat-row b {
+  color: #111827 !important;
+  font-size: 15px !important;
+  font-weight: 660 !important;
+  text-align: right !important;
+}
+
+/* ============================================================
+   SKELETON LOADING - Enhanced
+   ============================================================ */
+
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.director-role-shell .skeleton-loading {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.director-role-shell .skeleton-text {
+  display: inline-block;
+  min-width: 60px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  border-radius: 5px;
+  color: transparent !important;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.director-role-shell .skeleton-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.director-role-shell .skeleton-line {
+  height: 12px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+/* ============================================================
+   RESPONSIVE DESIGN
+   ============================================================ */
+
+@media (max-width: 1200px) {
+  .director-role-shell .superadmin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 950px) {
+  .director-role-shell .platform-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .director-role-shell .platform-stat-row {
+    grid-template-columns: 2fr 1fr 1fr 1fr !important;
+    gap: 14px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .director-role-shell .platform-topbar {
+    gap: 10px;
+    padding: 0 16px;
+    min-height: 72px !important;
+  }
+  
+  .director-role-shell .platform-menu-toggle {
+    display: flex !important;
+  }
+  
+  .director-role-shell .superadmin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px;
+  }
+  
+  .director-role-shell .platform-page-intro {
+    padding: 20px;
+    border-radius: 13px !important;
+  }
+  
+  .director-role-shell .platform-page-intro h2 {
+    font-size: 21px !important;
+  }
+  
+  .director-role-shell .platform-stat-row {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    padding: 18px !important;
+  }
+  
+  .director-role-shell .platform-stat-row > * {
+    text-align: left !important;
+  }
+  
+  .director-role-shell .platform-stat-row b {
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+}
+
+/* ============================================================
+   SHARED SIDEBAR GEOMETRY
+   ============================================================ */
+
+.director-role-shell > .platform-sidebar { 
+  width: 268px; 
+  height: 100vh; 
+  height: 100dvh; 
+  box-sizing: border-box; 
+  overflow-y: auto; 
+  overflow-x: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.director-role-shell .platform-sidebar nav { 
+  display: flex; 
+  flex-direction: column; 
+  min-height: 0; 
+}
+
+.director-role-shell .platform-brand > div:not(.platform-brand-icon) { 
+  flex: 1; 
+  min-width: 0; 
+}
+
+.director-role-shell > .platform-main { 
+  width: calc(100% - 268px); 
+  min-width: 0; 
+  margin-left: 268px; 
+  box-sizing: border-box; 
+}
+
+@media (max-width: 768px) {
+  .director-role-shell > .platform-sidebar { 
+    width: min(285px, 88vw); 
+    transform: translateX(-100%); 
+    z-index: 50;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .director-role-shell > .platform-sidebar.is-open { 
+    transform: translateX(0); 
+    box-shadow: 6px 0 30px rgba(10, 124, 89, 0.2) !important;
+  }
+  
+  .director-role-shell > .platform-main { 
+    width: 100%; 
+    margin-left: 0; 
+  }
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+
+.director-role-shell .superadmin-modal-backdrop {
+  background: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: blur(4px);
+}
+
+.director-role-shell .superadmin-modal {
+  background: #fff !important;
+  border: 1px solid #e9edf0 !important;
+  border-radius: 15px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.director-role-shell .superadmin-modal h2 {
+  color: #111827 !important;
+  font-weight: 740;
+}
+
+.director-role-shell .superadmin-modal label {
+  color: #111827 !important;
+  font-weight: 580;
+}
+
+.director-role-shell .superadmin-modal input,
+.director-role-shell .superadmin-modal textarea {
+  background: #fff !important;
+  border: 1.5px solid #d1d8dc !important;
+  color: #111827 !important;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.director-role-shell .superadmin-modal input:focus,
+.director-role-shell .superadmin-modal textarea:focus {
+  border-color: var(--d-green) !important;
+  box-shadow: 0 0 0 3px rgba(10, 124, 89, 0.1) !important;
+}
+
+.director-role-shell .superadmin-icon-button {
+  background: #f6f8fa !important;
+  color: #111827 !important;
+  border: 1px solid #e1e9e4 !important;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.director-role-shell .superadmin-icon-button:hover {
+  background: #edf0f2 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.director-role-shell .superadmin-icon-button.danger {
+  color: #dc2626 !important;
+}
+
+.director-role-shell .superadmin-icon-button.danger:hover {
+  background: #fff0f0 !important;
+  border-color: #fecaca !important;
 }
 
 /* Sidebar - Light green theme */

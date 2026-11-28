@@ -1229,6 +1229,113 @@ router.get("/finance/summary", async (req, res, next) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+// TRANSPORT MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/principal/transport/buses
+ * Get all buses for the school
+ */
+router.get("/transport/buses", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+
+    const buses = await prisma.bus.findMany({
+      where: { schoolId },
+      include: {
+        trips: {
+          where: { status: "IN_PROGRESS" },
+          take: 1,
+          orderBy: { startTime: "desc" },
+          select: {
+            id: true,
+            routeName: true,
+            status: true,
+            currentLatitude: true,
+            currentLongitude: true,
+          },
+        },
+      },
+      orderBy: { busNumber: "asc" },
+    });
+
+    return res.json(
+      buses.map((bus) => ({
+        id: bus.id,
+        busNumber: bus.busNumber,
+        registrationNumber: bus.registrationNumber,
+        capacity: bus.capacity,
+        isActive: bus.isActive,
+        insuranceExpiry: bus.insuranceExpiry,
+        fitnessExpiry: bus.fitnessExpiry,
+        currentTrip: bus.trips.length > 0 ? bus.trips[0] : null,
+      }))
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/principal/transport/trips
+ * Get trip history with pagination
+ */
+router.get("/transport/trips", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { status, page = 1, limit = 20 } = req.query;
+
+    const where = {
+      bus: { schoolId },
+      ...(status && { status }),
+    };
+
+    const [trips, total] = await Promise.all([
+      prisma.trip.findMany({
+        where,
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit),
+        orderBy: { startTime: "desc" },
+        include: {
+          bus: {
+            select: {
+              busNumber: true,
+              registrationNumber: true,
+            },
+          },
+        },
+      }),
+      prisma.trip.count({ where }),
+    ]);
+
+    return res.json({
+      trips: trips.map((trip) => ({
+        id: trip.id,
+        busId: trip.busId,
+        busNumber: trip.bus.busNumber,
+        registrationNumber: trip.bus.registrationNumber,
+        routeName: trip.routeName,
+        startTime: trip.startTime,
+        endTime: trip.endTime,
+        status: trip.status,
+        delayMinutes: trip.delayMinutes,
+        currentLatitude: trip.currentLatitude,
+        currentLongitude: trip.currentLongitude,
+        lastLocationUpdate: trip.lastLocationUpdate,
+      })),
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 // GPS TRACKING & LIVE LOCATION
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1615,6 +1722,565 @@ router.get("/tracking/stats", async (req, res, next) => {
         todayTrips,
         timestamp: new Date().toISOString(),
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/principal/inventory
+ * Get inventory items with filters and pagination
+ */
+router.get("/inventory", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { category, page = 1, limit = 20 } = req.query;
+
+    const where = {
+      schoolId,
+      ...(category && { category }),
+    };
+
+    const [items, total] = await Promise.all([
+      prisma.inventoryItem.findMany({
+        where,
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit),
+        orderBy: { name: "asc" },
+        include: {
+          _count: {
+            select: {
+              maintenanceRequests: {
+                where: { status: { in: ["PENDING", "IN_PROGRESS"] } },
+              },
+            },
+          },
+        },
+      }),
+      prisma.inventoryItem.count({ where }),
+    ]);
+
+    return res.json({
+      status: "success",
+      data: {
+        items: items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          location: item.location,
+          quantity: item.quantity,
+          condition: item.condition,
+          purchaseDate: item.purchaseDate,
+          cost: item.cost ? Number(item.cost) : null,
+          pendingMaintenance: item._count.maintenanceRequests > 0,
+        })),
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(total / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/principal/maintenance-requests
+ * Get maintenance requests with filters and pagination
+ */
+router.get("/maintenance-requests", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { status, page = 1, limit = 20 } = req.query;
+
+    const where = {
+      item: { schoolId },
+      ...(status && { status }),
+    };
+
+    const [requests, total] = await Promise.all([
+      prisma.maintenanceRequest.findMany({
+        where,
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit),
+        orderBy: { createdAt: "desc" },
+        include: {
+          item: {
+            select: {
+              id: true,
+              name: true,
+              category: true,
+              location: true,
+            },
+          },
+        },
+      }),
+      prisma.maintenanceRequest.count({ where }),
+    ]);
+
+    return res.json({
+      status: "success",
+      data: {
+        requests: requests.map((req) => ({
+          id: req.id,
+          itemId: req.itemId,
+          itemName: req.item.name,
+          itemCategory: req.item.category,
+          location: req.item.location,
+          description: req.description,
+          priority: req.priority,
+          status: req.status,
+          cost: req.cost ? Number(req.cost) : null,
+          scheduledDate: req.scheduledDate,
+          completedDate: req.completedDate,
+          createdAt: req.createdAt,
+        })),
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(total / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/principal/reports/attendance
+ * Generate attendance report
+ */
+router.get("/reports/attendance", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { startDate, endDate, grade, section } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        status: "error",
+        message: "Start date and end date are required",
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const where = {
+      user: { schoolId },
+      ...(grade && { grade }),
+      ...(section && { section }),
+    };
+
+    const students = await prisma.student.findMany({
+      where,
+      select: {
+        id: true,
+        rollNumber: true,
+        grade: true,
+        section: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+        attendance: {
+          where: {
+            date: { gte: start, lte: end },
+          },
+        },
+      },
+    });
+
+    const report = students.map((student) => {
+      const totalDays = student.attendance.length;
+      const present = student.attendance.filter((a) => a.status === "PRESENT").length;
+      const absent = student.attendance.filter((a) => a.status === "ABSENT").length;
+      const attendanceRate = totalDays > 0 ? Math.round((present / totalDays) * 100) : 0;
+
+      return {
+        studentId: student.id,
+        studentName: `${student.user.firstName} ${student.user.lastName}`,
+        rollNumber: student.rollNumber,
+        class: `${student.grade}-${student.section}`,
+        present,
+        absent,
+        totalDays,
+        attendanceRate,
+      };
+    });
+
+    return res.json({
+      status: "success",
+      data: {
+        dateRange: {
+          startDate: start.toLocaleDateString("en-IN"),
+          endDate: end.toLocaleDateString("en-IN"),
+        },
+        filters: {
+          grade: grade || "All",
+          section: section || "All",
+        },
+        report,
+        summary: {
+          totalStudents: report.length,
+          averageAttendance: report.length > 0
+            ? Math.round(report.reduce((sum, s) => sum + s.attendanceRate, 0) / report.length)
+            : 0,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/principal/reports/fee-collection
+ * Generate fee collection report
+ */
+router.get("/reports/fee-collection", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { academicYear, term, status } = req.query;
+
+    const where = {
+      student: { user: { schoolId } },
+      ...(academicYear && { academicYear }),
+      ...(term && { term }),
+      ...(status && { status }),
+    };
+
+    const feePayments = await prisma.feePayment.findMany({
+      where,
+      include: {
+        student: {
+          select: {
+            rollNumber: true,
+            grade: true,
+            section: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { dueDate: "asc" },
+    });
+
+    const summary = feePayments.reduce(
+      (acc, payment) => {
+        const amount = Number(payment.amount);
+        acc.totalAmount += amount;
+        if (payment.status === "PAID") {
+          acc.paidAmount += amount;
+        } else {
+          acc.pendingAmount += amount;
+        }
+        return acc;
+      },
+      { totalAmount: 0, paidAmount: 0, pendingAmount: 0 }
+    );
+
+    const details = feePayments.map((payment) => ({
+      studentId: payment.studentId,
+      studentName: `${payment.student.user.firstName} ${payment.student.user.lastName}`,
+      rollNumber: payment.student.rollNumber,
+      class: `${payment.student.grade}-${payment.student.section}`,
+      amount: Number(payment.amount),
+      status: payment.status,
+      term: payment.term,
+      academicYear: payment.academicYear,
+      dueDate: payment.dueDate,
+      paymentDate: payment.paymentDate,
+    }));
+
+    return res.json({
+      status: "success",
+      data: {
+        filters: {
+          academicYear: academicYear || "All",
+          term: term || "All",
+          status: status || "All",
+        },
+        summary,
+        details,
+        totalRecords: feePayments.length,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/principal/audit-logs
+ * Get audit logs with filtering and pagination
+ */
+router.get("/audit-logs", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { action, entityType, page = 1, limit = 50 } = req.query;
+
+    const where = {
+      schoolId,
+      ...(action && { action }),
+      ...(entityType && { entityType }),
+    };
+
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit),
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          userId: true,
+          action: true,
+          entityType: true,
+          entityId: true,
+          changes: true,
+          ipAddress: true,
+          createdAt: true,
+        },
+      }),
+      prisma.auditLog.count({ where }),
+    ]);
+
+    return res.json({
+      status: "success",
+      data: {
+        logs: logs.map((log) => ({
+          id: log.id,
+          userId: log.userId,
+          action: log.action,
+          entityType: log.entityType,
+          entityId: log.entityId,
+          changes: log.changes,
+          ipAddress: log.ipAddress,
+          createdAt: log.createdAt,
+        })),
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(total / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/principal/academic-calendar
+ * Get academic calendar events
+ */
+router.get("/academic-calendar", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { month, year, type } = req.query;
+
+    let where = { schoolId };
+
+    // Filter by month/year if provided
+    if (month && year) {
+      const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endDate = new Date(parseInt(year), parseInt(month), 0);
+      where.startDate = {
+        gte: startDate,
+        lte: endDate,
+      };
+    }
+
+    // Filter by event type if provided
+    if (type) {
+      where.eventType = type;
+    }
+
+    const events = await prisma.academicEvent.findMany({
+      where,
+      orderBy: { startDate: "asc" },
+    });
+
+    // Group events by month
+    const eventsByMonth = events.reduce((acc, event) => {
+      const monthKey = event.startDate.toISOString().substring(0, 7); // YYYY-MM format
+      if (!acc[monthKey]) {
+        acc[monthKey] = [];
+      }
+      acc[monthKey].push({
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        date: event.startDate,
+        endDate: event.endDate,
+        type: event.eventType,
+        notifyStudents: event.notifyStudents,
+        notifyParents: event.notifyParents,
+        notifyStaff: event.notifyStaff,
+        createdAt: event.createdAt,
+      });
+      return acc;
+    }, {});
+
+    return res.json({
+      status: "success",
+      data: {
+        events: eventsByMonth,
+        total: events.length,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/principal/academic-calendar
+ * Create a new calendar event
+ */
+router.post("/academic-calendar", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const {
+      title,
+      description,
+      date,
+      endDate,
+      type,
+      notifyStudents,
+      notifyParents,
+      notifyStaff,
+    } = req.body;
+
+    if (!title?.trim() || !date || !type) {
+      return res.status(400).json({
+        status: "error",
+        message: "Title, date, and type are required",
+      });
+    }
+
+    const event = await prisma.academicEvent.create({
+      data: {
+        title: title.trim(),
+        description: description?.trim() || null,
+        startDate: new Date(date),
+        endDate: endDate ? new Date(endDate) : null,
+        eventType: type,
+        notifyStudents: notifyStudents || false,
+        notifyParents: notifyParents || false,
+        notifyStaff: notifyStaff || false,
+        schoolId,
+        createdBy: req.user.id,
+      },
+    });
+
+    return res.status(201).json({
+      status: "success",
+      message: "Event created successfully",
+      data: event,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/principal/academic-calendar/:id
+ * Update a calendar event
+ */
+router.patch("/academic-calendar/:id", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      date,
+      endDate,
+      type,
+      notifyStudents,
+      notifyParents,
+      notifyStaff,
+    } = req.body;
+
+    // Verify event belongs to this school
+    const existingEvent = await prisma.academicEvent.findFirst({
+      where: { id, schoolId },
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({
+        status: "error",
+        message: "Event not found",
+      });
+    }
+
+    const updated = await prisma.academicEvent.update({
+      where: { id },
+      data: {
+        ...(title && { title: title.trim() }),
+        ...(description !== undefined && { description: description?.trim() || null }),
+        ...(date && { startDate: new Date(date) }),
+        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
+        ...(type && { eventType: type }),
+        ...(notifyStudents !== undefined && { notifyStudents }),
+        ...(notifyParents !== undefined && { notifyParents }),
+        ...(notifyStaff !== undefined && { notifyStaff }),
+      },
+    });
+
+    return res.json({
+      status: "success",
+      message: "Event updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/principal/academic-calendar/:id
+ * Delete a calendar event
+ */
+router.delete("/academic-calendar/:id", async (req, res, next) => {
+  try {
+    const schoolId = req.user.schoolId;
+    const { id } = req.params;
+
+    // Verify event belongs to this school
+    const event = await prisma.academicEvent.findFirst({
+      where: { id, schoolId },
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        status: "error",
+        message: "Event not found",
+      });
+    }
+
+    await prisma.academicEvent.delete({
+      where: { id },
+    });
+
+    return res.json({
+      status: "success",
+      message: "Event deleted successfully",
     });
   } catch (error) {
     next(error);

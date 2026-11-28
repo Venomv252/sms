@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { UserCheck, Plus, X, Save, Pencil, Trash2 } from "lucide-react";
+import { UserCheck, Plus, X, Save, Pencil, Trash2, RefreshCw } from "lucide-react";
 import { apiGet, apiPost, apiPatch, apiDelete } from "../../../api.js";
 import CredentialDisplay from "../../../components/CredentialDisplay.jsx";
 import SuperAdminDeleteConfirmation from "../../../components/SuperAdminDeleteConfirmation.jsx";
@@ -152,54 +152,62 @@ export default function Accountants({ setError, setMessage, schoolName }) {
           <button onClick={() => setShowForm(true)}><Plus size={16} /> Create Accountant</button>
         </div>
 
-        {loading && <div className="superadmin-loading">Loading accountants...</div>}
+        {loading && <div className="accountant-loading"><RefreshCw size={20} /> Loading accountants...</div>}
 
         {!loading && accountants.length > 0 && (
-          <div className="platform-stat-table">
-            <div className="platform-stat-row heading">
-              <span>Name</span>
-              <span>Employee ID</span>
-              <span>Email</span>
-              <span>Phone</span>
-              <span>Status</span>
-              <span>Actions</span>
-            </div>
-
-            {accountants.map((acc) => (
-              <div className="platform-stat-row" key={acc.id}>
-                <span><strong>{acc.name}</strong></span>
-                <span>{acc.employeeId}</span>
-                <span><small>{acc.email}</small></span>
-                <span><small>{acc.phoneNumber || "—"}</small></span>
-                <span className={acc.isActive ? "text-success" : "text-muted"}>{acc.isActive ? "Active" : "Inactive"}</span>
-                <span style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start' }}>
-                  <button 
-                    className="superadmin-icon-button" 
-                    onClick={() => handleEdit(acc)}
-                    title="Edit accountant"
-                  >
-                    <Pencil size={15} />
-                  </button>
-                  <button 
-                    className="superadmin-icon-button danger" 
-                    onClick={() => setDeleteConfirmation({ 
-                      id: acc.id, 
-                      name: acc.name,
-                      type: 'accountant',
-                      details: `Employee ID: ${acc.employeeId}`
-                    })}
-                    title="Delete accountant"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </span>
+          <div className="accountant-table-container">
+            <div className="accountant-table">
+              <div className="accountant-table-header">
+                <div>Name</div>
+                <div>Employee ID</div>
+                <div>Email</div>
+                <div>Phone</div>
+                <div>Status</div>
+                <div>Actions</div>
               </div>
-            ))}
+
+              {accountants.map((acc) => (
+                <div className="accountant-table-row" key={acc.id}>
+                  <div data-label="Name" className="accountant-cell-name">{acc.name}</div>
+                  <div data-label="Employee ID" className="accountant-cell-id">{acc.employeeId}</div>
+                  <div data-label="Email" className="accountant-cell-email">{acc.email}</div>
+                  <div data-label="Phone" className="accountant-cell-phone">{acc.phoneNumber || "—"}</div>
+                  <div data-label="Status">
+                    <span className={`accountant-status-badge ${acc.isActive ? "active" : "inactive"}`}>
+                      {acc.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <div data-label="Actions" className="accountant-actions">
+                    <button 
+                      onClick={() => handleEdit(acc)}
+                      title="Edit accountant"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button 
+                      className="danger"
+                      onClick={() => setDeleteConfirmation({ 
+                        id: acc.id, 
+                        name: acc.name,
+                        type: 'accountant',
+                        details: `Employee ID: ${acc.employeeId}`
+                      })}
+                      title="Delete accountant"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {!loading && accountants.length === 0 && (
-          <div className="superadmin-empty">No accountants created yet. Create your first accountant to manage school finances.</div>
+          <div className="accountant-empty">
+            <UserCheck size={48} />
+            <p>No accountants created yet. Create your first accountant to manage school finances.</p>
+          </div>
         )}
       </section>
 

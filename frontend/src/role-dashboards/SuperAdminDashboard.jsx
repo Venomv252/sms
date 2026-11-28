@@ -1373,8 +1373,9 @@ export default function SuperAdminDashboard() {
                 </span>
               ) : (
                 <button onClick={checkHealth} className="superadmin-refresh" title="Recheck health">
-                  <RefreshCw size={15} /> Recheck
+                  <RefreshCw size={15} /> 
                 </button>
+                
               )}
             </div>
             
