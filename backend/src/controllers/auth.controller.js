@@ -19,13 +19,17 @@ const register = async (req, res, next) => {
   try {
     const result = await authService.register(req.body);
     
-    // Set httpOnly cookies
+    // Set httpOnly cookies for same-origin deployments
     setAuthCookies(res, result.accessToken, result.refreshToken);
     
-    // Return user data only (tokens in cookies)
+    // ALSO return tokens in response body for cross-origin deployments
     res.status(201).json({ 
       status: "success", 
-      data: { user: result.user } 
+      data: { 
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      } 
     });
   } catch (error) { 
     next(error); 
@@ -39,13 +43,18 @@ const login = async (req, res, next) => {
     
     const result = await authService.login(username, password, deviceInfo);
     
-    // Set httpOnly cookies
+    // Set httpOnly cookies for same-origin deployments
     setAuthCookies(res, result.accessToken, result.refreshToken);
     
-    // Return user data only (tokens in cookies)
+    // ALSO return tokens in response body for cross-origin deployments (Vercel + Render)
+    // Frontend will use Bearer token strategy when cookies don't work
     res.status(200).json({ 
       status: "success", 
-      data: { user: result.user } 
+      data: { 
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      } 
     });
   } catch (error) { 
     next(error); 
@@ -63,7 +72,12 @@ const getMe = async (req, res, next) => {
 
 const refresh = async (req, res, next) => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
+    // Try to get refresh token from cookie first, then from body (for cross-origin)
+    let refreshToken = req.cookies?.refreshToken;
+    
+    if (!refreshToken && req.body?.refreshToken) {
+      refreshToken = req.body.refreshToken;
+    }
     
     if (!refreshToken) {
       return res.status(401).json({ 
@@ -120,8 +134,9 @@ const refresh = async (req, res, next) => {
     // Try to verify existing access token to check version
     let accessTokenPayload = null;
     try {
-      if (req.cookies?.accessToken) {
-        accessTokenPayload = verifyAccessToken(req.cookies.accessToken);
+      const existingAccessToken = req.cookies?.accessToken || req.headers.authorization?.slice(7);
+      if (existingAccessToken) {
+        accessTokenPayload = verifyAccessToken(existingAccessToken);
       }
     } catch {
       // Access token invalid/expired - that's why we're refreshing
@@ -150,12 +165,17 @@ const refresh = async (req, res, next) => {
     const deviceInfo = getDeviceFingerprint(req);
     await storeRefreshToken(user.id, newRefreshTokenHash, deviceInfo);
     
-    // Set new cookies
+    // Set new cookies (for same-origin deployments)
     setAuthCookies(res, newAccessToken, newRefreshToken);
     
+    // ALSO return tokens in response body for cross-origin deployments
     res.status(200).json({ 
       status: "success", 
-      message: "Token refreshed" 
+      message: "Token refreshed",
+      data: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
+      }
     });
   } catch (error) { 
     clearAuthCookies(res);

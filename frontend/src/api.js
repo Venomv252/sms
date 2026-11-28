@@ -3,6 +3,8 @@ const API_BASE_URL = (
 ).replace(/\/$/, "");
 
 const USER_KEY = "sms_authenticated_user";
+const ACCESS_TOKEN_KEY = "sms_access_token";
+const REFRESH_TOKEN_KEY = "sms_refresh_token";
 const ACTIVE_SCHOOL_KEY = "sms_active_school_id";
 
 // Track ongoing refresh request to prevent concurrent refreshes
@@ -28,7 +30,7 @@ export async function loginUser(username, password) {
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // Send cookies
+    credentials: "include", // Send cookies (for backward compatibility)
     body: JSON.stringify({
       username: username.trim(),
       password,
@@ -44,8 +46,16 @@ export async function loginUser(username, password) {
   // Clear active school on login
   sessionStorage.removeItem(ACTIVE_SCHOOL_KEY);
   
-  // Store user data (tokens are in httpOnly cookies)
+  // Store user data and tokens (Bearer token strategy for cross-origin)
   sessionStorage.setItem(USER_KEY, JSON.stringify(result.user));
+  
+  // Store tokens if provided in response (for cross-origin deployments)
+  if (result.accessToken) {
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, result.accessToken);
+  }
+  if (result.refreshToken) {
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
+  }
 
   return result;
 }
@@ -72,13 +82,30 @@ async function refreshAccessToken() {
 
   refreshPromise = (async () => {
     try {
+      const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
+      
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: "POST",
-        credentials: "include", // Send refresh token cookie
+        credentials: "include", // Send refresh token cookie (backward compatibility)
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // Also send refresh token in body for cross-origin deployments
+        body: JSON.stringify({ refreshToken }),
       });
 
       if (!response.ok) {
         throw new Error("Token refresh failed");
+      }
+
+      const result = await response.json().catch(() => ({}));
+      
+      // Store new tokens if provided
+      if (result.data?.accessToken) {
+        sessionStorage.setItem(ACCESS_TOKEN_KEY, result.data.accessToken);
+      }
+      if (result.data?.refreshToken) {
+        sessionStorage.setItem(REFRESH_TOKEN_KEY, result.data.refreshToken);
       }
 
       return true;
@@ -99,13 +126,17 @@ async function refreshAccessToken() {
  */
 export async function apiRequest(path, options = {}) {
   const makeRequest = async () => {
+    const accessToken = sessionStorage.getItem(ACCESS_TOKEN_KEY);
+    
     return fetch(
       `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`,
       {
         ...options,
-        credentials: "include", // Always send cookies
+        credentials: "include", // Send cookies (for backward compatibility)
         headers: {
           ...(options.body ? { "Content-Type": "application/json" } : {}),
+          // Send access token via Authorization header (Bearer token strategy)
+          ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {}),
           ...(sessionStorage.getItem(ACTIVE_SCHOOL_KEY)
             ? {
                 "X-School-Id": sessionStorage.getItem(ACTIVE_SCHOOL_KEY),
@@ -173,13 +204,17 @@ export async function apiDelete(path) {
  */
 export function clearApiSession() {
   sessionStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
   sessionStorage.removeItem(ACTIVE_SCHOOL_KEY);
 }
 
 export function hasApiSession() {
-  // With httpOnly cookies, we check if user data exists
-  // The actual auth state is managed by cookies
-  return Boolean(sessionStorage.getItem(USER_KEY));
+  // Check if we have user data AND access token
+  return Boolean(
+    sessionStorage.getItem(USER_KEY) && 
+    sessionStorage.getItem(ACCESS_TOKEN_KEY)
+  );
 }
 
 export function setActiveSchoolId(schoolId) {

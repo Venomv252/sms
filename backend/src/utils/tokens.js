@@ -160,7 +160,7 @@ export function setAuthCookies(res, accessToken, refreshToken) {
     secure: config.cookie.secure,
     sameSite: config.cookie.sameSite,
     maxAge: 15 * 60 * 1000, // 15 minutes in milliseconds
-    domain: config.cookie.domain === "localhost" ? undefined : config.cookie.domain,
+    domain: config.cookie.domain,
   });
 
   // Refresh token cookie (7 days)
@@ -170,7 +170,7 @@ export function setAuthCookies(res, accessToken, refreshToken) {
     sameSite: "strict", // Stricter for refresh token
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
     path: "/api/auth", // Only sent to auth endpoints
-    domain: config.cookie.domain === "localhost" ? undefined : config.cookie.domain,
+    domain: config.cookie.domain,
   });
 }
 
@@ -182,7 +182,7 @@ export function clearAuthCookies(res) {
     httpOnly: true,
     secure: config.cookie.secure,
     sameSite: config.cookie.sameSite,
-    domain: config.cookie.domain === "localhost" ? undefined : config.cookie.domain,
+    domain: config.cookie.domain,
   });
   
   res.clearCookie("refreshToken", {
@@ -190,6 +190,6 @@ export function clearAuthCookies(res) {
     secure: config.cookie.secure,
     sameSite: "strict",
     path: "/api/auth",
-    domain: config.cookie.domain === "localhost" ? undefined : config.cookie.domain,
+    domain: config.cookie.domain,
   });
 }

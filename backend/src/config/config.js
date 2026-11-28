@@ -30,7 +30,7 @@ const config = {
     refreshExpiry: process.env.JWT_REFRESH_EXPIRY || "7d",
   },
   cookie: {
-    domain: process.env.COOKIE_DOMAIN || "localhost",
+    domain: process.env.COOKIE_DOMAIN || undefined, // undefined = no domain restriction
     secure: process.env.COOKIE_SECURE === "true",
     sameSite: process.env.COOKIE_SAMESITE || "lax",
   },
