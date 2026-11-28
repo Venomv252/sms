@@ -10,29 +10,18 @@ import {
 
 import LoginPage from "./components/LoginPage.jsx";
 import StudentDashboardApp from "./StudentDashboardApp.jsx";
-import ParentDashboardApp from "./parent-dashboard/ParentDashboardApp.jsx";
+import UnderMaintenance from "./Undermaintence.jsx";
+
 import { apiGet, clearApiSession, hasApiSession } from "./api.js";
 import { TrackingProvider } from "./context/TrackingContext.jsx";
 
-// Lazy-loaded role dashboards
-const TeacherDashboard = lazy(
-  () => import("./role-dashboards/teacher/App.jsx")
-);
-
+// Lazy-loaded dashboards that are currently active
 const PrincipalDashboard = lazy(
   () => import("./role-dashboards/PrincipalDashboard.jsx")
 );
 
-const ManagementDashboard = lazy(
-  () => import("./role-dashboards/management/App.jsx")
-);
-
 const AccountantDashboard = lazy(
   () => import("./role-dashboards/AccountantDashboard.jsx")
-);
-
-const DriverDashboard = lazy(
-  () => import("./role-dashboards/driver/App.jsx")
 );
 
 const SuperAdminDashboard = lazy(
@@ -46,12 +35,12 @@ const DirectorDashboard = lazy(
 // Role-based dashboard mapping
 const DASHBOARDS = {
   STUDENT: StudentDashboardApp,
-  PARENT: ParentDashboardApp,
-  TEACHER: TeacherDashboard,
+  PARENT: UnderMaintenance,
+  TEACHER: UnderMaintenance,
   PRINCIPAL: PrincipalDashboard,
-  MANAGEMENT: ManagementDashboard,
+  MANAGEMENT: UnderMaintenance,
   ACCOUNTANT: AccountantDashboard,
-  DRIVER: DriverDashboard,
+  DRIVER: UnderMaintenance,
   SUPER_ADMIN: SuperAdminDashboard,
   DIRECTOR: DirectorDashboard,
   ADMIN: SuperAdminDashboard,
@@ -223,32 +212,38 @@ function AppContent() {
 
           {/* Principal */}
           <Route
-            path="/principal/dashboard"
+            path="/principal/dashboard/*"
             element={<PrincipalDashboard />}
           />
 
-          {/* Teacher - supports nested routes */}
+          {/* Teacher - Under Maintenance */}
           <Route
             path="/teacher/dashboard/*"
-            element={<TeacherDashboard />}
+            element={
+              <UnderMaintenance serviceName="Teacher Portal" />
+            }
           />
 
-          {/* Management */}
+          {/* Management - Under Maintenance */}
           <Route
-            path="/management/dashboard"
-            element={<ManagementDashboard />}
+            path="/management/dashboard/*"
+            element={
+              <UnderMaintenance serviceName="Management Portal" />
+            }
           />
 
           {/* Accountant */}
           <Route
-            path="/accountant/dashboard"
+            path="/accountant/dashboard/*"
             element={<AccountantDashboard />}
           />
 
-          {/* Driver */}
+          {/* Driver - Under Maintenance */}
           <Route
-            path="/driver/dashboard"
-            element={<DriverDashboard />}
+            path="/driver/dashboard/*"
+            element={
+              <UnderMaintenance serviceName="Driver Portal" />
+            }
           />
 
           {/* Student */}
@@ -257,10 +252,12 @@ function AppContent() {
             element={<StudentDashboardApp />}
           />
 
-          {/* Parent */}
+          {/* Parent - Under Maintenance */}
           <Route
-            path="/parent/dashboard"
-            element={<ParentDashboardApp />}
+            path="/parent/dashboard/*"
+            element={
+              <UnderMaintenance serviceName="Parent Portal" />
+            }
           />
 
           {/* Root redirect */}

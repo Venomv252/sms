@@ -1,234 +1,309 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Navigation, Clock, Gauge, Users, Shield, Zap,
-  CheckCircle, AlertTriangle, MapPin, Phone, Radio
-} from 'lucide-react'
-import './RouteWaypoints.css'
-
-const topStats = [
-  { label: 'Waypoint Progress', icon: Navigation, value: 'Stop 5/8', sub: 'ECC Road Cross', color: 'blue' },
-  { label: 'Terminal ETA', icon: Clock, value: '08:14 AM', sub: '≈ +10 min delay (Traffic)', color: 'green' },
-  { label: 'Distance Gauge', icon: Gauge, value: '28.4 km', sub: '16.8 km remaining • 41.5% Corridor cleared', color: 'orange' },
-  { label: 'Manifest Check', icon: Users, value: '36/38', sub: 'Onboard Active • 2 Absent • Verified by Portal', color: 'purple' },
-  { label: 'Speed Governor', icon: Zap, value: '32 km/h', sub: 'Gov. Limit: 40 km/h Max • Compliant (Zone Green)', color: 'green' },
-]
-
-const stops = [
-  { id: 1, name: '01. Hope Farm Junction', sub: 'Opposite Metro Pillar 142', status: 'cleared', time: 'Cleared 07:16 AM', sched: 'Schd: 07:15 AM (+1m)', boarded: 8 },
-  { id: 2, name: '02. ITPL Tech Park Main Gate', sub: 'Gate 2 Dedicated Bus Bay', status: 'cleared', time: 'Cleared 07:26 AM', sched: 'Schd: 07:25 AM (+1m)', boarded: 6 },
-  { id: 3, name: '03. Prestige Ozone Phase 1', sub: 'Ozone Club House Arch', status: 'cleared', time: 'Cleared 07:37 AM', sched: 'Schd: 07:35 AM (+2m)', boarded: 9 },
-  { id: 4, name: '04. Palm Meadows Hub', sub: 'Mulberry Lane Security Cabin', status: 'cleared', time: 'Cleared 07:47 AM', sched: 'Schd: 07:46 AM (+1m)', boarded: 7 },
-  { id: 5, name: '05. ECC Road Cross', sub: 'Windmills Apt Corner, Outer Service Bay', status: 'active', time: 'NOW APPROACHING', sched: 'Schd: 07:54 AM | Expected 07:56 AM', boarded: 4, eta: 'ETA 2 mins (0.4 km away)' },
-  { id: 6, name: '06. Borewell Road Junction', sub: 'Post Office Turn', status: 'upcoming', time: 'Upcoming', sched: 'Schd: 08:06 AM', boarded: 4 },
-  { id: 7, name: '07. Varthur Kodi Circle', sub: 'Lake View Point', status: 'warning', time: 'Upcoming', sched: 'Schd: 08:16 AM', boarded: 2, warning: 'Trench Work Warning' },
-  { id: 8, name: '08. Greenwood High Main Campus', sub: 'Sector 48 Campus Drop-off Gate 3', status: 'terminal', time: 'Final Terminal', sched: 'Schd: 08:14 AM | (Delivered by 08:24 AM)', boarded: 36, note: 'All 36 Debark' },
-]
-
-const activeStudents = [
-  { name: 'Ananya Rao', grade: 'Grade 9-A', rfid: '#ST-412', status: 'Ready at Bay' },
-  { name: 'Rohan Mehra', grade: 'Grade 9-A', rfid: '#ST-890', status: 'Ready at Bay' },
-  { name: 'Kavya Nambiar', grade: 'Grade 4-C', rfid: '#ST-114', status: 'Ready at Bay' },
-  { name: 'Tanya Sethi', grade: 'Grade 11-PCM', rfid: '#ST-093', status: 'Guardian with ward' },
-]
+  Navigation, Clock, MapPin, ArrowLeft, RefreshCw, AlertTriangle, Users
+} from 'lucide-react';
+import { apiGet } from '../../../api.js';
+import './RouteWaypoints.css';
 
 export default function RouteWaypoints() {
-  const [activeStop] = useState(5)
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    loadRouteData();
+  }, []);
+
+  const loadRouteData = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await apiGet('/driver/profile');
+      setProfile(response.data);
+    } catch (err) {
+      setError(err.message || 'Failed to load route data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="route-page">
+        <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
+          <RefreshCw size={24} className="spin" style={{ margin: '0 auto 12px' }} />
+          <div style={{ color: 'var(--gray-600)' }}>Loading route data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !profile?.assignedRoute) {
+    return (
+      <div className="route-page">
+        <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => navigate('/')}
+              style={{ padding: '6px' }}
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <h1 style={{ fontSize: '18px', fontWeight: '700' }}>Route & Waypoints</h1>
+          </div>
+        </div>
+        <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
+          <AlertTriangle size={24} style={{ color: 'var(--red-alert)', margin: '0 auto 12px' }} />
+          <div style={{ color: 'var(--gray-700)', marginBottom: '12px' }}>
+            {error || 'No route assigned'}
+          </div>
+          <button className="btn btn-outline" onClick={() => navigate('/')}>
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const route = profile.assignedRoute;
+  const pickupPoints = route.pickupPoints || [];
+  const totalStudents = route.totalStudents || 0;
 
   return (
     <div className="route-page">
-      {/* Top stats */}
-      <div className="route-stats-grid">
-        {topStats.map((s, i) => (
-          <div key={i} className="stat-card">
-            <div className="flex items-center gap-2 mb-1">
-              <s.icon size={13} style={{ color: 'var(--green-primary)' }} />
-              <span className="stat-label">{s.label}</span>
-            </div>
-            <div className="stat-value" style={{ fontSize: 18 }}>{s.value}</div>
-            <div className="stat-sub">{s.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Main two col */}
-      <div className="route-main-grid">
-        {/* Left: Active waypoint + Stop list */}
-        <div className="flex flex-col gap-3">
-          {/* Active Waypoint */}
-          <div className="card active-waypoint-card">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="badge badge-green" style={{ fontSize: 10 }}>● ACTIVE WAYPOINT • APPROACH ZONE</span>
-                  <span className="badge badge-orange">ETA 2 Mins (0.4 km away)</span>
-                </div>
-                <div className="text-xs" style={{ color: 'var(--gray-500)', marginBottom: 4 }}>STOP #05 OF 08</div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--gray-900)', lineHeight: 1.1 }}>
-                  ECC Road Cross
-                </div>
-                <div className="flex items-center gap-2 mt-1" style={{ color: 'var(--gray-500)', fontSize: 12 }}>
-                  <MapPin size={12} />
-                  <span>Landmark: Windmills Apartment Corner, Outer Service Bay</span>
-                </div>
-              </div>
-              <div className="manifest-target">
-                <div className="text-xs" style={{ color: 'var(--gray-500)' }}>MANIFEST TARGET</div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--gray-900)' }}>4 Students</div>
-                <div className="text-xs" style={{ color: 'var(--gray-500)' }}>All Parent Phones Synced</div>
-              </div>
-            </div>
-
-            <div className="awaiting-students">
-              {activeStudents.map((s, i) => (
-                <div key={i} className="awaiting-student">
-                  <div className="student-chip-avatar">{s.name.split(' ').map(n=>n[0]).join('')}</div>
-                  <div>
-                    <div className="font-semibold" style={{ fontSize: 11 }}>{s.name}</div>
-                    <div className="text-xs" style={{ color: 'var(--gray-500)' }}>{s.grade} • {s.rfid}</div>
-                    <div className="text-xs" style={{ color: 'var(--green-primary)' }}>● {s.status}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-2 mt-3">
-              <button className="btn btn-primary flex-1">
-                <CheckCircle size={13} /> Mark Stop Arrived
-              </button>
-              <button className="btn btn-outline flex-1">
-                <Radio size={13} /> Trigger 5-min Proximity SMS (4)
-              </button>
-            </div>
-            <button className="btn btn-sm w-full mt-2" style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>
-              <AlertTriangle size={12} /> Report Road Hazard
+      {/* Header */}
+      <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => navigate('/')}
+              style={{ padding: '6px' }}
+            >
+              <ArrowLeft size={18} />
             </button>
-          </div>
-
-          {/* Stop Sequence */}
-          <div className="card">
-            <div className="flex justify-between items-center mb-3">
-              <div>
-                <div className="section-title">Complete Corridor Stop Sequence</div>
-                <div className="section-subtitle">Real-time schedule variance, student boarding tally, and stop clearance status</div>
-              </div>
-              <span className="badge badge-gray">8 Total Stops</span>
-            </div>
-            <div className="stop-list">
-              {stops.map((stop) => (
-                <div key={stop.id} className={`stop-item stop-${stop.status}`}>
-                  <div className="stop-dot">
-                    {stop.status === 'cleared' && <CheckCircle size={16} style={{ color: 'var(--green-primary)' }} />}
-                    {stop.status === 'active' && <div className="active-dot"></div>}
-                    {(stop.status === 'upcoming' || stop.status === 'terminal') && <div className="upcoming-dot"></div>}
-                    {stop.status === 'warning' && <AlertTriangle size={16} style={{ color: '#f59e0b' }} />}
-                  </div>
-                  <div className="stop-info">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold" style={{ fontSize: 12 }}>{stop.name}</span>
-                      {stop.warning && <span className="badge badge-orange" style={{ fontSize: 9 }}>{stop.warning}</span>}
-                      {stop.status === 'active' && <span className="badge badge-green" style={{ fontSize: 9 }}>NOW APPROACHING</span>}
-                      {stop.status === 'terminal' && <span className="badge badge-blue" style={{ fontSize: 9 }}>Final Terminal</span>}
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--gray-500)' }}>{stop.sub} • {stop.sched}</div>
-                  </div>
-                  <div className="stop-count">
-                    <span className="font-bold" style={{ fontSize: 13 }}>{stop.boarded}</span>
-                    <span className="text-xs" style={{ color: 'var(--gray-500)' }}>
-                      {stop.note || (stop.status === 'cleared' ? 'Boarded' : 'Waiting')}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Re-route, GPS, map, vehicle load */}
-        <div className="flex flex-col gap-3">
-          {/* Dynamic Re-route */}
-          <div className="card">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="section-title">DYNAMIC RE-ROUTE</span>
-              <span className="badge badge-green" style={{ fontSize: 9 }}>Recommended</span>
-            </div>
-            <div className="font-semibold" style={{ fontSize: 13 }}>Bypass Varthur Kodi Jam</div>
-            <div className="text-xs" style={{ color: 'var(--gray-500)', margin: '4px 0 10px' }}>
-              Divert via Kadugodi Peripheral Ring Road before Stop 7 to bypass BWSSB trench congestion.
-            </div>
-            <div className="reroute-stats">
-              <div className="reroute-stat">
-                <div className="font-semibold">+1.2 km</div>
-                <div className="text-xs" style={{ color: 'var(--gray-500)' }}>Distance Delta</div>
-              </div>
-              <div className="reroute-stat">
-                <div className="font-semibold">-8 mins</div>
-                <div className="text-xs" style={{ color: 'var(--gray-500)' }}>Time Delta saved</div>
-              </div>
-              <div className="reroute-stat">
-                <div className="font-semibold">Auto-Push</div>
-                <div className="text-xs" style={{ color: 'var(--gray-500)' }}>Parent Reroute SMS</div>
+            <div>
+              <h1 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>
+                Route & Waypoints
+              </h1>
+              <div style={{ fontSize: '12px', color: 'var(--gray-600)' }}>
+                {route.routeName}
               </div>
             </div>
-            <button className="btn btn-primary w-full mt-2">Apply Ring Road Detour</button>
           </div>
-
-          {/* GPS Telemetry */}
-          <div className="card">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="section-title">AIS-140 GPS TELEMETRY</span>
-              <span className="badge badge-green" style={{ fontSize: 9 }}>LOCKED (4G VoLTE)</span>
-            </div>
-            <div className="gps-grid">
-              <div><div className="text-xs" style={{ color: 'var(--gray-500)' }}>Ping Latency / Rate</div><div className="font-semibold" style={{ fontSize: 12 }}>3.4 KB/s • 38ms</div></div>
-              <div><div className="text-xs" style={{ color: 'var(--gray-500)' }}>Packet Loss Rate</div><div className="font-semibold" style={{ color: 'var(--green-primary)', fontSize: 12 }}>0.00% (Lossless)</div></div>
-              <div><div className="text-xs" style={{ color: 'var(--gray-500)' }}>Satellite Fix Count</div><div className="font-semibold" style={{ fontSize: 12 }}>14 Sats (GNSS+NavIC)</div></div>
-              <div><div className="text-xs" style={{ color: 'var(--gray-500)' }}>Geofence Boundary</div><div className="font-semibold" style={{ fontSize: 12 }}>In Whitefield Sub-Zone 4</div></div>
-            </div>
-          </div>
-
-          {/* Map */}
-          <div className="card">
-            <div className="flex justify-between items-center mb-2">
-              <span className="section-title">Live Corridor Geofence</span>
-              <span className="text-xs" style={{ color: 'var(--gray-500)' }}>Scale: 1:18,000</span>
-            </div>
-            <div className="map-placeholder" style={{ height: 200 }}>
-              <div className="map-inner">
-                <div className="map-bus-marker">🚌 KA-01-MJ-9941 (32 km/h)</div>
-                <div className="map-label">Next Stop Proximity</div>
-                <div className="map-label green">ECC Road: 420m remaining</div>
-                <div className="map-label">Live AIS Ping: 2.1s ago</div>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-2">
-              <button className="btn btn-outline btn-sm flex-1"><Phone size={12} /> Transit Dispatcher</button>
-              <button className="btn btn-outline btn-sm flex-1">School Transport Desk</button>
-            </div>
-          </div>
-
-          {/* Vehicle Load */}
-          <div className="card">
-            <div className="flex justify-between items-center mb-2">
-              <span className="section-title">Vehicle Load & Balance</span>
-              <span className="badge badge-orange">85% Occupancy</span>
-            </div>
-            <div className="text-xs" style={{ color: 'var(--gray-500)', marginBottom: 6 }}>
-              Capacity: 36 seated / 42 seats &nbsp;&nbsp; 6 seats available
-            </div>
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: '85%', background: '#f59e0b' }}></div>
-            </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-xs" style={{ color: 'var(--green-primary)', fontWeight: 600 }}>
-                ✓ Child Check System Armed
-              </span>
-              <span className="text-xs" style={{ color: 'var(--green-primary)', fontWeight: 600 }}>
-                RFID Sensor Online
-              </span>
-            </div>
-          </div>
+          <button className="btn btn-outline btn-sm" onClick={loadRouteData}>
+            <RefreshCw size={14} /> Refresh
+          </button>
         </div>
       </div>
+
+      {/* Route Summary */}
+      <div className="route-stats-grid">
+        <div className="stat-card">
+          <div className="flex items-center gap-2 mb-1">
+            <MapPin size={13} style={{ color: 'var(--blue-primary)' }} />
+            <span className="stat-label">Total Stops</span>
+          </div>
+          <div className="stat-value" style={{ fontSize: '24px' }}>{pickupPoints.length}</div>
+          <div className="stat-sub">Pickup points</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="flex items-center gap-2 mb-1">
+            <Users size={13} style={{ color: 'var(--green-primary)' }} />
+            <span className="stat-label">Total Students</span>
+          </div>
+          <div className="stat-value" style={{ fontSize: '24px' }}>{totalStudents}</div>
+          <div className="stat-sub">On this route</div>
+        </div>
+
+        {route.distance && (
+          <div className="stat-card">
+            <div className="flex items-center gap-2 mb-1">
+              <Navigation size={13} style={{ color: 'var(--orange)' }} />
+              <span className="stat-label">Distance</span>
+            </div>
+            <div className="stat-value" style={{ fontSize: '24px' }}>{route.distance} km</div>
+            <div className="stat-sub">{route.duration ? `~${route.duration} minutes` : 'Total route'}</div>
+          </div>
+        )}
+
+        <div className="stat-card">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock size={13} style={{ color: 'var(--purple)' }} />
+            <span className="stat-label">Route Number</span>
+          </div>
+          <div className="stat-value" style={{ fontSize: '24px' }}>{route.routeNumber || 'N/A'}</div>
+          <div className="stat-sub">Route ID</div>
+        </div>
+      </div>
+
+      {/* Map Placeholder */}
+      <div className="card" style={{ marginBottom: '16px' }}>
+        <div style={{
+          height: '300px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{ textAlign: 'center', zIndex: 1 }}>
+            <MapPin size={48} style={{ margin: '0 auto 12px', opacity: 0.9 }} />
+            <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+              Interactive Route Map
+            </div>
+            <div style={{ fontSize: '13px', opacity: 0.9 }}>
+              Map visualization will be displayed here with MapLibre GL JS
+            </div>
+            <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '8px' }}>
+              Using OpenFreeMap tiles (no API key required)
+            </div>
+          </div>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+            pointerEvents: 'none'
+          }} />
+        </div>
+      </div>
+
+      {/* Pickup Points List */}
+      <div className="card">
+        <div className="section-title" style={{ marginBottom: '12px' }}>
+          Pickup Points ({pickupPoints.length})
+        </div>
+
+        {pickupPoints.length === 0 ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--gray-500)' }}>
+            <MapPin size={32} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+            <div>No pickup points configured</div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {pickupPoints.map((point, index) => (
+              <div
+                key={point.id}
+                style={{
+                  padding: '14px',
+                  border: '1px solid var(--gray-200)',
+                  borderRadius: '10px',
+                  background: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px'
+                }}
+              >
+                {/* Stop Number */}
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  background: index === 0 ? '#10b981' : index === pickupPoints.length - 1 ? '#3b82f6' : 'var(--gray-200)',
+                  color: index === 0 || index === pickupPoints.length - 1 ? '#fff' : 'var(--gray-700)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  flexShrink: 0
+                }}>
+                  {index + 1}
+                </div>
+
+                {/* Point Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '4px' }}>
+                    {point.name}
+                  </div>
+                  {point.address && (
+                    <div style={{ fontSize: '12px', color: 'var(--gray-600)', marginBottom: '4px' }}>
+                      <MapPin size={11} style={{ display: 'inline', marginRight: '4px' }} />
+                      {point.address}
+                    </div>
+                  )}
+                  {point.studentCount !== undefined && (
+                    <div style={{ fontSize: '11px', color: 'var(--gray-500)' }}>
+                      <Users size={11} style={{ display: 'inline', marginRight: '4px' }} />
+                      {point.studentCount} student{point.studentCount !== 1 ? 's' : ''}
+                    </div>
+                  )}
+                </div>
+
+                {/* Time */}
+                {point.estimatedTime && (
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: '11px', color: 'var(--gray-500)', marginBottom: '2px' }}>
+                      Est. Time
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--gray-900)' }}>
+                      {point.estimatedTime}
+                    </div>
+                  </div>
+                )}
+
+                {/* Coordinates */}
+                {(point.latitude || point.longitude) && (
+                  <div style={{ textAlign: 'right', flexShrink: 0, fontSize: '10px', color: 'var(--gray-400)' }}>
+                    {point.latitude?.toFixed(4)}, {point.longitude?.toFixed(4)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Route Details */}
+      {(route.startLocation || route.endLocation || route.description) && (
+        <div className="card" style={{ marginTop: '16px' }}>
+          <div className="section-title" style={{ marginBottom: '12px' }}>Route Details</div>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {route.startLocation && (
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--gray-500)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '600' }}>
+                  Start Location
+                </div>
+                <div style={{ fontSize: '13px', color: 'var(--gray-900)' }}>
+                  {route.startLocation}
+                </div>
+              </div>
+            )}
+            {route.endLocation && (
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--gray-500)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '600' }}>
+                  End Location
+                </div>
+                <div style={{ fontSize: '13px', color: 'var(--gray-900)' }}>
+                  {route.endLocation}
+                </div>
+              </div>
+            )}
+            {route.description && (
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--gray-500)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '600' }}>
+                  Description
+                </div>
+                <div style={{ fontSize: '13px', color: 'var(--gray-900)' }}>
+                  {route.description}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }

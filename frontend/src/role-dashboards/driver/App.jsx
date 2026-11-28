@@ -6,6 +6,7 @@ import "./index.css";
 
 import Layout from "./components/Layout";
 import DriverCockpit from "./pages/DriverCockpit";
+import TripEnd from "./pages/TripEnd";
 import RouteWaypoints from "./pages/RouteWaypoints";
 import StudentRoster from "./pages/StudentRoster";
 import FleetProximity from "./pages/FleetProximity";
@@ -20,6 +21,12 @@ export default function App() {
       <Routes>
         {/* Main Driver Dashboard */}
         <Route index element={<DriverCockpit />} />
+
+        {/* Trip Management */}
+        <Route
+          path="trip-end/:tripId"
+          element={<TripEnd />}
+        />
 
         {/* Transport Management */}
         <Route
