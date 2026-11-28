@@ -1673,9 +1673,9 @@ export default function SuperAdminDashboard() {
                     placeholder="City, state, country"
                   />
                 </label>
-                <button className="director-submit" disabled={savingSchool}>
-                  <Plus size={16} />
-                  {savingSchool ? "Creating…" : "Create School"}
+                <button className="director-submit create-school-btn" disabled={savingSchool}>
+                  <Plus size={18} />
+                  <span>{savingSchool ? "Creating School..." : "Create School"}</span>
                 </button>
               </form>
             </section>
