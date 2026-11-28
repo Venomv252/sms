@@ -21,6 +21,7 @@ import platformRoutes from "./routes/platform.routes.js";
 import principalRoutes from "./routes/principal.routes.js";
 import accountantRoutes from "./routes/accountant.routes.js";
 import leavesRoutes from "./routes/leaves.routes.js";
+import driverRoutes from "./routes/driver.routes.js";
 
 import errorHandler from "./middleware/errorHandler.js";
 import prisma from "./config/prisma.js";
@@ -133,6 +134,7 @@ app.use("/api/platform", platformRoutes);
 app.use("/api/principal", principalRoutes);
 app.use("/api/accountant", accountantRoutes);
 app.use("/api/leaves", leavesRoutes);
+app.use("/api/driver", driverRoutes);
 
 // 404 handler
 app.use((req, res) => {

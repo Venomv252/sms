@@ -133,6 +133,7 @@ model User {
   parentLinks    ParentStudent[] @relation("ParentUser")
   teacher        Teacher?
   accountant     Accountant?
+  driver         Driver?
   notes          Note[]
   doubts         Doubt[]        @relation("DoubtAuthor")
   comments       DoubtComment[]
@@ -197,6 +198,8 @@ model Student {
   fees         FeePayment[]
   certificates Certificate[]
   leaves       LeaveRequest[]
+  routeAssignments StudentRouteAssignment[]
+  pickupLogs   StudentPickupLog[]
 
   @@map("students")
 }
@@ -654,6 +657,7 @@ model Trip {
 
   bus Bus @relation(fields: [busId], references: [id], onDelete: Cascade)
   locationHistory BusLocationHistory[]
+  pickupLogs StudentPickupLog[]
 
   @@index([busId, startTime])
   @@index([status])
@@ -741,4 +745,224 @@ model CompanyEmployee {
   @@index([department])
   @@index([joiningDate])
   @@map("company_employees")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DRIVER & TRANSPORT MANAGEMENT MODELS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Driver profile linked to User with DRIVER role
+model Driver {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  employeeId      String   @unique
+  licenseNumber   String   @unique
+  licenseExpiry   DateTime
+  phoneNumber     String?
+  address         String?
+  emergencyContact String?
+  emergencyPhone  String?
+  bloodGroup      String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedRoutes BusRoute[]
+  pickupLogs     StudentPickupLog[]
+  fuelExpenses   FuelExpense[]
+  breakdowns     VehicleBreakdown[]
+  incidents      Incident[]
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("drivers")
+}
+
+// Bus routes with pickup points
+model BusRoute {
+  id          String   @id @default(uuid())
+  routeNumber String   @unique
+  routeName   String
+  busId       String
+  driverId    String?
+  schoolId    String
+  startPoint  String
+  endPoint    String
+  distance    Float?   // in kilometers
+  duration    Int?     // estimated duration in minutes
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  driver       Driver?       @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  pickupPoints PickupPoint[]
+  students     StudentRouteAssignment[]
+
+  @@index([schoolId, isActive])
+  @@index([busId])
+  @@index([driverId])
+  @@map("bus_routes")
+}
+
+// Pickup/drop-off points along a route
+model PickupPoint {
+  id          String   @id @default(uuid())
+  routeId     String
+  name        String
+  address     String
+  latitude    Float?
+  longitude   Float?
+  sequence    Int      // order in route
+  estimatedTime String? // e.g., "07:30 AM"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  route      BusRoute              @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  students   StudentRouteAssignment[]
+  pickupLogs StudentPickupLog[]
+
+  @@index([routeId, sequence])
+  @@map("pickup_points")
+}
+
+// Student assignment to route and pickup point
+model StudentRouteAssignment {
+  id            String   @id @default(uuid())
+  studentId     String
+  routeId       String
+  pickupPointId String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  student     Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  route       BusRoute    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  pickupPoint PickupPoint @relation(fields: [pickupPointId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, routeId])
+  @@index([routeId, isActive])
+  @@index([pickupPointId])
+  @@map("student_route_assignments")
+}
+
+// Log of student pickups/dropoffs during trips
+model StudentPickupLog {
+  id            String   @id @default(uuid())
+  tripId        String
+  studentId     String
+  pickupPointId String
+  driverId      String
+  eventType     String   // PICKUP or DROPOFF
+  timestamp     DateTime @default(now())
+  latitude      Float?
+  longitude     Float?
+  createdAt     DateTime @default(now())
+
+  trip        Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  pickupPoint PickupPoint  @relation(fields: [pickupPointId], references: [id], onDelete: Cascade)
+  driver      Driver       @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, studentId, eventType])
+  @@index([tripId, timestamp])
+  @@index([studentId, eventType])
+  @@map("student_pickup_logs")
+}
+
+// Fuel expenses submitted by drivers
+model FuelExpense {
+  id            String   @id @default(uuid())
+  driverId      String
+  busId         String
+  date          DateTime
+  fuelQuantity  Float    // in liters
+  amount        Decimal  @db.Decimal(10, 2)
+  odometerReading Int?
+  fuelStation   String?
+  receiptUrl    String?
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy    String?  // User ID
+  approvedAt    DateTime?
+  remarks       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([driverId, date])
+  @@index([status])
+  @@map("fuel_expenses")
+}
+
+// Vehicle breakdown reports
+model VehicleBreakdown {
+  id          String   @id @default(uuid())
+  driverId    String
+  busId       String
+  location    String
+  latitude    Float?
+  longitude   Float?
+  date        DateTime @default(now())
+  description String
+  severity    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  imageUrl    String?
+  status      String   @default("REPORTED") // REPORTED, ASSIGNED, IN_REPAIR, RESOLVED
+  assignedTo  String?  // Mechanic/staff user ID
+  resolvedAt  DateTime?
+  repairCost  Decimal? @db.Decimal(10, 2)
+  remarks     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([driverId, date])
+  @@index([status, severity])
+  @@map("vehicle_breakdowns")
+}
+
+// Incident reports (accidents, safety issues, etc.)
+model Incident {
+  id          String   @id @default(uuid())
+  driverId    String
+  tripId      String?
+  incidentType String  // ACCIDENT, STUDENT_SAFETY, VEHICLE_DAMAGE, ROUTE_DISRUPTION, OTHER
+  title       String
+  description String
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  date        DateTime @default(now())
+  severity    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  imageUrl    String?
+  status      String   @default("REPORTED") // REPORTED, UNDER_REVIEW, RESOLVED, CLOSED
+  reviewedBy  String?  // User ID
+  reviewedAt  DateTime?
+  resolution  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([driverId, date])
+  @@index([status, severity])
+  @@index([incidentType])
+  @@map("incidents")
+}
+
+// Emergency contacts for drivers
+model EmergencyContact {
+  id          String   @id @default(uuid())
+  schoolId    String
+  name        String
+  department  String   // Transport Control, First Aid, Police, Ambulance, etc.
+  phoneNumber String
+  priority    Int      @default(1) // Display order
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([schoolId, isActive, priority])
+  @@map("emergency_contacts")
 }

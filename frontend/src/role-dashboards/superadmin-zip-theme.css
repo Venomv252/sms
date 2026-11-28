@@ -299,20 +299,82 @@
     #fff 55%,
     #e6f4f0 100%
   ) !important;
-  padding: 24px 26px !important;
+  padding: 26px 28px !important;
   margin-bottom: 20px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(10, 124, 89, 0.08) !important;
+  position: relative;
+  overflow: hidden;
 }
+
+.superadmin-role-shell .platform-page-intro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 180px;
+  height: 100%;
+  background: radial-gradient(circle at top right, rgba(10, 124, 89, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.superadmin-role-shell .platform-page-intro > div:first-child {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
 .superadmin-role-shell .platform-page-intro h2 {
-  font-size: 25px;
+  font-size: 26px;
   color: #111827;
-  font-weight: 700;
-  margin: 0 0 6px;
+  font-weight: 750;
+  margin: 0 0 7px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  letter-spacing: -0.015em;
 }
 .superadmin-role-shell .platform-page-intro p {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #6b7280;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-weight: 450;
+}
+
+.superadmin-role-shell .platform-page-intro button {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  background: #0a7c59 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 12px 22px !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(10, 124, 89, 0.25), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  letter-spacing: 0.01em;
+}
+
+.superadmin-role-shell .platform-page-intro button:hover {
+  background: #065c41 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(10, 124, 89, 0.35), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.superadmin-role-shell .platform-page-intro button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(10, 124, 89, 0.3), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* KPI Overview Section */
@@ -354,11 +416,24 @@
     gap: 14px;
   }
   .superadmin-role-shell .platform-page-intro {
-    padding: 18px;
+    padding: 20px 18px !important;
     border-radius: 12px !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  .superadmin-role-shell .platform-page-intro::before {
+    width: 120px;
   }
   .superadmin-role-shell .platform-page-intro h2 {
-    font-size: 20px;
+    font-size: 21px;
+  }
+  .superadmin-role-shell .platform-page-intro p {
+    font-size: 12.5px;
+  }
+  .superadmin-role-shell .platform-page-intro button {
+    width: 100%;
+    justify-content: center !important;
   }
 }
 
@@ -447,19 +522,77 @@
   border-radius: 13px !important;
   background: #fff !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+  padding: 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  transition: all 0.2s ease !important;
+  position: relative;
+  overflow: hidden;
 }
+
+.superadmin-role-shell .superadmin-kpis article::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0a7c59, #10b981);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.superadmin-role-shell .superadmin-kpis article:hover {
+  border-color: #d1d5db !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-2px);
+}
+
+.superadmin-role-shell .superadmin-kpis article:hover::before {
+  opacity: 1;
+}
+
 .superadmin-role-shell .superadmin-kpis article > svg {
   color: #0a7c59 !important;
   background: #e6f4f0 !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 10px !important;
+  border-radius: 10px !important;
+  flex-shrink: 0;
 }
+
 .superadmin-role-shell .superadmin-kpis article > span {
   color: #6b7280 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
 }
+
 .superadmin-role-shell .superadmin-kpis article > strong {
   color: #111827 !important;
+  font-size: 28px !important;
+  font-weight: 750 !important;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
+
 .superadmin-role-shell .superadmin-kpis article small {
   color: #9ca3af !important;
+  font-size: 11px !important;
+  font-weight: 500;
+  margin-top: -4px;
+}
+
+.superadmin-role-shell .superadmin-kpis article .text-success {
+  color: #059669 !important;
+}
+
+.superadmin-role-shell .superadmin-kpis article .text-warning {
+  color: #d97706 !important;
 }
 .superadmin-role-shell .superadmin-panel {
   border: 1px solid #e5e7eb !important;
@@ -822,42 +955,50 @@
 .superadmin-role-shell .platform-stat-table {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  background: #f1f3f5;
-  border-radius: 10px;
-  padding: 2px;
+  gap: 0;
+  background: #fff;
+  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 .superadmin-role-shell .platform-stat-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1.2fr 1.2fr;
+  grid-template-columns: 0.8fr 1.2fr 1.3fr 1fr 1fr 1fr 1fr 0.8fr 0.8fr;
   gap: 16px;
   align-items: center;
-  padding: 16px 20px;
+  padding: 18px 20px;
   background: #fff;
-  border-radius: 8px;
+  border-bottom: 1px solid #f1f3f5;
   transition: all 0.15s ease;
 }
 
-.superadmin-role-shell .platform-stat-row:hover {
+.superadmin-role-shell .platform-stat-row:last-child {
+  border-bottom: none;
+}
+
+.superadmin-role-shell .platform-stat-row:hover:not(.heading) {
   background: #f9fafb;
-  transform: translateX(2px);
+  box-shadow: inset 3px 0 0 #0a7c59;
 }
 
 .superadmin-role-shell .platform-stat-row.heading {
-  background: #f8fafb;
+  background: linear-gradient(to bottom, #f8fafb, #f3f5f7);
   font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.05em;
+  font-size: 10px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #6b7280;
-  padding: 12px 20px;
+  padding: 14px 20px;
+  border-bottom: 2px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .superadmin-role-shell .platform-stat-row.heading:hover {
-  background: #f8fafb;
-  transform: none;
+  background: linear-gradient(to bottom, #f8fafb, #f3f5f7);
+  box-shadow: none;
 }
 
 .superadmin-role-shell .platform-stat-row > span {
@@ -879,7 +1020,7 @@
 .superadmin-role-shell .platform-stat-row > span small {
   font-size: 11px;
   color: #6b7280;
-  font-weight: 500;
+  font-weight: 450;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -889,14 +1030,166 @@
   font-size: 13px;
   font-weight: 600;
   color: #374151;
-  text-align: right;
   white-space: nowrap;
 }
 
 .superadmin-role-shell .platform-stat-row.heading > span {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #6b7280;
+}
+
+/* Icon Buttons in Table */
+.superadmin-role-shell .superadmin-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.superadmin-role-shell .superadmin-icon-button:hover {
+  background: #f3f7f5;
+  color: #0a7c59;
+  border-color: #0a7c59;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(10, 124, 89, 0.15);
+}
+
+.superadmin-role-shell .superadmin-icon-button.danger {
+  color: #dc2626;
+}
+
+.superadmin-role-shell .superadmin-icon-button.danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
+}
+
+.superadmin-role-shell .superadmin-icon-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Status Badges */
+.superadmin-role-shell .status-resolved {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.superadmin-role-shell .status-rejected {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Text Utilities */
+.superadmin-role-shell .text-success {
+  color: #059669 !important;
+  font-weight: 650 !important;
+}
+
+/* Pagination Controls */
+.superadmin-role-shell .principal-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 0;
+}
+
+.superadmin-role-shell .principal-pagination button {
+  padding: 10px 18px;
+  background: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 90px;
+}
+
+.superadmin-role-shell .principal-pagination button:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #0a7c59;
+  color: #0a7c59;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(10, 124, 89, 0.1);
+}
+
+.superadmin-role-shell .principal-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
+.superadmin-role-shell .principal-pagination > span {
+  padding: 0 12px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Search and Filter Controls */
+.superadmin-role-shell .director-search-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.superadmin-role-shell .director-search-controls select {
+  padding: 9px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 140px;
+}
+
+.superadmin-role-shell .director-search-controls select:hover {
+  border-color: #0a7c59;
+  box-shadow: 0 0 0 3px rgba(10, 124, 89, 0.08);
+}
+
+.superadmin-role-shell .director-search-controls select:focus {
+  outline: none;
+  border-color: #0a7c59;
+  box-shadow: 0 0 0 3px rgba(10, 124, 89, 0.12);
 }
 
 .superadmin-role-shell .superadmin-privacy-note {
@@ -920,10 +1213,33 @@
 }
 
 /* Responsive Statistics Table */
+@media (max-width: 1400px) {
+  .superadmin-role-shell .platform-stat-row {
+    grid-template-columns: 0.7fr 1fr 1.2fr 0.9fr 0.9fr 0.9fr 0.9fr 0.7fr 0.7fr;
+    gap: 12px;
+    padding: 16px 18px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .superadmin-role-shell .platform-stat-row {
+    grid-template-columns: 0.8fr 1.2fr 1fr 0.8fr 0.6fr 0.6fr;
+    gap: 12px;
+  }
+  
+  /* Hide less critical columns on medium screens */
+  .superadmin-role-shell .platform-stat-row > span:nth-child(3),
+  .superadmin-role-shell .platform-stat-row > b:nth-child(5),
+  .superadmin-role-shell .platform-stat-row > span:nth-child(6) {
+    display: none;
+  }
+}
+
 @media (max-width: 950px) {
   .superadmin-role-shell .platform-stat-row {
-    grid-template-columns: 1.5fr 0.8fr 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: 1fr 1.5fr 1fr 0.8fr;
+    gap: 10px;
     padding: 14px 16px;
   }
   
@@ -938,32 +1254,71 @@
   .superadmin-role-shell .platform-stat-row > b {
     font-size: 12px;
   }
+  
+  /* Show only essential columns */
+  .superadmin-role-shell .platform-stat-row > *:nth-child(n+5):not(:last-child) {
+    display: none;
+  }
 }
 
 @media (max-width: 680px) {
-  .superadmin-role-shell .platform-stat-row {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 14px;
+  .superadmin-role-shell .platform-stat-table {
+    border-radius: 10px;
   }
   
-  .superadmin-role-shell .platform-stat-row > b {
-    text-align: left;
+  .superadmin-role-shell .platform-stat-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px 14px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+  
+  .superadmin-role-shell .platform-stat-row:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: none;
   }
   
   .superadmin-role-shell .platform-stat-row.heading {
     display: none;
   }
   
+  .superadmin-role-shell .platform-stat-row > * {
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
   .superadmin-role-shell .platform-stat-row > span::before,
   .superadmin-role-shell .platform-stat-row > b::before {
     content: attr(data-label);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     color: #9ca3af;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     display: block;
-    margin-bottom: 4px;
+  }
+  
+  .superadmin-role-shell .director-search-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .superadmin-role-shell .director-search-controls select,
+  .superadmin-role-shell .superadmin-header-search {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .superadmin-role-shell .principal-pagination {
+    flex-wrap: wrap;
+  }
+  
+  .superadmin-role-shell .principal-pagination button {
+    flex: 1;
+    min-width: 100px;
   }
 }

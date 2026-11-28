@@ -108,9 +108,9 @@ function CompanyStatsPage({ loading: parentLoading, error: parentError, message:
         apiGet(`/platform/company-employees?${params}`),
       ]);
 
-      setStats(statsData.data);
-      setEmployees(employeesData.data.employees);
-      setPagination(employeesData.data.pagination);
+      setStats(statsData.data || statsData);
+      setEmployees(employeesData.data?.employees || employeesData.employees || []);
+      setPagination(employeesData.data?.pagination || employeesData.pagination || { total: 0, page: 1, limit: 20, totalPages: 0 });
     } catch (err) {
       setError(err.message || "Unable to load company employee data");
     } finally {
@@ -190,7 +190,16 @@ function CompanyStatsPage({ loading: parentLoading, error: parentError, message:
     );
   }
 
-  const { overview, byRole, byDepartment } = stats;
+  const { overview, byRole, byDepartment } = stats || { overview: {}, byRole: [], byDepartment: [] };
+  const safeOverview = {
+    totalEmployees: 0,
+    activeEmployees: 0,
+    inactiveEmployees: 0,
+    totalMonthlySalary: 0,
+    totalAnnualSalary: 0,
+    averageMonthlySalary: 0,
+    ...overview
+  };
 
   return (
     <>
@@ -211,35 +220,35 @@ function CompanyStatsPage({ loading: parentLoading, error: parentError, message:
         <article>
           <Users />
           <span>Total Employees</span>
-          <strong>{overview.totalEmployees}</strong>
+          <strong>{safeOverview.totalEmployees}</strong>
           <small>Company staff</small>
         </article>
 
         <article>
           <CheckCircle2 />
           <span>Active</span>
-          <strong className="text-success">{overview.activeEmployees}</strong>
+          <strong className="text-success">{safeOverview.activeEmployees}</strong>
           <small>Currently working</small>
         </article>
 
         <article>
           <AlertTriangle />
           <span>Inactive</span>
-          <strong className="text-warning">{overview.inactiveEmployees}</strong>
+          <strong className="text-warning">{safeOverview.inactiveEmployees}</strong>
           <small>Not active</small>
         </article>
 
         <article>
           <CircleDollarSign />
           <span>Monthly Salary</span>
-          <strong>{money(overview.totalMonthlySalary)}</strong>
+          <strong>{money(safeOverview.totalMonthlySalary)}</strong>
           <small>Total expense</small>
         </article>
 
         <article>
           <CircleDollarSign />
           <span>Annual Salary</span>
-          <strong>{money(overview.totalAnnualSalary)}</strong>
+          <strong>{money(safeOverview.totalAnnualSalary)}</strong>
           <small>Yearly expense</small>
         </article>
       </section>
@@ -326,17 +335,17 @@ function CompanyStatsPage({ loading: parentLoading, error: parentError, message:
         <div className="network-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
           <article className="network-card" style={{ padding: "20px" }}>
             <div style={{ marginBottom: "8px", fontSize: "14px", color: "#666" }}>Total Monthly</div>
-            <div style={{ fontSize: "24px", fontWeight: "600", color: "#16a34a" }}>{money(overview.totalMonthlySalary)}</div>
+            <div style={{ fontSize: "24px", fontWeight: "600", color: "#16a34a" }}>{money(safeOverview.totalMonthlySalary)}</div>
           </article>
           
           <article className="network-card" style={{ padding: "20px" }}>
             <div style={{ marginBottom: "8px", fontSize: "14px", color: "#666" }}>Total Annual</div>
-            <div style={{ fontSize: "24px", fontWeight: "600", color: "#16a34a" }}>{money(overview.totalAnnualSalary)}</div>
+            <div style={{ fontSize: "24px", fontWeight: "600", color: "#16a34a" }}>{money(safeOverview.totalAnnualSalary)}</div>
           </article>
           
           <article className="network-card" style={{ padding: "20px" }}>
             <div style={{ marginBottom: "8px", fontSize: "14px", color: "#666" }}>Average Monthly</div>
-            <div style={{ fontSize: "24px", fontWeight: "600", color: "#2563eb" }}>{money(overview.averageMonthlySalary)}</div>
+            <div style={{ fontSize: "24px", fontWeight: "600", color: "#2563eb" }}>{money(safeOverview.averageMonthlySalary)}</div>
           </article>
         </div>
       </section>
