@@ -61,6 +61,640 @@ const NAV = [
   { id: "health", label: "System health", icon: Activity, group: "OVERSIGHT", path: "/superadmin/health" },
 ];
 
+// ============================================================
+// COMPANY STATS PAGE COMPONENT
+// ============================================================
+
+function CompanyStatsPage({ loading: parentLoading, error: parentError, message: parentMessage, setError, setMessage, onRefresh }) {
+  const [stats, setStats] = useState(null);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState({ role: "", department: "", status: "" });
+  const [sortBy, setSortBy] = useState("joiningDate");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [savingEmployee, setSavingEmployee] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deletingEmployee, setDeletingEmployee] = useState(false);
+
+  const money = (value) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(Number(value || 0));
+
+  const loadData = async () => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        sortBy,
+        sortOrder,
+        ...(search && { search }),
+        ...(filters.role && { role: filters.role }),
+        ...(filters.department && { department: filters.department }),
+        ...(filters.status && { status: filters.status }),
+      });
+
+      const [statsData, employeesData] = await Promise.all([
+        apiGet("/platform/company-employees/stats"),
+        apiGet(`/platform/company-employees?${params}`),
+      ]);
+
+      setStats(statsData.data);
+      setEmployees(employeesData.data.employees);
+      setPagination(employeesData.data.pagination);
+    } catch (err) {
+      setError(err.message || "Unable to load company employee data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [pagination.page, search, filters, sortBy, sortOrder]);
+
+  const handleAddEmployee = async (formData) => {
+    setSavingEmployee(true);
+    setError("");
+    
+    try {
+      await apiPost("/platform/company-employees", formData);
+      setMessage("Employee added successfully");
+      setShowAddModal(false);
+      loadData();
+    } catch (err) {
+      setError(err.message || "Unable to add employee");
+    } finally {
+      setSavingEmployee(false);
+    }
+  };
+
+  const handleUpdateEmployee = async (id, formData) => {
+    setSavingEmployee(true);
+    setError("");
+    
+    try {
+      await apiPatch(`/platform/company-employees/${id}`, formData);
+      setMessage("Employee updated successfully");
+      setEditingEmployee(null);
+      loadData();
+    } catch (err) {
+      setError(err.message || "Unable to update employee");
+    } finally {
+      setSavingEmployee(false);
+    }
+  };
+
+  const handleDeleteEmployee = async () => {
+    if (!deleteConfirm) return;
+    
+    setDeletingEmployee(true);
+    setError("");
+    
+    try {
+      await apiDelete(`/platform/company-employees/${deleteConfirm.id}`);
+      setMessage("Employee deleted successfully");
+      setDeleteConfirm(null);
+      loadData();
+    } catch (err) {
+      setError(err.message || "Unable to delete employee");
+    } finally {
+      setDeletingEmployee(false);
+    }
+  };
+
+  if (loading && !stats) {
+    return (
+      <div className="superadmin-loading">
+        <RefreshCw size={20} className="spin" /> Loading company employee data...
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="superadmin-empty">
+        <AlertTriangle size={20} />
+        <p>Unable to load company data. {parentError || error}</p>
+        <button onClick={() => loadData()}>Retry</button>
+      </div>
+    );
+  }
+
+  const { overview, byRole, byDepartment } = stats;
+
+  return (
+    <>
+      <section className="platform-page-intro">
+        <div>
+          <h2>Company Stats</h2>
+          <p>
+            Manage and monitor ERP platform employees. This data is completely separate from school employees.
+          </p>
+        </div>
+        <button className="director-submit" onClick={() => setShowAddModal(true)}>
+          <Plus size={16} /> Add Employee
+        </button>
+      </section>
+
+      {/* Overview Statistics */}
+      <section className="superadmin-overview superadmin-kpis">
+        <article>
+          <Users />
+          <span>Total Employees</span>
+          <strong>{overview.totalEmployees}</strong>
+          <small>Company staff</small>
+        </article>
+
+        <article>
+          <CheckCircle2 />
+          <span>Active</span>
+          <strong className="text-success">{overview.activeEmployees}</strong>
+          <small>Currently working</small>
+        </article>
+
+        <article>
+          <AlertTriangle />
+          <span>Inactive</span>
+          <strong className="text-warning">{overview.inactiveEmployees}</strong>
+          <small>Not active</small>
+        </article>
+
+        <article>
+          <CircleDollarSign />
+          <span>Monthly Salary</span>
+          <strong>{money(overview.totalMonthlySalary)}</strong>
+          <small>Total expense</small>
+        </article>
+
+        <article>
+          <CircleDollarSign />
+          <span>Annual Salary</span>
+          <strong>{money(overview.totalAnnualSalary)}</strong>
+          <small>Yearly expense</small>
+        </article>
+      </section>
+
+      <div className="platform-overview-grid">
+        {/* Employee Distribution by Role */}
+        <section className="superadmin-panel">
+          <div className="superadmin-section-title">
+            <div>
+              <h2>
+                <Users size={19} /> Employee Distribution by Role
+              </h2>
+              <p>Headcount and salary breakdown by job role</p>
+            </div>
+          </div>
+          
+          {byRole.length > 0 ? (
+            <div className="platform-stat-table">
+              <div className="platform-stat-row heading">
+                <span>Role</span>
+                <span>Count</span>
+                <span>Total Salary</span>
+              </div>
+              {byRole.map((r) => (
+                <div className="platform-stat-row" key={r.role}>
+                  <span>
+                    <strong>{r.role}</strong>
+                  </span>
+                  <b>{r.count}</b>
+                  <b>{money(r.totalSalary)}</b>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="superadmin-empty">No employees added yet</div>
+          )}
+        </section>
+
+        {/* Employee Distribution by Department */}
+        <section className="superadmin-panel">
+          <div className="superadmin-section-title">
+            <div>
+              <h2>
+                <Building2 size={19} /> Distribution by Department
+              </h2>
+              <p>Headcount and salary breakdown by department</p>
+            </div>
+          </div>
+          
+          {byDepartment.length > 0 ? (
+            <div className="platform-stat-table">
+              <div className="platform-stat-row heading">
+                <span>Department</span>
+                <span>Count</span>
+                <span>Total Salary</span>
+              </div>
+              {byDepartment.map((d) => (
+                <div className="platform-stat-row" key={d.department}>
+                  <span>
+                    <strong>{d.department}</strong>
+                  </span>
+                  <b>{d.count}</b>
+                  <b>{money(d.totalSalary)}</b>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="superadmin-empty">No employees added yet</div>
+          )}
+        </section>
+      </div>
+
+      {/* Salary Statistics Panel */}
+      <section className="superadmin-panel">
+        <div className="superadmin-section-title">
+          <div>
+            <h2>
+              <CircleDollarSign size={19} /> Salary Statistics
+            </h2>
+            <p>Comprehensive salary expense analysis</p>
+          </div>
+        </div>
+
+        <div className="network-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+          <article className="network-card" style={{ padding: "20px" }}>
+            <div style={{ marginBottom: "8px", fontSize: "14px", color: "#666" }}>Total Monthly</div>
+            <div style={{ fontSize: "24px", fontWeight: "600", color: "#16a34a" }}>{money(overview.totalMonthlySalary)}</div>
+          </article>
+          
+          <article className="network-card" style={{ padding: "20px" }}>
+            <div style={{ marginBottom: "8px", fontSize: "14px", color: "#666" }}>Total Annual</div>
+            <div style={{ fontSize: "24px", fontWeight: "600", color: "#16a34a" }}>{money(overview.totalAnnualSalary)}</div>
+          </article>
+          
+          <article className="network-card" style={{ padding: "20px" }}>
+            <div style={{ marginBottom: "8px", fontSize: "14px", color: "#666" }}>Average Monthly</div>
+            <div style={{ fontSize: "24px", fontWeight: "600", color: "#2563eb" }}>{money(overview.averageMonthlySalary)}</div>
+          </article>
+        </div>
+      </section>
+
+      {/* Employee Directory */}
+      <section className="superadmin-panel">
+        <div className="superadmin-section-title">
+          <div>
+            <h2>
+              <Briefcase size={19} /> Employee Directory
+            </h2>
+            <p>Search, filter, and manage company employees</p>
+          </div>
+          <span className="superadmin-count">{pagination.total} employees</span>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="director-search-controls" style={{ marginBottom: "20px" }}>
+          <div className="superadmin-header-search" style={{ maxWidth: "400px" }}>
+            <Search size={16} />
+            <input
+              type="search"
+              placeholder="Search by name, email, or employee ID..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPagination(p => ({ ...p, page: 1 }));
+              }}
+            />
+          </div>
+
+          <select
+            value={filters.role}
+            onChange={(e) => {
+              setFilters({ ...filters, role: e.target.value });
+              setPagination(p => ({ ...p, page: 1 }));
+            }}
+            style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #e5e7eb" }}
+          >
+            <option value="">All Roles</option>
+            {byRole.map((r) => (
+              <option key={r.role} value={r.role}>{r.role}</option>
+            ))}
+          </select>
+
+          <select
+            value={filters.department}
+            onChange={(e) => {
+              setFilters({ ...filters, department: e.target.value });
+              setPagination(p => ({ ...p, page: 1 }));
+            }}
+            style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #e5e7eb" }}
+          >
+            <option value="">All Departments</option>
+            {byDepartment.map((d) => (
+              <option key={d.department} value={d.department}>{d.department}</option>
+            ))}
+          </select>
+
+          <select
+            value={filters.status}
+            onChange={(e) => {
+              setFilters({ ...filters, status: e.target.value });
+              setPagination(p => ({ ...p, page: 1 }));
+            }}
+            style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #e5e7eb" }}
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+
+          <select
+            value={`${sortBy}-${sortOrder}`}
+            onChange={(e) => {
+              const [field, order] = e.target.value.split('-');
+              setSortBy(field);
+              setSortOrder(order);
+            }}
+            style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #e5e7eb" }}
+          >
+            <option value="joiningDate-desc">Newest First</option>
+            <option value="joiningDate-asc">Oldest First</option>
+            <option value="monthlySalary-desc">Highest Salary</option>
+            <option value="monthlySalary-asc">Lowest Salary</option>
+            <option value="fullName-asc">Name A-Z</option>
+            <option value="fullName-desc">Name Z-A</option>
+          </select>
+        </div>
+
+        {loading ? (
+          <div className="superadmin-loading">Loading employees...</div>
+        ) : employees.length > 0 ? (
+          <>
+            <div className="platform-stat-table">
+              <div className="platform-stat-row heading">
+                <span>Employee ID</span>
+                <span>Name</span>
+                <span>Email</span>
+                <span>Role</span>
+                <span>Department</span>
+                <span>Employment Type</span>
+                <span>Monthly Salary</span>
+                <span>Status</span>
+                <span>Actions</span>
+              </div>
+
+              {employees.map((emp) => (
+                <div className="platform-stat-row" key={emp.id}>
+                  <span>
+                    <strong>{emp.employeeId}</strong>
+                  </span>
+                  <span>
+                    <strong>{emp.fullName}</strong>
+                    <small>{emp.phone || "No phone"}</small>
+                  </span>
+                  <span><small>{emp.email}</small></span>
+                  <b>{emp.role}</b>
+                  <b>{emp.department}</b>
+                  <span><small>{emp.employmentType.replace(/_/g, " ")}</small></span>
+                  <b className="text-success">{money(emp.monthlySalary)}</b>
+                  <span>
+                    <span className={emp.isActive ? "status-resolved" : "status-rejected"}>
+                      {emp.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </span>
+                  <span style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      className="superadmin-icon-button"
+                      title="Edit"
+                      onClick={() => setEditingEmployee(emp)}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      className="superadmin-icon-button danger"
+                      title="Delete"
+                      onClick={() => setDeleteConfirm(emp)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {pagination.totalPages > 1 && (
+              <div className="principal-pagination" style={{ marginTop: "20px" }}>
+                <button
+                  disabled={pagination.page === 1}
+                  onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
+                >
+                  Previous
+                </button>
+                <span>Page {pagination.page} of {pagination.totalPages}</span>
+                <button
+                  disabled={pagination.page === pagination.totalPages}
+                  onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="superadmin-empty">
+            {search || filters.role || filters.department || filters.status
+              ? "No employees match your filters"
+              : "No employees added yet. Add your first employee above."}
+          </div>
+        )}
+      </section>
+
+      {/* Add Employee Modal */}
+      {showAddModal && (
+        <EmployeeFormModal
+          title="Add Company Employee"
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddEmployee}
+          saving={savingEmployee}
+        />
+      )}
+
+      {/* Edit Employee Modal */}
+      {editingEmployee && (
+        <EmployeeFormModal
+          title="Edit Employee"
+          employee={editingEmployee}
+          onClose={() => setEditingEmployee(null)}
+          onSave={(data) => handleUpdateEmployee(editingEmployee.id, data)}
+          saving={savingEmployee}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <SuperAdminDeleteConfirmation
+          type="employee"
+          item={{ name: deleteConfirm.fullName, id: deleteConfirm.employeeId }}
+          onConfirm={handleDeleteEmployee}
+          onCancel={() => setDeleteConfirm(null)}
+          isDeleting={deletingEmployee}
+        />
+      )}
+    </>
+  );
+}
+
+// ============================================================
+// EMPLOYEE FORM MODAL COMPONENT
+// ============================================================
+
+function EmployeeFormModal({ title, employee, onClose, onSave, saving }) {
+  const [formData, setFormData] = useState(employee || {
+    employeeId: "",
+    fullName: "",
+    email: "",
+    phone: "",
+    role: "",
+    department: "",
+    joiningDate: new Date().toISOString().split('T')[0],
+    employmentType: "FULL_TIME",
+    monthlySalary: "",
+    isActive: true,
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="superadmin-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <form className="superadmin-modal" onSubmit={handleSubmit} style={{ maxWidth: "600px", maxHeight: "90vh", overflowY: "auto" }}>
+        <div className="superadmin-modal-heading">
+          <h2>{title}</h2>
+          <button type="button" className="superadmin-icon-button" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <label>
+            Employee ID *
+            <input
+              required
+              disabled={!!employee}
+              value={formData.employeeId}
+              onChange={(e) => setFormData({ ...formData, employeeId: e.target.value.toUpperCase() })}
+              placeholder="EMP001"
+            />
+          </label>
+
+          <label>
+            Full Name *
+            <input
+              required
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              placeholder="John Doe"
+            />
+          </label>
+
+          <label>
+            Email *
+            <input
+              required
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="john@company.com"
+            />
+          </label>
+
+          <label>
+            Phone
+            <input
+              value={formData.phone || ""}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+91 1234567890"
+            />
+          </label>
+
+          <label>
+            Role *
+            <input
+              required
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              placeholder="Software Developer"
+            />
+          </label>
+
+          <label>
+            Department *
+            <input
+              required
+              value={formData.department}
+              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+              placeholder="Engineering"
+            />
+          </label>
+
+          <label>
+            Joining Date *
+            <input
+              required
+              type="date"
+              value={formData.joiningDate instanceof Date ? formData.joiningDate.toISOString().split('T')[0] : (formData.joiningDate || "").split('T')[0]}
+              onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+            />
+          </label>
+
+          <label>
+            Employment Type *
+            <select
+              required
+              value={formData.employmentType}
+              onChange={(e) => setFormData({ ...formData, employmentType: e.target.value })}
+            >
+              <option value="FULL_TIME">Full Time</option>
+              <option value="PART_TIME">Part Time</option>
+              <option value="CONTRACT">Contract</option>
+              <option value="INTERN">Intern</option>
+            </select>
+          </label>
+
+          <label>
+            Monthly Salary (₹) *
+            <input
+              required
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.monthlySalary}
+              onChange={(e) => setFormData({ ...formData, monthlySalary: e.target.value })}
+              placeholder="50000"
+            />
+          </label>
+
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", gridColumn: "1 / -1" }}>
+            <input
+              type="checkbox"
+              checked={formData.isActive}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            />
+            <span>Active Employee</span>
+          </label>
+        </div>
+
+        <button className="director-submit" disabled={saving} style={{ marginTop: "16px" }}>
+          <Save size={16} /> {saving ? "Saving..." : employee ? "Update Employee" : "Add Employee"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function SuperAdminDashboard() {
   const user = JSON.parse(
     sessionStorage.getItem("sms_authenticated_user") || "{}",
@@ -1357,6 +1991,18 @@ export default function SuperAdminDashboard() {
               </>
             )}
           </>
+          } />
+          
+          {/* Company Stats Route */}
+          <Route path="company-stats" element={
+            <CompanyStatsPage 
+              loading={loading}
+              error={error}
+              message={message}
+              setError={setError}
+              setMessage={setMessage}
+              onRefresh={() => loadData(true)}
+            />
           } />
           
           {/* Health Route */}
